@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Accès aux fichiers</title>
+    <title>Accès aux fichiers - Regarder une pub</title>
     
-    <!-- 1. SDK MONETAG (le vrai) -->
+    <!-- SDK Monetag (chargé en premier) -->
     <script src='//libtl.com/sdk.js' data-zone='10518701' data-sdk='show_10518701'></script>
     
-    <!-- 2. Telegram WebApp -->
+    <!-- Telegram WebApp -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
     <!-- CSS -->
@@ -18,72 +18,268 @@
     <link rel="stylesheet" href="css/animations.css">
 </head>
 <body>
-    <!-- ... garde tout ton HTML existant ... -->
+    <!-- Background animé subtil -->
+    <div class="bg-gradient"></div>
+    
+    <!-- Container principal -->
+    <main class="container">
+        
+        <!-- Header avec logo animé -->
+        <header class="header">
+            <div class="logo-wrapper">
+                <div class="logo">
+                    <div class="logo-inner">
+                        <svg viewBox="0 0 24 24" class="logo-icon" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="pulse-ring"></div>
+            </div>
+            <h1 class="title">STOCKAGE DE FICHIERS</h1>
+            <p class="subtitle">Système d'accès sécurisé aux fichiers</p>
+        </header>
 
-    <!-- 3. Configuration API -->
+        <!-- Balance/Session Overview Card -->
+        <section class="card status-card" id="statusCard">
+            <div class="status-header">
+                <div class="status-badge" id="statusBadge">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span class="status-text" id="statusText">Vérification du statut...</span>
+                </div>
+                <div class="timer-display hidden" id="timerDisplay">
+                    <span class="timer-value" id="timerValue">--:--</span>
+                    <span class="timer-label">restant</span>
+                </div>
+            </div>
+            
+            <div class="status-details">
+                <div class="detail-row">
+                    <span class="detail-label">Type d'accès</span>
+                    <span class="detail-value" id="accessType">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Expire dans</span>
+                    <span class="detail-value" id="expireTime">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Fichiers disponibles</span>
+                    <span class="detail-value">Illimité</span>
+                </div>
+            </div>
+
+            <!-- Barre de progression -->
+            <div class="progress-bar hidden" id="progressBar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </section>
+
+        <!-- Carte Action Monetag -->
+        <section class="card action-card" id="actionCard">
+            <div class="monetag-section" id="monetagSection">
+                <div class="info-box">
+                    <svg class="info-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                    </svg>
+                    <p class="info-text">
+                        Pour accéder à vos fichiers, regardez une courte publicité. 
+                        Vous obtiendrez <strong id="freeDuration">10 minutes</strong> d'accès illimité à tous vos documents.
+                    </p>
+                </div>
+
+                <!-- Bouton principal Monetag -->
+                <button class="btn btn-primary btn-monetag" id="watchAdBtn" onclick="handleWatchAd()">
+                    <span class="btn-icon">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                    </span>
+                    <span class="btn-text">Regarder la publicité</span>
+                </button>
+
+                <!-- Loader caché par défaut -->
+                <div class="loader hidden" id="loader">
+                    <svg class="spinner" viewBox="0 0 50 50">
+                        <circle class="path" cx="25" cy="25" r="20" fill="none"></circle>
+                    </svg>
+                    <span class="loader-text">Chargement de la pub...</span>
+                </div>
+
+                <!-- Message erreur -->
+                <div class="error-message hidden" id="errorMsg">
+                    Veuillez regarder la publicité jusqu'à la fin pour débloquer l'accès
+                </div>
+            </div>
+
+            <!-- Section succès (cachée initialement) -->
+            <div class="success-section hidden" id="successSection">
+                <div class="success-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                </div>
+                <h3 class="success-title">Accès accordé !</h3>
+                <p class="success-text">Vous avez <span id="durationText">10 minutes</span> pour télécharger vos fichiers</p>
+                
+                <button class="btn btn-secondary" onclick="openBot()">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                        <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+                    </svg>
+                    Ouvrir le bot Telegram
+                </button>
+            </div>
+        </section>
+
+        <!-- Quick Stats Mini Grid -->
+        <section class="card" style="padding: var(--space-md);">
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-md); text-align: center;">
+                <div>
+                    <div style="font-size: 1.25rem; font-weight: 700; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">24/7</div>
+                    <div style="font-size: 0.7rem; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px;">Disponible</div>
+                </div>
+                <div>
+                    <div style="font-size: 1.25rem; font-weight: 700; background: var(--gradient-success); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Rapide</div>
+                    <div style="font-size: 0.7rem; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px;">Téléchargement</div>
+                </div>
+                <div>
+                    <div style="font-size: 1.25rem; font-weight: 700; background: linear-gradient(135deg, var(--secondary), var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Sécurisé</div>
+                    <div style="font-size: 0.7rem; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px;">Stockage</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Promo Premium discrète -->
+        <section class="card promo-card">
+            <p class="promo-text">Vous voulez un accès illimité sans publicité ?</p>
+            <button class="btn btn-outline" onclick="goPremium()">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                </svg>
+                Passer à Premium
+            </button>
+        </section>
+
+    </main>
+
+    <!-- Navigation bottom fixe -->
+    <nav class="bottom-nav">
+        <a href="index.html" class="nav-item active">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+            </svg>
+            <span class="nav-label">Accès</span>
+        </a>
+        <a href="prime.html" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+            </svg>
+            <span class="nav-label">Premium</span>
+        </a>
+        <a href="admin.html" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+            </svg>
+            <span class="nav-label">Admin</span>
+        </a>
+    </nav>
+
+    <!-- Scripts -->
     <script>
-        // ⚠️ REMPLACE PAR TON URL RENDER !
+        // ============================================================
+        // CONFIGURATION - TON URL RENDER
+        // ============================================================
         const API_BASE = 'https://test-cey.onrender.com';
         
-        // Wrapper Monetag
-        const Monetag = {
-            show: () => {
-                return new Promise((resolve, reject) => {
-                    // Vérifier si la fonction existe
-                    if (typeof show_10518701 !== 'function') {
-                        console.error('SDK Monetag pas chargé');
-                        reject('SDK not loaded');
-                        return;
-                    }
+        // ============================================================
+        // GESTION MONETAG
+        // ============================================================
+        const MonetagManager = {
+            // Attendre que le SDK soit prêt (max 5 secondes)
+            waitForSDK: function() {
+                return new Promise((resolve) => {
+                    let attempts = 0;
+                    const maxAttempts = 50;
                     
-                    // Appeler la pub
-                    try {
-                        show_10518701().then(() => {
-                            console.log('✅ Pub visionnée');
+                    const check = () => {
+                        attempts++;
+                        if (typeof show_10518701 === 'function') {
+                            console.log('[Monetag] SDK prêt');
                             resolve(true);
-                        }).catch(() => {
-                            console.log('❌ Pub fermée');
-                            reject(false);
-                        });
-                    } catch(e) {
-                        reject(e);
+                        } else if (attempts >= maxAttempts) {
+                            console.warn('[Monetag] SDK non chargé après 5s');
+                            resolve(false);
+                        } else {
+                            setTimeout(check, 100);
+                        }
+                    };
+                    check();
+                });
+            },
+            
+            // Afficher la pub
+            showAd: async function() {
+                const isReady = await this.waitForSDK();
+                
+                if (!isReady) {
+                    throw new Error('SDK Monetag non disponible. Vérifiez votre connexion ou désactivez le bloqueur de pub.');
+                }
+                
+                return new Promise((resolve, reject) => {
+                    try {
+                        console.log('[Monetag] Lancement pub...');
+                        show_10518701()
+                            .then(() => {
+                                console.log('[Monetag] Pub complétée');
+                                resolve(true);
+                            })
+                            .catch((err) => {
+                                console.log('[Monetag] Pub fermée:', err);
+                                reject(false);
+                            });
+                    } catch (e) {
+                        console.error('[Monetag] Erreur:', e);
+                        reject(false);
                     }
                 });
             }
         };
-    </script>
 
-    <!-- 4. API Client -->
-    <script>
-        async function checkSession(userId, auth) {
-            try {
-                const res = await fetch(`${API_BASE}/api/check-session`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({user_id: userId, auth: auth})
-                });
-                return await res.json();
-            } catch(e) {
-                return {has_access: false};
+        // ============================================================
+        // API CLIENT
+        // ============================================================
+        const API = {
+            checkSession: async function(userId, auth) {
+                try {
+                    const response = await fetch(`${API_BASE}/api/check-session`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({user_id: userId, auth: auth})
+                    });
+                    return await response.json();
+                } catch (e) {
+                    console.error('API Error:', e);
+                    return {has_access: false};
+                }
+            },
+            
+            watchAd: async function(userId, auth) {
+                try {
+                    const response = await fetch(`${API_BASE}/api/watch-ad`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({user_id: userId, auth: auth})
+                    });
+                    return await response.json();
+                } catch (e) {
+                    console.error('API Error:', e);
+                    return {success: false, error: e.message};
+                }
             }
-        }
+        };
 
-        async function activateSession(userId, auth) {
-            try {
-                const res = await fetch(`${API_BASE}/api/watch-ad`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({user_id: userId, auth: auth})
-                });
-                return await res.json();
-            } catch(e) {
-                return {success: false};
-            }
-        }
-    </script>
-
-    <!-- 5. Logique principale -->
-    <script>
+        // ============================================================
+        // LOGIQUE UI
+        // ============================================================
         const tg = window.Telegram?.WebApp;
         
         async function handleWatchAd() {
@@ -98,40 +294,93 @@
             
             try {
                 // 1. Afficher pub Monetag
-                await Monetag.show();
+                await MonetagManager.showAd();
                 
-                // 2. Pub regardée → Activer session
-                const userId = tg.initDataUnsafe?.user?.id;
-                const result = await activateSession(userId, tg.initData);
+                // 2. Succès - Activer session
+                const userId = tg?.initDataUnsafe?.user?.id;
+                const auth = tg?.initData;
+                
+                if (!userId) throw new Error('Utilisateur non identifié');
+                
+                const result = await API.watchAd(userId, auth);
                 
                 if (result.success) {
-                    // Succès !
+                    // Afficher section succès
                     document.getElementById('monetagSection').classList.add('hidden');
                     document.getElementById('successSection').classList.remove('hidden');
                     document.getElementById('durationText').textContent = result.duration + ' minutes';
                     
-                    tg.showAlert('✅ Accès débloqué pour ' + result.duration + ' min !');
+                    // Mettre à jour status card
+                    updateStatusCard(result.duration, result.expires_at);
+                    
+                    if (tg) tg.showAlert('✅ Accès débloqué pour ' + result.duration + ' minutes !');
                 } else {
-                    throw new Error('Erreur serveur');
+                    throw new Error(result.message || 'Erreur serveur');
                 }
                 
             } catch (error) {
-                console.error(error);
+                console.error('Erreur:', error);
                 loader.classList.add('hidden');
                 btn.classList.remove('hidden');
                 errorMsg.classList.remove('hidden');
-                errorMsg.textContent = 'Veuillez regarder la pub jusqu\'à la fin';
+                errorMsg.textContent = error.message || 'Veuillez regarder la pub jusqu\'à la fin';
             }
         }
-
-        // Init
-        document.addEventListener('DOMContentLoaded', () => {
-            if (!tg) {
-                alert('Ouvrir via Telegram');
-                return;
+        
+        function updateStatusCard(duration, expiresAt) {
+            document.getElementById('statusDot').classList.add('active');
+            document.getElementById('statusText').textContent = 'Session active';
+            document.getElementById('accessType').textContent = 'Gratuit (Pub)';
+            document.getElementById('expireTime').textContent = new Date(expiresAt).toLocaleString();
+            document.getElementById('timerDisplay').classList.remove('hidden');
+        }
+        
+        async function checkExistingSession() {
+            try {
+                const userId = tg?.initDataUnsafe?.user?.id;
+                if (!userId) return;
+                
+                const data = await API.checkSession(userId, tg.initData);
+                
+                if (data.has_access && data.time_left > 0) {
+                    // Cacher bouton pub, afficher succès
+                    document.getElementById('monetagSection').classList.add('hidden');
+                    document.getElementById('successSection').classList.remove('hidden');
+                    document.getElementById('durationText').textContent = Math.floor(data.time_left/60) + ' minutes';
+                    updateStatusCard(Math.floor(data.time_left/60), data.expires_at);
+                } else {
+                    document.getElementById('statusText').textContent = 'Aucune session active';
+                }
+            } catch (e) {
+                console.error('Check session error:', e);
+                document.getElementById('statusText').textContent = 'Erreur de connexion';
             }
-            tg.expand();
-            tg.ready();
+        }
+        
+        function openBot() {
+            if (tg) {
+                tg.close();
+                setTimeout(() => {
+                    window.location.href = 'https://t.me/WaraMugiBot';
+                }, 100);
+            }
+        }
+        
+        function goPremium() {
+            window.location.href = 'prime.html';
+        }
+
+        // ============================================================
+        // INITIALISATION
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            if (tg) {
+                tg.expand();
+                tg.ready();
+            }
+            
+            // Vérifier session existante après 500ms (laisser le temps au DOM)
+            setTimeout(checkExistingSession, 500);
         });
     </script>
 </body>

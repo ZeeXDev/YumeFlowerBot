@@ -12,7 +12,7 @@
  * - GET /api/admin/stats : Récupérer les statistiques
  */
 
-const API_BASE = window.location.origin;
+const API_BASE = 'https://test-cey.onrender.com';
 
 class API {
   /**
