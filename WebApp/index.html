@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Accès aux fichiers - Regarder une pub</title>
     
-    <!-- SDK Monetag (chargé en premier) -->
+    <!-- SDK Monetag -->
     <script src='//libtl.com/sdk.js' data-zone='10518701' data-sdk='show_10518701'></script>
     
     <!-- Telegram WebApp -->
@@ -16,15 +16,100 @@
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/animations.css">
+    
+    <style>
+        /* Styles pour les notifications promo */
+        .notifications-container {
+            margin-bottom: var(--space-lg);
+        }
+        
+        .promo-notification {
+            background: var(--gradient-surface);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            margin-bottom: var(--space-md);
+            box-shadow: var(--shadow-md);
+            transition: all var(--transition-base);
+            animation: slide-up 0.5s ease;
+        }
+        
+        .promo-notification:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-glow-cyan);
+            border-color: var(--primary);
+        }
+        
+        .promo-image {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            display: block;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .promo-content {
+            padding: var(--space-md);
+        }
+        
+        .promo-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: var(--space-sm);
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+        
+        .promo-title::before {
+            content: '📢';
+            font-size: 1.2rem;
+        }
+        
+        .promo-desc {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-md);
+            line-height: 1.5;
+        }
+        
+        .promo-btn {
+            width: 100%;
+            padding: var(--space-sm) var(--space-md);
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .promo-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px var(--secondary-glow);
+        }
+        
+        .no-notifications {
+            text-align: center;
+            padding: var(--space-md);
+            color: var(--text-tertiary);
+            font-size: 0.875rem;
+            font-style: italic;
+        }
+    </style>
 </head>
 <body>
-    <!-- Background animé subtil -->
+    <!-- Background -->
     <div class="bg-gradient"></div>
     
-    <!-- Container principal -->
     <main class="container">
         
-        <!-- Header avec logo animé -->
+        <!-- Header -->
         <header class="header">
             <div class="logo-wrapper">
                 <div class="logo">
@@ -40,7 +125,12 @@
             <p class="subtitle">Système d'accès sécurisé aux fichiers</p>
         </header>
 
-        <!-- Balance/Session Overview Card -->
+        <!-- NOTIFICATIONS PROMO (NOUVEAU) -->
+        <section class="notifications-container" id="notificationsContainer">
+            <!-- Les notifications seront injectées ici par JS -->
+        </section>
+
+        <!-- Status Card -->
         <section class="card status-card" id="statusCard">
             <div class="status-header">
                 <div class="status-badge" id="statusBadge">
@@ -68,7 +158,6 @@
                 </div>
             </div>
 
-            <!-- Barre de progression -->
             <div class="progress-bar hidden" id="progressBar">
                 <div class="progress-fill" id="progressFill"></div>
             </div>
@@ -87,7 +176,6 @@
                     </p>
                 </div>
 
-                <!-- Bouton principal Monetag -->
                 <button class="btn btn-primary btn-monetag" id="watchAdBtn" onclick="handleWatchAd()">
                     <span class="btn-icon">
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
@@ -97,7 +185,6 @@
                     <span class="btn-text">Regarder la publicité</span>
                 </button>
 
-                <!-- Loader caché par défaut -->
                 <div class="loader hidden" id="loader">
                     <svg class="spinner" viewBox="0 0 50 50">
                         <circle class="path" cx="25" cy="25" r="20" fill="none"></circle>
@@ -105,13 +192,11 @@
                     <span class="loader-text">Chargement de la pub...</span>
                 </div>
 
-                <!-- Message erreur -->
                 <div class="error-message hidden" id="errorMsg">
                     Veuillez regarder la publicité jusqu'à la fin pour débloquer l'accès
                 </div>
             </div>
 
-            <!-- Section succès (cachée initialement) -->
             <div class="success-section hidden" id="successSection">
                 <div class="success-icon">
                     <svg viewBox="0 0 24 24" fill="currentColor">
@@ -130,7 +215,7 @@
             </div>
         </section>
 
-        <!-- Quick Stats Mini Grid -->
+        <!-- Quick Stats -->
         <section class="card" style="padding: var(--space-md);">
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-md); text-align: center;">
                 <div>
@@ -148,7 +233,7 @@
             </div>
         </section>
 
-        <!-- Promo Premium discrète -->
+        <!-- Promo Premium -->
         <section class="card promo-card">
             <p class="promo-text">Vous voulez un accès illimité sans publicité ?</p>
             <button class="btn btn-outline" onclick="goPremium()">
@@ -161,7 +246,7 @@
 
     </main>
 
-    <!-- Navigation bottom fixe -->
+    <!-- Navigation -->
     <nav class="bottom-nav">
         <a href="index.html" class="nav-item active">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
@@ -185,16 +270,10 @@
 
     <!-- Scripts -->
     <script>
-        // ============================================================
-        // CONFIGURATION - TON URL RENDER
-        // ============================================================
         const API_BASE = 'https://test-cey.onrender.com';
         
-        // ============================================================
-        // GESTION MONETAG
-        // ============================================================
+        // Gestion Monetag
         const MonetagManager = {
-            // Attendre que le SDK soit prêt (max 5 secondes)
             waitForSDK: function() {
                 return new Promise((resolve) => {
                     let attempts = 0;
@@ -203,10 +282,8 @@
                     const check = () => {
                         attempts++;
                         if (typeof show_10518701 === 'function') {
-                            console.log('[Monetag] SDK prêt');
                             resolve(true);
                         } else if (attempts >= maxAttempts) {
-                            console.warn('[Monetag] SDK non chargé après 5s');
                             resolve(false);
                         } else {
                             setTimeout(check, 100);
@@ -216,37 +293,23 @@
                 });
             },
             
-            // Afficher la pub
             showAd: async function() {
                 const isReady = await this.waitForSDK();
-                
-                if (!isReady) {
-                    throw new Error('SDK Monetag non disponible. Vérifiez votre connexion ou désactivez le bloqueur de pub.');
-                }
+                if (!isReady) throw new Error('SDK non disponible');
                 
                 return new Promise((resolve, reject) => {
                     try {
-                        console.log('[Monetag] Lancement pub...');
                         show_10518701()
-                            .then(() => {
-                                console.log('[Monetag] Pub complétée');
-                                resolve(true);
-                            })
-                            .catch((err) => {
-                                console.log('[Monetag] Pub fermée:', err);
-                                reject(false);
-                            });
+                            .then(() => resolve(true))
+                            .catch(() => reject(false));
                     } catch (e) {
-                        console.error('[Monetag] Erreur:', e);
                         reject(false);
                     }
                 });
             }
         };
 
-        // ============================================================
-        // API CLIENT
-        // ============================================================
+        // API Client
         const API = {
             checkSession: async function(userId, auth) {
                 try {
@@ -257,7 +320,6 @@
                     });
                     return await response.json();
                 } catch (e) {
-                    console.error('API Error:', e);
                     return {has_access: false};
                 }
             },
@@ -271,15 +333,63 @@
                     });
                     return await response.json();
                 } catch (e) {
-                    console.error('API Error:', e);
-                    return {success: false, error: e.message};
+                    return {success: false};
+                }
+            },
+            
+            // NOUVEAU: Récupérer les notifications
+            getNotifications: async function() {
+                try {
+                    const response = await fetch(`${API_BASE}/api/notifications`, {
+                        method: 'GET',
+                        headers: {'Content-Type': 'application/json'}
+                    });
+                    if (!response.ok) throw new Error('Erreur API');
+                    return await response.json();
+                } catch (e) {
+                    console.error('Erreur chargement notifications:', e);
+                    // Données de démo si l'API n'existe pas encore
+                    return {
+                        notifications: [
+                            {
+                                id: 1,
+                                image: 'https://i.ibb.co/8b5z5z5/promo1.jpg',
+                                title: 'Offre Spéciale !',
+                                description: 'Profitez de 50% de réduction sur l\'abonnement premium cette semaine.',
+                                buttonText: 'En profiter',
+                                buttonUrl: 'https://t.me/WaraMugiBot'
+                            }
+                        ]
+                    };
                 }
             }
         };
 
-        // ============================================================
-        // LOGIQUE UI
-        // ============================================================
+        // Afficher les notifications
+        async function loadNotifications() {
+            const container = document.getElementById('notificationsContainer');
+            const data = await API.getNotifications();
+            
+            if (!data.notifications || data.notifications.length === 0) {
+                container.innerHTML = '<div class="no-notifications">Aucune annonce pour le moment</div>';
+                return;
+            }
+            
+            container.innerHTML = data.notifications.map(notif => `
+                <div class="promo-notification">
+                    ${notif.image ? `<img src="${notif.image}" alt="${notif.title}" class="promo-image" onerror="this.style.display='none'">` : ''}
+                    <div class="promo-content">
+                        <h3 class="promo-title">${notif.title}</h3>
+                        <p class="promo-desc">${notif.description}</p>
+                        <button class="promo-btn" onclick="window.open('${notif.buttonUrl}', '_blank')">
+                            ${notif.buttonText}
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Logique existante...
         const tg = window.Telegram?.WebApp;
         
         async function handleWatchAd() {
@@ -287,39 +397,27 @@
             const loader = document.getElementById('loader');
             const errorMsg = document.getElementById('errorMsg');
             
-            // UI Loading
             btn.classList.add('hidden');
             loader.classList.remove('hidden');
             errorMsg.classList.add('hidden');
             
             try {
-                // 1. Afficher pub Monetag
                 await MonetagManager.showAd();
-                
-                // 2. Succès - Activer session
                 const userId = tg?.initDataUnsafe?.user?.id;
-                const auth = tg?.initData;
-                
                 if (!userId) throw new Error('Utilisateur non identifié');
                 
-                const result = await API.watchAd(userId, auth);
+                const result = await API.watchAd(userId, tg.initData);
                 
                 if (result.success) {
-                    // Afficher section succès
                     document.getElementById('monetagSection').classList.add('hidden');
                     document.getElementById('successSection').classList.remove('hidden');
                     document.getElementById('durationText').textContent = result.duration + ' minutes';
-                    
-                    // Mettre à jour status card
                     updateStatusCard(result.duration, result.expires_at);
-                    
-                    if (tg) tg.showAlert('✅ Accès débloqué pour ' + result.duration + ' minutes !');
+                    if (tg) tg.showAlert('✅ Accès débloqué !');
                 } else {
                     throw new Error(result.message || 'Erreur serveur');
                 }
-                
             } catch (error) {
-                console.error('Erreur:', error);
                 loader.classList.add('hidden');
                 btn.classList.remove('hidden');
                 errorMsg.classList.remove('hidden');
@@ -343,7 +441,6 @@
                 const data = await API.checkSession(userId, tg.initData);
                 
                 if (data.has_access && data.time_left > 0) {
-                    // Cacher bouton pub, afficher succès
                     document.getElementById('monetagSection').classList.add('hidden');
                     document.getElementById('successSection').classList.remove('hidden');
                     document.getElementById('durationText').textContent = Math.floor(data.time_left/60) + ' minutes';
@@ -352,7 +449,6 @@
                     document.getElementById('statusText').textContent = 'Aucune session active';
                 }
             } catch (e) {
-                console.error('Check session error:', e);
                 document.getElementById('statusText').textContent = 'Erreur de connexion';
             }
         }
@@ -360,9 +456,7 @@
         function openBot() {
             if (tg) {
                 tg.close();
-                setTimeout(() => {
-                    window.location.href = 'https://t.me/WaraMugiBot';
-                }, 100);
+                setTimeout(() => window.location.href = 'https://t.me/WaraMugiBot', 100);
             }
         }
         
@@ -370,16 +464,17 @@
             window.location.href = 'prime.html';
         }
 
-        // ============================================================
-        // INITIALISATION
-        // ============================================================
+        // Initialisation
         document.addEventListener('DOMContentLoaded', () => {
             if (tg) {
                 tg.expand();
                 tg.ready();
             }
             
-            // Vérifier session existante après 500ms (laisser le temps au DOM)
+            // Charger les notifications
+            loadNotifications();
+            
+            // Vérifier session
             setTimeout(checkExistingSession, 500);
         });
     </script>

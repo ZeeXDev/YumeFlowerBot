@@ -5,17 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Administration Dashboard</title>
     
-    <!-- Telegram WebApp -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <!-- CSS -->
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/animations.css">
     
     <style>
-        /* Login Screen */
         .login-screen {
             display: flex;
             align-items: center;
@@ -46,39 +41,12 @@
             justify-content: center;
             margin-bottom: var(--space-lg);
             box-shadow: var(--shadow-glow-cyan);
-            position: relative;
-        }
-        
-        .login-icon::before {
-            content: '';
-            position: absolute;
-            inset: -6px;
-            border-radius: var(--radius-full);
-            background: var(--gradient-primary);
-            opacity: 0.2;
-            filter: blur(16px);
-            z-index: -1;
         }
         
         .login-icon svg {
             width: 48px;
             height: 48px;
             fill: white;
-        }
-        
-        .input-group {
-            margin-bottom: var(--space-xl);
-            text-align: left;
-        }
-        
-        .input-label {
-            display: block;
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            margin-bottom: var(--space-sm);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
         
         .input-field {
@@ -89,17 +57,16 @@
             border-radius: var(--radius-md);
             color: var(--text-primary);
             font-size: 1rem;
+            margin-bottom: var(--space-md);
             transition: all var(--transition-base);
         }
         
         .input-field:focus {
             outline: none;
             border-color: var(--primary);
-            background: var(--bg-tertiary);
             box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
         }
         
-        /* Dashboard */
         .dashboard-screen {
             display: none;
         }
@@ -111,7 +78,7 @@
         /* Stats Grid */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(2, 1fr);
             gap: var(--space-md);
             margin-bottom: var(--space-xl);
         }
@@ -123,35 +90,17 @@
             padding: var(--space-lg);
             text-align: center;
             transition: all var(--transition-base);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: var(--gradient-primary);
-            transform: scaleX(0);
-            transition: transform var(--transition-base);
         }
         
         .stat-card:hover {
             transform: translateY(-4px);
-            box-shadow: var(--shadow-lg);
-        }
-        
-        .stat-card:hover::before {
-            transform: scaleX(1);
+            box-shadow: var(--shadow-glow-cyan);
         }
         
         .stat-icon {
-            width: 56px;
-            height: 56px;
-            margin: 0 auto var(--space-md);
+            width: 48px;
+            height: 48px;
+            margin: 0 auto var(--space-sm);
             background: var(--bg-secondary);
             border-radius: var(--radius-md);
             display: flex;
@@ -160,42 +109,28 @@
         }
         
         .stat-icon svg {
-            width: 28px;
-            height: 28px;
+            width: 24px;
+            height: 24px;
+            fill: var(--primary);
         }
         
-        .stat-icon.cyan { background: rgba(0, 212, 255, 0.1); }
-        .stat-icon.cyan svg { fill: var(--primary); }
-        
-        .stat-icon.violet { background: rgba(123, 97, 255, 0.1); }
-        .stat-icon.violet svg { fill: var(--secondary); }
-        
-        .stat-icon.mint { background: rgba(0, 255, 170, 0.1); }
-        .stat-icon.mint svg { fill: var(--success); }
-        
-        .stat-icon.orange { background: rgba(255, 165, 0, 0.1); }
-        .stat-icon.orange svg { fill: var(--warning); }
-        
         .stat-value {
-            font-size: 2.5rem;
+            font-size: 2rem;
             font-weight: 900;
             background: var(--gradient-primary);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
             margin-bottom: var(--space-xs);
-            line-height: 1;
         }
         
         .stat-label {
-            color: var(--text-secondary);
-            font-size: 0.875rem;
+            color: var(--text-tertiary);
+            font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            font-weight: 500;
         }
         
-        /* Config Section */
+        /* Configuration */
         .config-section {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -209,19 +144,9 @@
             align-items: center;
             gap: var(--space-sm);
             margin-bottom: var(--space-lg);
-            padding-bottom: var(--space-md);
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .config-title svg {
-            width: 24px;
-            height: 24px;
-            fill: var(--primary);
-        }
-        
-        .config-title h3 {
-            font-size: 1.125rem;
-            margin: 0;
+            color: var(--primary);
+            font-size: 1.1rem;
+            font-weight: 700;
         }
         
         .config-row {
@@ -244,14 +169,13 @@
         .config-name {
             color: var(--text-primary);
             font-weight: 600;
-            margin-bottom: var(--space-xs);
             font-size: 0.95rem;
+            margin-bottom: var(--space-xs);
         }
         
         .config-desc {
             color: var(--text-tertiary);
             font-size: 0.8rem;
-            line-height: 1.4;
         }
         
         .config-input-wrapper {
@@ -261,41 +185,115 @@
         }
         
         .config-input {
-            width: 100px;
-            padding: var(--space-sm) var(--space-md);
+            width: 80px;
+            padding: var(--space-sm);
             background: var(--bg-secondary);
             border: 2px solid var(--border);
             border-radius: var(--radius-md);
             color: var(--text-primary);
             text-align: center;
             font-weight: 700;
-            font-size: 1rem;
         }
         
         .config-input:focus {
-            outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+            outline: none;
         }
         
         .config-unit {
             color: var(--text-tertiary);
             font-size: 0.875rem;
-            font-weight: 600;
-            min-width: 40px;
         }
         
-        /* Logout Button */
-        .logout-btn {
+        /* Notifications */
+        .notification-editor {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: var(--space-lg);
+            margin-bottom: var(--space-lg);
+        }
+        
+        .notification-editor h4 {
+            color: var(--secondary);
+            margin-bottom: var(--space-md);
+            font-size: 1rem;
+        }
+        
+        .form-group {
+            margin-bottom: var(--space-md);
+        }
+        
+        .form-label {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            margin-bottom: var(--space-xs);
+            font-weight: 600;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: var(--space-sm) var(--space-md);
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+        
+        textarea.form-input {
+            min-height: 60px;
+            resize: vertical;
+        }
+        
+        .preview-box {
+            background: var(--bg-primary);
+            border: 1px dashed var(--border-light);
+            border-radius: var(--radius-md);
+            padding: var(--space-sm);
+            margin-top: var(--space-sm);
+            text-align: center;
+            display: none;
+        }
+        
+        .preview-image {
+            max-width: 100%;
+            max-height: 100px;
+            border-radius: var(--radius-sm);
+        }
+        
+        /* Buttons */
+        .btn-success {
+            background: linear-gradient(135deg, var(--success) 0%, var(--primary) 100%);
+            color: var(--bg-primary);
+            font-weight: 700;
+        }
+        
+        .btn-danger {
             background: rgba(255, 85, 85, 0.1);
             color: var(--danger);
             border: 2px solid var(--danger);
         }
         
-        .logout-btn:hover {
+        .btn-danger:hover {
             background: var(--danger);
             color: white;
-            box-shadow: 0 0 24px var(--danger-glow);
+        }
+        
+        .logout-btn {
+            width: 100%;
+            margin-top: var(--space-xl);
+        }
+        
+        .error-message {
+            color: var(--danger);
+            font-size: 0.875rem;
+            margin-top: var(--space-sm);
+        }
+        
+        .hidden {
+            display: none !important;
         }
     </style>
 </head>
@@ -306,36 +304,27 @@
     <div class="login-screen" id="loginScreen">
         <div class="login-card">
             <div class="login-icon">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
-                </svg>
+                <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
             </div>
-            <h2 style="margin-bottom: var(--space-sm); font-size: 1.75rem;">Administration</h2>
+            <h2 style="margin-bottom: var(--space-sm);">Administration</h2>
             <p style="color: var(--text-secondary); margin-bottom: var(--space-xl); font-size: 0.875rem;">
                 Authentication required
             </p>
             
             <form onsubmit="handleLogin(event)">
-                <div class="input-group">
-                    <label class="input-label">Password</label>
-                    <input 
-                        type="password" 
-                        class="input-field" 
-                        id="passwordInput" 
-                        placeholder="Enter admin password"
-                        autocomplete="current-password"
-                        required
-                    >
-                </div>
+                <input 
+                    type="password" 
+                    class="input-field" 
+                    id="passwordInput" 
+                    placeholder="Enter admin password"
+                    required
+                >
                 
                 <button type="submit" class="btn btn-primary" style="width: 100%;">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
-                    </svg>
                     Sign In
                 </button>
                 
-                <div class="error-message hidden" id="loginError" style="margin-top: var(--space-md);">
+                <div id="loginError" class="error-message hidden">
                     Incorrect password
                 </div>
             </form>
@@ -353,145 +342,384 @@
             </header>
 
             <!-- Statistics Grid -->
-            <section class="stats-grid">
-                <div class="stat-card stagger-item">
-                    <div class="stat-icon cyan">
-                        <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+            <section class="card">
+                <h3 style="color: var(--primary); margin-bottom: var(--space-lg); font-size: 1.1rem;">📊 Statistics</h3>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                        </div>
+                        <div class="stat-value" id="totalUsers">0</div>
+                        <div class="stat-label">Total Users</div>
                     </div>
-                    <div class="stat-value" id="totalUsers">0</div>
-                    <div class="stat-label">Total Users</div>
-                </div>
 
-                <div class="stat-card stagger-item">
-                    <div class="stat-icon mint">
-                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                        </div>
+                        <div class="stat-value" id="activeSessions">0</div>
+                        <div class="stat-label">Active Sessions</div>
                     </div>
-                    <div class="stat-value" id="activeSessions">0</div>
-                    <div class="stat-label">Active Sessions</div>
-                </div>
 
-                <div class="stat-card stagger-item">
-                    <div class="stat-icon violet">
-                        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
+                        </div>
+                        <div class="stat-value" id="adsWatched">0</div>
+                        <div class="stat-label">Ads Watched</div>
                     </div>
-                    <div class="stat-value" id="adsWatched">0</div>
-                    <div class="stat-label">Ads Watched</div>
-                </div>
 
-                <div class="stat-card stagger-item">
-                    <div class="stat-icon orange">
-                        <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                        </div>
+                        <div class="stat-value" id="premiumUsers">0</div>
+                        <div class="stat-label">Premium Users</div>
                     </div>
-                    <div class="stat-value" id="premiumUsers">0</div>
-                    <div class="stat-label">Premium Users</div>
                 </div>
             </section>
 
             <!-- Configuration -->
             <section class="config-section">
                 <div class="config-title">
-                    <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94L14.4 2.81c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-                    <h3>System Configuration</h3>
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                        <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94L14.4 2.81c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+                    </svg>
+                    System Configuration
                 </div>
 
                 <div class="config-row">
                     <div class="config-info">
                         <div class="config-name">Free Session Duration</div>
-                        <div class="config-desc">Access time after watching advertisement</div>
+                        <div class="config-desc">Minutes after watching ad</div>
                     </div>
                     <div class="config-input-wrapper">
-                        <input 
-                            type="number" 
-                            class="config-input" 
-                            id="freeDuration" 
-                            value="10" 
-                            min="1" 
-                            max="60"
-                        >
+                        <input type="number" class="config-input" id="freeDuration" value="10" min="1" max="60">
                         <span class="config-unit">min</span>
                     </div>
                 </div>
 
                 <div class="config-row">
                     <div class="config-info">
-                        <div class="config-name">Premium Monthly Duration</div>
-                        <div class="config-desc">Days of access for monthly subscription</div>
+                        <div class="config-name">Monthly Premium</div>
+                        <div class="config-desc">Days of access</div>
                     </div>
                     <div class="config-input-wrapper">
-                        <input 
-                            type="number" 
-                            class="config-input" 
-                            id="monthlyDuration" 
-                            value="30" 
-                            min="1" 
-                            max="365"
-                        >
+                        <input type="number" class="config-input" id="monthlyDuration" value="30" min="1" max="365">
                         <span class="config-unit">days</span>
                     </div>
                 </div>
 
                 <div class="config-row">
                     <div class="config-info">
-                        <div class="config-name">Premium Yearly Duration</div>
-                        <div class="config-desc">Days of access for annual subscription</div>
+                        <div class="config-name">Yearly Premium</div>
+                        <div class="config-desc">Days of access</div>
                     </div>
                     <div class="config-input-wrapper">
-                        <input 
-                            type="number" 
-                            class="config-input" 
-                            id="yearlyDuration" 
-                            value="365" 
-                            min="1" 
-                            max="730"
-                        >
+                        <input type="number" class="config-input" id="yearlyDuration" value="365" min="1" max="730">
                         <span class="config-unit">days</span>
                     </div>
                 </div>
 
-                <button class="btn btn-success" style="width: 100%; margin-top: var(--space-xl);" onclick="saveConfig()">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                    </svg>
+                <button class="btn btn-success" style="width: 100%; margin-top: var(--space-lg);" onclick="saveConfig()">
                     Save Configuration
                 </button>
             </section>
 
-            <!-- Logout -->
-            <section class="card" style="text-align: center;">
-                <button class="btn btn-outline logout-btn" onclick="logout()">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                        <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
-                    </svg>
-                    Sign Out
+            <!-- Notifications Promo -->
+            <section class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg);">
+                    <h3 style="color: var(--secondary); margin: 0; font-size: 1.1rem;">📢 Promo Notifications</h3>
+                    <span style="color: var(--text-tertiary); font-size: 0.8rem;">Max 2</span>
+                </div>
+
+                <!-- Notification 1 -->
+                <div class="notification-editor">
+                    <h4>Notification #1</h4>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Image URL (optional)</label>
+                        <input type="url" class="form-input" id="notif1-image" placeholder="https://imgbb.com/image.jpg" onchange="showPreview(1, this.value)">
+                        <div class="preview-box" id="preview1">
+                            <img src="" alt="Preview" class="preview-image" id="preview1-img">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Title</label>
+                        <input type="text" class="form-input" id="notif1-title" placeholder="Special Offer!" maxlength="50">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-input" id="notif1-desc" placeholder="Short description..." maxlength="200"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Button Text</label>
+                        <input type="text" class="form-input" id="notif1-btn-text" placeholder="Click here" maxlength="30">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Button URL</label>
+                        <input type="url" class="form-input" id="notif1-btn-url" placeholder="https://...">
+                    </div>
+                </div>
+
+                <!-- Notification 2 -->
+                <div class="notification-editor">
+                    <h4>Notification #2</h4>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Image URL (optional)</label>
+                        <input type="url" class="form-input" id="notif2-image" placeholder="https://imgbb.com/image.jpg" onchange="showPreview(2, this.value)">
+                        <div class="preview-box" id="preview2">
+                            <img src="" alt="Preview" class="preview-image" id="preview2-img">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Title</label>
+                        <input type="text" class="form-input" id="notif2-title" placeholder="Special Offer!" maxlength="50">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-input" id="notif2-desc" placeholder="Short description..." maxlength="200"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Button Text</label>
+                        <input type="text" class="form-input" id="notif2-btn-text" placeholder="Click here" maxlength="30">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Button URL</label>
+                        <input type="url" class="form-input" id="notif2-btn-url" placeholder="https://...">
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" style="width: 100%;" onclick="saveNotifications()">
+                    Save Notifications
                 </button>
             </section>
+
+            <!-- Logout -->
+            <button class="btn btn-danger logout-btn" onclick="logout()">
+                Sign Out
+            </button>
 
         </main>
     </div>
 
-    <!-- Navigation (cachée en login) -->
+    <!-- Navigation -->
     <nav class="bottom-nav" id="bottomNav" style="display: none;">
         <a href="index.html" class="nav-item">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-            </svg>
+            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
             <span class="nav-label">Access</span>
         </a>
         <a href="prime.html" class="nav-item">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-            </svg>
+            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
             <span class="nav-label">Premium</span>
         </a>
         <a href="admin.html" class="nav-item active">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
-            </svg>
+            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
             <span class="nav-label">Admin</span>
         </a>
     </nav>
 
-    <script src="js/api.js"></script>
-    <script src="js/admin.js"></script>
+    <script>
+        const API_BASE = 'https://test-cey.onrender.com';
+        let isAuthenticated = false;
+
+        // Preview image
+        function showPreview(num, url) {
+            const box = document.getElementById(`preview${num}`);
+            const img = document.getElementById(`preview${num}-img`);
+            if (url) {
+                img.src = url;
+                box.style.display = 'block';
+                img.onerror = () => { box.style.display = 'none'; };
+            } else {
+                box.style.display = 'none';
+            }
+        }
+
+        // Login
+        async function handleLogin(e) {
+            e.preventDefault();
+            const password = document.getElementById('passwordInput').value;
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/admin/login`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({password})
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    window.adminToken = data.token;
+                    isAuthenticated = true;
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('dashboardScreen').classList.add('active');
+                    document.getElementById('bottomNav').style.display = 'flex';
+                    
+                    if (window.Telegram?.WebApp) {
+                        window.Telegram.WebApp.HapticFeedback?.notificationOccurred('success');
+                    }
+                    
+                    loadStats();
+                    loadConfig();
+                    loadNotifications();
+                } else {
+                    document.getElementById('loginError').classList.remove('hidden');
+                    document.getElementById('passwordInput').value = '';
+                }
+            } catch (e) {
+                alert('Connection error');
+            }
+        }
+
+        // Load Stats
+        async function loadStats() {
+            try {
+                const res = await fetch(`${API_BASE}/api/admin/stats`, {
+                    headers: {'Authorization': `Bearer ${window.adminToken}`}
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    document.getElementById('totalUsers').textContent = data.total_users || 0;
+                    document.getElementById('activeSessions').textContent = data.active_sessions || 0;
+                    document.getElementById('adsWatched').textContent = data.ads_watched || 0;
+                    document.getElementById('premiumUsers').textContent = data.premium_users || 0;
+                }
+            } catch (e) {
+                console.error('Stats error:', e);
+            }
+        }
+
+        // Load Config
+        async function loadConfig() {
+            try {
+                const res = await fetch(`${API_BASE}/api/admin/stats`, {
+                    headers: {'Authorization': `Bearer ${window.adminToken}`}
+                });
+                const data = await res.json();
+                
+                if (data.config) {
+                    document.getElementById('freeDuration').value = data.config.free_session_duration || 10;
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // Save Config
+        async function saveConfig() {
+            const config = {
+                free_duration: parseInt(document.getElementById('freeDuration').value),
+                monthly_duration: parseInt(document.getElementById('monthlyDuration').value),
+                yearly_duration: parseInt(document.getElementById('yearlyDuration').value)
+            };
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/admin/config`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${window.adminToken}`
+                    },
+                    body: JSON.stringify(config)
+                });
+                
+                const data = await res.json();
+                
+                if (window.Telegram?.WebApp) {
+                    window.Telegram.WebApp.showAlert(data.success ? '✅ Configuration saved!' : '❌ Error');
+                }
+            } catch (e) {
+                alert('Error saving config');
+            }
+        }
+
+        // Load Notifications
+        async function loadNotifications() {
+            try {
+                const res = await fetch(`${API_BASE}/api/notifications`);
+                const data = await res.json();
+                
+                if (data.notifications) {
+                    data.notifications.forEach((n, i) => {
+                        const num = i + 1;
+                        document.getElementById(`notif${num}-image`).value = n.image || '';
+                        document.getElementById(`notif${num}-title`).value = n.title || '';
+                        document.getElementById(`notif${num}-desc`).value = n.description || '';
+                        document.getElementById(`notif${num}-btn-text`).value = n.buttonText || '';
+                        document.getElementById(`notif${num}-btn-url`).value = n.buttonUrl || '';
+                        if (n.image) showPreview(num, n.image);
+                    });
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // Save Notifications
+        async function saveNotifications() {
+            const notifications = [
+                {
+                    id: 1,
+                    image: document.getElementById('notif1-image').value,
+                    title: document.getElementById('notif1-title').value,
+                    description: document.getElementById('notif1-desc').value,
+                    buttonText: document.getElementById('notif1-btn-text').value,
+                    buttonUrl: document.getElementById('notif1-btn-url').value
+                },
+                {
+                    id: 2,
+                    image: document.getElementById('notif2-image').value,
+                    title: document.getElementById('notif2-title').value,
+                    description: document.getElementById('notif2-desc').value,
+                    buttonText: document.getElementById('notif2-btn-text').value,
+                    buttonUrl: document.getElementById('notif2-btn-url').value
+                }
+            ].filter(n => n.title);
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/admin/notifications`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${window.adminToken}`
+                    },
+                    body: JSON.stringify({notifications})
+                });
+                
+                const data = await res.json();
+                
+                if (window.Telegram?.WebApp) {
+                    window.Telegram.WebApp.showAlert(data.success ? '✅ Notifications saved!' : '❌ Error');
+                }
+            } catch (e) {
+                alert('Error saving notifications');
+            }
+        }
+
+        // Logout
+        function logout() {
+            window.adminToken = null;
+            location.reload();
+        }
+
+        // Init
+        if (window.Telegram?.WebApp) {
+            window.Telegram.WebApp.expand();
+            window.Telegram.WebApp.ready();
+        }
+    </script>
 </body>
 </html>

@@ -391,6 +391,51 @@ async def api_admin_stats(request):
             'error': str(e)
         }, status=500)
 
+@routes.get("/api/notifications")
+async def get_notifications(request):
+    """Récupère les notifications promo actives"""
+    try:
+        # Récupérer depuis la DB ou retourner un tableau vide par défaut
+        notifications = await db.get_notifications() if hasattr(db, 'get_notifications') else []
+        return web.json_response({
+            'success': True,
+            'notifications': notifications
+        })
+    except Exception as e:
+        return web.json_response({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+@routes.post("/api/admin/notifications")
+async def update_notifications(request):
+    """Met à jour les notifications (admin only)"""
+    try:
+        # Vérifier auth admin ici si nécessaire
+        data = await request.json()
+        notifications = data.get('notifications', [])
+        
+        # Limiter à 2 notifications
+        notifications = notifications[:2]
+        
+        # Sauvegarder dans DB
+        if hasattr(db, 'save_notifications'):
+            await db.save_notifications(notifications)
+        
+        logger.info(f"Notifications mises à jour: {len(notifications)} items")
+        
+        return web.json_response({
+            'success': True,
+            'message': 'Notifications updated'
+        })
+    except Exception as e:
+        logger.error(f"Erreur update notifications: {e}")
+        return web.json_response({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
 @routes.post("/api/admin/config")
 async def api_admin_config(request):
     """Modifie la configuration"""
