@@ -1,0 +1,119 @@
+/* Mobile First - Base styles for 320px+ */
+
+/* Small devices (landscape phones, 576px and up) */
+@media (min-width: 576px) {
+    .container {
+        padding: 0 var(--space-lg);
+    }
+    
+    .payment-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Medium devices (tablets, 768px and up) */
+@media (min-width: 768px) {
+    .container {
+        max-width: 600px;
+    }
+    
+    .plans {
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-lg);
+    }
+    
+    .stats {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* Large devices (desktops, 992px and up) */
+@media (min-width: 992px) {
+    .container {
+        max-width: 600px; /* Keep it readable */
+    }
+}
+
+/* Extra large devices (large desktops, 1200px and up) */
+@media (min-width: 1200px) {
+    /* Nothing special, keep max-width */
+}
+
+/* Touch devices optimizations */
+@media (hover: none) {
+    .btn:hover {
+        transform: none;
+    }
+    
+    .card:hover {
+        transform: none;
+    }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Dark mode (already dark, but for system consistency) */
+@media (prefers-color-scheme: dark) {
+    /* Already optimized for dark mode */
+}
+
+/* Landscape orientation on mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+    .header {
+        padding-top: 20px;
+        padding-bottom: 10px;
+    }
+    
+    .logo-wrap {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .bottom-nav {
+        position: relative;
+        border-top: none;
+        border-bottom: 1px solid var(--border);
+    }
+}
+
+/* High DPI screens */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .logo {
+        /* Sharper edges on retina */
+        border: 0.5px solid rgba(255,255,255,0.1);
+    }
+}
+
+/* Notch support (iPhone X+) */
+@supports (padding-top: env(safe-area-inset-top)) {
+    body {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: calc(80px + env(safe-area-inset-bottom));
+    }
+    
+    .bottom-nav {
+        padding-bottom: calc(var(--space-sm) + env(safe-area-inset-bottom));
+    }
+}
+
+/* Print styles (hide unnecessary elements) */
+@media print {
+    .bottom-nav,
+    .btn {
+        display: none !important;
+    }
+    
+    body {
+        background: white;
+        color: black;
+    }
+}
