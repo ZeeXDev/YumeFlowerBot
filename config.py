@@ -43,7 +43,8 @@ PORT = os.environ.get("PORT", "8001")
 
 # URL de la Mini App (laisser vide pour auto-détection: https://{bot_username}.onrender.com)
 # Exemple: https://monbot.onrender.com
-ADSGRAM_WEBAPP_URL = os.environ.get("ADSGRAM_WEBAPP_URL", "https://WaraMugi.vercel.app")
+ADSGRAM_WEBAPP_URL = "https://waramugi.vercel.app"  # Ton URL Vercel
+
 
 # Mot de passe pour accéder à la page admin (/admin)
 # IMPORTANT: Changez ceci en production!
