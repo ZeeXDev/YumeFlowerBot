@@ -48,7 +48,7 @@ ADSGRAM_WEBAPP_URL = "https://waramugi.vercel.app"  # Ton URL Vercel
 
 # Mot de passe pour accéder à la page admin (/admin)
 # IMPORTANT: Changez ceci en production!
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
+ADMIN_PASSWORD = "kingcey00"
 
 # Durée des sessions gratuites en MINUTES (défaut: 10 minutes)
 # Anciennement en heures pour AdsGram, maintenant en minutes pour plus de flexibilité
