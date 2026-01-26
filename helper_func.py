@@ -86,65 +86,42 @@ async def get_messages(client, message_ids):
         temb_ids = message_ids[total_messages:total_messages+200]
         try:
             msgs = await client.get_messages(
-                chat_id=client.db_channel.id if hasattr(client.db_channel, 'id') else client.db_channel,
+                chat_id=client.db_channel.id,
                 message_ids=temb_ids
             )
         except FloodWait as e:
             await asyncio.sleep(e.x)
             msgs = await client.get_messages(
-                chat_id=client.db_channel.id if hasattr(client.db_channel, 'id') else client.db_channel,
+                chat_id=client.db_channel.id,
                 message_ids=temb_ids
             )
-        except Exception as e:
-            print(f"Error getting messages: {e}")
-            msgs = []
+        except:
+            pass
         total_messages += len(temb_ids)
         messages.extend(msgs)
     return messages
 
 async def get_message_id(client, message):
-    """
-    Extrait l'ID du message depuis un forward ou un lien
-    """
-    # Récupère l'ID du canal DB (gère int ou objet Chat)
-    if hasattr(client, 'db_channel'):
-        if hasattr(client.db_channel, 'id'):
-            db_channel_id = client.db_channel.id
-        else:
-            db_channel_id = client.db_channel  # Si c'est juste un int
-    else:
-        print("[ERROR] client.db_channel n'est pas défini!")
-        return 0
-    
-    # Debug
-    print(f"[DEBUG] DB Channel ID: {db_channel_id}")
     if message.forward_from_chat:
-        print(f"[DEBUG] Forward from chat ID: {message.forward_from_chat.id}")
-
-    if message.forward_from_chat:
-        if message.forward_from_chat.id == db_channel_id:
+        if message.forward_from_chat.id == client.db_channel.id:
             return message.forward_from_message_id
         else:
-            print(f"[DEBUG] ID mismatch: {message.forward_from_chat.id} != {db_channel_id}")
             return 0
     elif message.forward_sender_name:
         return 0
     elif message.text:
-        pattern = r"https://t.me/(?:c/)?(.*)/(\d+)"
-        matches = re.match(pattern, message.text)
+        pattern = "https://t.me/(?:c/)?(.*)/(\d+)"
+        matches = re.match(pattern,message.text)
         if not matches:
             return 0
         channel_id = matches.group(1)
         msg_id = int(matches.group(2))
         if channel_id.isdigit():
-            if f"-100{channel_id}" == str(db_channel_id):
+            if f"-100{channel_id}" == str(client.db_channel.id):
                 return msg_id
         else:
-            # Pour les canaux publics, vérifier le username si disponible
-            if hasattr(client.db_channel, 'username') and client.db_channel.username:
-                if channel_id.lower() == client.db_channel.username.lower():
-                    return msg_id
-        return 0
+            if channel_id == client.db_channel.username:
+                return msg_id
     else:
         return 0
 
