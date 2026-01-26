@@ -56,19 +56,30 @@ class Bot(Client):
             self.web_app_domain = f"https://{usr_bot_me.username}.onrender.com"
 
         # =======================
-        # Vérification DB Channel
+        # Vérification DB Channel - CRITIQUE POUR /genlink ET /batch
         # =======================
         try:
+            print(f"[INIT] Connexion au canal DB (CHANNEL_ID: {CHANNEL_ID})...")
             db_channel = await self.get_chat(CHANNEL_ID)
-            self.db_channel = db_channel
-            test = await self.send_message(chat_id=db_channel.id, text="Test Message")
+            self.db_channel = db_channel  # Stocke l'objet Chat complet (avec .id, .username, etc.)
+            
+            # Test d'envoi pour vérifier les permissions
+            test = await self.send_message(chat_id=db_channel.id, text="🔄 Test de connexion...")
             await test.delete()
+            
+            print(f"[INIT] ✅ Canal DB connecté: {db_channel.title} (ID: {db_channel.id})")
+            print(f"[INIT]    Username: @{db_channel.username if db_channel.username else 'N/A'}")
+            
         except Exception as e:
-            self.LOGGER(__name__).warning(e)
-            self.LOGGER(__name__).warning(
-                f"Bot must be admin in DB Channel. CHANNEL_ID={CHANNEL_ID}"
+            self.LOGGER(__name__).error(f"[INIT] ❌ ERREUR CRITIQUE: {e}")
+            self.LOGGER(__name__).error(
+                f"Le bot doit être admin dans le canal DB. CHANNEL_ID={CHANNEL_ID}"
             )
-            sys.exit()
+            print(f"\n[ERREUR] Impossible de se connecter au canal DB. Vérifie:")
+            print(f"  1. Que CHANNEL_ID ({CHANNEL_ID}) est correct")
+            print(f"  2. Que le bot est admin du canal")
+            print(f"  3. Que le canal existe\n")
+            sys.exit(1)
 
         self.set_parse_mode(ParseMode.HTML)
         self.username = usr_bot_me.username
@@ -85,8 +96,8 @@ class Bot(Client):
                 OWNER_ID,
                 "<b><blockquote> Bᴏᴛ Rᴇᴅéᴍᴀʀʀᴇʀ 🥰😘</blockquote></b>"
             )
-        except:
-            pass
+        except Exception as e:
+            self.LOGGER(__name__).warning(f"Impossible d'envoyer message au propriétaire: {e}")
 
     # =======================
     # Arrêt du bot
