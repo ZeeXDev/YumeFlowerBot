@@ -32,7 +32,7 @@ OWNER = os.environ.get("OWNER", "ZeeXDevBot")
 OWNER_ID = int(os.environ.get("OWNER_ID", "8140299716"))
 
 # Base de données MongoDB (optionnel, pour futur scaling)
-DB_URI = os.environ.get("DATABASE_URL", "mongodb+srv://Ethan:Ethan123@telegrambots.lva9j.mongodb.net/?retryWrites=true&w=majority&appName=TELEGRAMBOTS")
+DB_URI = os.environ.get("DATABASE_URL", "mongodb+srv://elisabethboko45_db_user:kmrLKNKnfe8lK1df@cluster0.isv90ao.mongodb.net/?appName=Cluster0")
 DB_NAME = os.environ.get("DATABASE_NAME", "Cluster0")
 
 # ==========================================
@@ -111,7 +111,7 @@ CMD_TXT = """<blockquote><b>» Commandes administrateur :</b></blockquote>
 
 CUSTOM_CAPTION = os.environ.get("CUSTOM_CAPTION", None)
 PROTECT_CONTENT = True if os.environ.get('PROTECT_CONTENT', "True") == "True" else False
-DISABLE_CHANNEL_BUTTON = os.environ.get("DISABLE_CHANNEL_BUTTON", None) == 'True'
+DISABLE_CHANNEL_BUTTON = os.environ.get("DISABLE_CHANNEL_BUTTON", True) == 'True'
 
 BOT_STATS_TEXT = "<b>TEMPS DE FONCTIONNEMENT DU BOT</b>\n{uptime}"
 USER_REPLY_TEXT = "Impossible d'utilisé ! Vous n'êtes pas un administrateur !!"

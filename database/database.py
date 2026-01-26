@@ -2,7 +2,7 @@
 #rohit_1888 on Tg
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any, Optional
 import logging
 
@@ -191,14 +191,15 @@ class Rohit:
 
     async def create_free_session(self, user_id: int, duration_minutes: int = 10) -> Dict:
         """Crée une session gratuite après pub"""
-        expiry_time = datetime.now() + timedelta(minutes=duration_minutes)
+        now = datetime.now(timezone.utc)
+        expiry_time = now + timedelta(minutes=duration_minutes)
         session_data = {
             '_id': user_id,
             'type': 'free',
             'is_active': True,
-            'created_at': datetime.now().isoformat(),
+            'created_at': now.isoformat(),
             'expires_at': expiry_time.isoformat(),
-            'last_ad_watch': datetime.now().isoformat()
+            'last_ad_watch': now.isoformat()
         }
         await self.sessions_col.update_one(
             {'_id': user_id},
@@ -210,12 +211,13 @@ class Rohit:
 
     async def create_premium_session(self, user_id: int, duration_seconds: int, admin_id: int = None) -> Dict:
         """Crée une session premium (via paiement ou admin)"""
-        expiry_time = datetime.now() + timedelta(seconds=duration_seconds)
+        now = datetime.now(timezone.utc)
+        expiry_time = now + timedelta(seconds=duration_seconds)
         session_data = {
             '_id': user_id,
             'type': 'premium',
             'is_active': True,
-            'created_at': datetime.now().isoformat(),
+            'created_at': now.isoformat(),
             'expires_at': expiry_time.isoformat(),
             'granted_by': admin_id,
             'payment_method': 'manual' if admin_id else 'crypto'
@@ -239,8 +241,16 @@ class Rohit:
             return False
         
         try:
-            expiry = datetime.fromisoformat(session['expires_at'])
-            now = datetime.now()
+            # Gérer les dates avec ou sans timezone
+            expiry_str = session['expires_at']
+            if expiry_str.endswith('Z'):
+                expiry = datetime.fromisoformat(expiry_str.replace('Z', '+00:00'))
+            else:
+                expiry = datetime.fromisoformat(expiry_str)
+                if expiry.tzinfo is None:
+                    expiry = expiry.replace(tzinfo=timezone.utc)
+            
+            now = datetime.now(timezone.utc)
             
             print(f"[DEBUG] Session check - Now: {now}, Expiry: {expiry}, Diff: {(expiry - now).total_seconds()}s")
             
@@ -272,23 +282,64 @@ class Rohit:
             return 0
         
         try:
-            expiry = datetime.fromisoformat(session['expires_at'])
-            remaining = (expiry - datetime.now()).total_seconds()
+            expiry_str = session['expires_at']
+            if expiry_str.endswith('Z'):
+                expiry = datetime.fromisoformat(expiry_str.replace('Z', '+00:00'))
+            else:
+                expiry = datetime.fromisoformat(expiry_str)
+                if expiry.tzinfo is None:
+                    expiry = expiry.replace(tzinfo=timezone.utc)
+            
+            now = datetime.now(timezone.utc)
+            remaining = (expiry - now).total_seconds()
             return max(0, int(remaining))
-        except:
+        except Exception as e:
+            print(f"[ERROR] Erreur calcul temps restant: {e}")
             return 0
 
     async def can_watch_ad(self, user_id: int) -> bool:
         """Vérifie si l'utilisateur peut regarder une nouvelle pub (anti-spam)"""
         session = await self.get_user_session(user_id)
+        
+        # Si pas de session ou pas de last_ad_watch, il peut regarder
         if not session or not session.get('last_ad_watch'):
             return True
         
-        last_watch = datetime.fromisoformat(session['last_ad_watch'])
-        time_diff = datetime.now() - last_watch
-        
-        # Peut regarder une pub si 20h se sont écoulées (configurable)
-        return time_diff >= timedelta(hours=20)
+        try:
+            last_watch_str = session['last_ad_watch']
+            if last_watch_str.endswith('Z'):
+                last_watch = datetime.fromisoformat(last_watch_str.replace('Z', '+00:00'))
+            else:
+                last_watch = datetime.fromisoformat(last_watch_str)
+                if last_watch.tzinfo is None:
+                    last_watch = last_watch.replace(tzinfo=timezone.utc)
+            
+            now = datetime.now(timezone.utc)
+            time_diff = now - last_watch
+            
+            # Debug
+            hours_left = 20 - (time_diff.total_seconds() / 3600)
+            print(f"[DEBUG] Last watch: {last_watch}, Now: {now}, Hours left to wait: {hours_left:.2f}")
+            
+            # Peut regarder une pub si 20h se sont écoulées
+            can_watch = time_diff >= timedelta(hours=20)
+            
+            if not can_watch:
+                print(f"[DEBUG] User {user_id} must wait {hours_left:.2f} more hours")
+            
+            return can_watch
+            
+        except Exception as e:
+            print(f"[ERROR] Erreur vérification can_watch_ad: {e}")
+            return True  # En cas d'erreur, on autorise pour ne pas bloquer l'user
+
+    async def force_reset_ad_timer(self, user_id: int) -> None:
+        """Reset le timer de pub (pour tests ou admin)"""
+        await self.sessions_col.update_one(
+            {'_id': user_id},
+            {'$unset': {'last_ad_watch': ''}}
+        )
+        print(f"[DB] Timer reset for user {user_id}")
 
     # ==========================================
     # ADMIN CONFIGURATION
