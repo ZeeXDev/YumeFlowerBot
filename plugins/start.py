@@ -17,7 +17,7 @@ from database.database import db
 BAN_SUPPORT = f"{BAN_SUPPORT}"
 
 # ============================================================
-# FONCTION DE VÉRIFICATION D'ACCÈS (NOUVEAU SYSTÈME)
+# FONCTION DE VÉRIFICATION D'ACCÈS (CORRIGÉE)
 # ============================================================
 
 async def check_user_access(client: Client, user_id: int, message: Message) -> tuple:
@@ -25,21 +25,35 @@ async def check_user_access(client: Client, user_id: int, message: Message) -> t
     Vérifie si l'utilisateur a accès aux fichiers.
     Retourne: (has_access: bool, status_message: str or None)
     """
-    # Vérifier si session active (gratuite ou premium)
+    # CORRECTION : Vérifier d'abord si session existe ET si temps restant > 0
     has_session = await db.has_active_session(user_id)
     
     if has_session:
         time_left = await db.get_session_time_left(user_id)
-        minutes = time_left // 60
-        seconds = time_left % 60
-        session = await db.get_user_session(user_id)
         
-        type_label = "⭐ PREMIUM" if session.get('type') == 'premium' else "📺 FREE"
-        status_msg = f"{type_label} | Temps restant: {minutes}m {seconds}s"
-        return True, status_msg
+        # CORRECTION CRITIQUE : Vérifier qu'il reste du temps !
+        if time_left > 0:
+            minutes = time_left // 60
+            seconds = time_left % 60
+            session = await db.get_user_session(user_id)
+            
+            type_label = "⭐ PREMIUM" if session.get('type') == 'premium' else "📺 FREE"
+            status_msg = f"{type_label} | Temps restant: {minutes}m {seconds}s"
+            return True, status_msg
+        else:
+            # Session existe mais expirée, on la supprime proprement
+            await db.deactivate_session(user_id)
+            print(f"[DEBUG] Session expirée pour user {user_id}, désactivation...")
     
     # Pas de session active -> proposer la Mini App
-    web_app_url = ADSGRAM_WEBAPP_URL or f"https://{client.username}.onrender.com"
+    # CORRECTION : Utiliser ADSGRAM_WEBAPP_URL qui doit pointer vers Vercel
+    web_app_url = ADSGRAM_WEBAPP_URL
+    
+    if not web_app_url:
+        print("[ERROR] ADSGRAM_WEBAPP_URL non défini dans config.py !")
+        web_app_url = f"https://{client.username}.onrender.com"  # Fallback mais mauvais !
+    
+    print(f"[DEBUG] Redirection vers Mini App: {web_app_url}")
     
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton(
@@ -108,12 +122,16 @@ async def send_with_progress(client, message, msg):
 
 
 # ============================================================
-# COMMANDE /START
+# COMMANDE /START (AVEC DEBUG)
 # ============================================================
 
 @Bot.on_message(filters.command('start') & filters.private)
 async def start_command(client: Client, message: Message):
     user_id = message.from_user.id
+    
+    # DEBUG
+    print(f"[DEBUG] Commande /start reçue de user {user_id}")
+    print(f"[DEBUG] Texte: {message.text}")
 
     # Vérification ban
     banned_users = await db.get_ban_users()
@@ -147,11 +165,14 @@ async def start_command(client: Client, message: Message):
         except IndexError:
             return
 
-        # ===== NOUVELLE LOGIQUE SESSION =====
+        # ===== VÉRIFICATION SESSION =====
+        print(f"[DEBUG] Vérification accès pour user {user_id}")
         has_access, status_msg = await check_user_access(client, user_id, message)
+        print(f"[DEBUG] Résultat: has_access={has_access}")
+        
         if not has_access:
-            return
-        # ===== FIN NOUVELLE LOGIQUE =====
+            return  # L'utilisateur a reçu les boutons pour débloquer
+        # ===== FIN VÉRIFICATION =====
 
         string = await decode(base64_string)
         argument = string.split("-")

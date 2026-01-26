@@ -316,6 +316,7 @@ class Rohit:
             {'$set': session_data},
             upsert=True
         )
+        print(f"[DB] Session créée pour user {user_id}, expire à {expiry_time}")
         return session_data
 
     async def create_premium_session(self, user_id: int, duration_seconds: int, admin_id: int = None) -> Dict:
@@ -349,13 +350,21 @@ class Rohit:
         if not session or not session.get('is_active'):
             return False
         
-        expiry = datetime.fromisoformat(session['expires_at'])
-        if datetime.now() > expiry:
-            # Session expirée, la désactiver
-            await self.deactivate_session(user_id)
+        try:
+            expiry = datetime.fromisoformat(session['expires_at'])
+            now = datetime.now()
+            
+            print(f"[DEBUG] Session check - Now: {now}, Expiry: {expiry}, Diff: {(expiry - now).total_seconds()}s")
+            
+            if now > expiry:
+                # Session expirée, la désactiver
+                await self.deactivate_session(user_id)
+                return False
+            
+            return True
+        except Exception as e:
+            print(f"[ERROR] Erreur vérification session: {e}")
             return False
-        
-        return True
 
     async def deactivate_session(self, user_id: int) -> None:
         """Désactive une session"""
@@ -375,9 +384,12 @@ class Rohit:
         if not session or not session.get('is_active'):
             return 0
         
-        expiry = datetime.fromisoformat(session['expires_at'])
-        remaining = (expiry - datetime.now()).total_seconds()
-        return max(0, int(remaining))
+        try:
+            expiry = datetime.fromisoformat(session['expires_at'])
+            remaining = (expiry - datetime.now()).total_seconds()
+            return max(0, int(remaining))
+        except:
+            return 0
 
     async def can_watch_ad(self, user_id: int) -> bool:
         """Vérifie si l'utilisateur peut regarder une nouvelle pub (anti-spam)"""
