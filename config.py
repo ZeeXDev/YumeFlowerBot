@@ -19,7 +19,7 @@ from logging.handlers import RotatingFileHandler
 # CONFIGURATION BOT TELEGRAM
 # ==========================================
 
-TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "8418741949:AAEtrEPr3UICxBL2GBwfJeX-mBjPncYkj_o")
+TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "8020965278:AAEf0tseiDuGkiJ70n2RDL4iOtITrQ7XK_s")
 APP_ID = int(os.environ.get("APP_ID", "25926022"))
 API_HASH = os.environ.get("API_HASH", "30db27d9e56d854fb5e943723268db32")
 
@@ -66,7 +66,7 @@ TG_BOT_WORKERS = int(os.environ.get("TG_BOT_WORKERS", "200"))
 # MÉDIAS & IMAGES
 # ==========================================
 
-START_PIC = os.environ.get("START_PIC", "https://ibb.co/nNSsK23f")
+START_PIC = os.environ.get("START_PIC", "https://files.catbox.moe/68v7dr.jpg")
 FORCE_PIC = os.environ.get("FORCE_PIC", "https://ibb.co/nNSsK23f")
 
 # ==========================================
@@ -77,7 +77,7 @@ HELP_TXT = "<b><blockquote>Besoin d'aide ?</blockquote></b>"
 ABOUT_TXT = "<b><blockquote>◈ Ceci est un bot OpenSource qui vous offre des fichiers d'Animes/Manga Propulsé par @AnimeCey & @MangaCey</blockquote></b>"
 
 START_MSG = os.environ.get("START_MESSAGE", 
-    "<b>Salut {first}\n\n<blockquote>Ceci est un bot OpenSource . ce bot ne dispose pas en lui dans sa base de donné les fichiers d'animes. si ceci viole vos conditions de droits d'auteurs. contactez nous à @ZeeXDevBot</blockquote></b>")
+    "<b>👋 Bienvenue, {first} !</b>\n\nCe bot est une <b>extension de stockage</b> dédiée à <a href='https://t.me/ZeeXClub'>@ZeeXClub</a>.\n\n<blockquote>📁 <b>Comment ça marche ?</b></blockquote>\nLes fichiers (films, séries, animes) sont stockés ici et accessibles via des liens générés sur notre canal principal.\n\n🤖 <b>Pour chercher du contenu :</b>\n\nAllez à notre canal principal ou faite des demandes à travers les commentaires <a href='https://t.me/WaraMugiBot'>@WaraMugiBot</a>\n\n⚠️ <i>Ce bot ne répond qu'aux liens de fichiers provenant de @ZeeXClub.</i>")
 
 FORCE_MSG = os.environ.get("FORCE_SUB_MESSAGE", 
     "Salut {first}\n\n<b>Impossible de récupérer ce(s) fichier(s) : vous n'êtes pas membre de ce(s) canal(aux). Pour y accéder, rejoignez d'abord le(s) canal(aux), puis réessayez de récupérer les fichiers...</b>")
@@ -110,7 +110,7 @@ CMD_TXT = """<blockquote><b>» Commandes administrateur :</b></blockquote>
 # ==========================================
 
 CUSTOM_CAPTION = os.environ.get("CUSTOM_CAPTION", None)
-PROTECT_CONTENT = True if os.environ.get('PROTECT_CONTENT', "False") == "True" else False
+PROTECT_CONTENT = True if os.environ.get('PROTECT_CONTENT', "True") == "True" else False
 DISABLE_CHANNEL_BUTTON = os.environ.get("DISABLE_CHANNEL_BUTTON", None) == 'True'
 
 BOT_STATS_TEXT = "<b>TEMPS DE FONCTIONNEMENT DU BOT</b>\n{uptime}"

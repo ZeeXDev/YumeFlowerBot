@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium - Ad-Free Access</title>
+    <title>Premium - Accès Sans Publicité</title>
     
     <!-- Telegram WebApp -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -418,12 +418,12 @@
                 </svg>
             </div>
             <h1 class="premium-title">PREMIUM</h1>
-            <p class="subtitle">Unlimited ad-free access to all files</p>
+            <p class="subtitle">Accès illimité sans publicité à tous les fichiers</p>
         </header>
 
-        <!-- Currency Selector -->
+        <!-- Sélecteur de Devise -->
         <section class="card">
-            <h3 style="margin-bottom: var(--space-md); text-align: center; font-size: 1.125rem;">Choose Your Currency</h3>
+            <h3 style="margin-bottom: var(--space-md); text-align: center; font-size: 1.125rem;">Choisissez votre devise</h3>
             <div class="currency-selector">
                 <button class="currency-btn active" onclick="selectCurrency('XOF', this)">XOF</button>
                 <button class="currency-btn" onclick="selectCurrency('CDF', this)">CDF</button>
@@ -435,133 +435,139 @@
 
         <!-- Plans -->
         <section class="plans-container">
-            <!-- Weekly Plan -->
+            <!-- Plan Hebdomadaire -->
             <div class="plan-card">
-                <h3 class="plan-name">Weekly</h3>
+                <h3 class="plan-name">Hebdomadaire</h3>
                 <div class="plan-price" id="price-weekly">1100</div>
                 <div class="plan-currency" id="currency-weekly">XOF</div>
-                <p class="plan-duration">7 days access</p>
+                <p class="plan-duration">7 jours d'accès</p>
                 
                 <ul class="plan-features">
                     <li class="plan-feature">
                         <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                        <span>Unlimited access for 7 days</span>
+                        <span>Accès illimité pendant 7 jours</span>
                     </li>
                     <li class="plan-feature">
                         <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                        <span>Zero advertisements</span>
+                        <span>Zéro publicité</span>
                     </li>
                     <li class="plan-feature">
                         <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                        <span>High-speed downloads</span>
+                        <span>Téléchargements rapides</span>
                     </li>
                 </ul>
                 
-                <button class="btn btn-outline" onclick="selectPlan('weekly')">Choose Plan</button>
+                <button class="btn btn-outline" onclick="selectPlan('weekly')">Choisir cette formule</button>
             </div>
 
-            <!-- Monthly Plan -->
+            <!-- Plan Mensuel -->
             <div class="plan-card">
-                <h3 class="plan-name">Monthly</h3>
+                <h3 class="plan-name">Mensuel</h3>
                 <div class="plan-price" id="price-monthly">3500</div>
                 <div class="plan-currency" id="currency-monthly">XOF</div>
-                <p class="plan-duration">30 days access</p>
+                <p class="plan-duration">30 jours d'accès</p>
                 
                 <ul class="plan-features">
                     <li class="plan-feature">
                         <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                        <span>Unlimited access for 30 days</span>
+                        <span>Accès illimité pendant 30 jours</span>
                     </li>
                     <li class="plan-feature">
                         <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                        <span>Zero advertisements</span>
+                        <span>Zéro publicité</span>
                     </li>
                     <li class="plan-feature">
                         <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                        <span>High-speed downloads</span>
+                        <span>Téléchargements rapides</span>
                     </li>
                     <li class="plan-feature">
                         <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                        <span>Priority support</span>
+                        <span>Support prioritaire</span>
                     </li>
                 </ul>
                 
-                <button class="btn btn-outline" onclick="selectPlan('monthly')">Choose Plan</button>
+                <button class="btn btn-outline" onclick="selectPlan('monthly')">Choisir cette formule</button>
             </div>
 
-            <!-- Yearly Plan -->
+            <!-- Plan Annuel -->
             <div class="plan-card">
-                <div class="plan-badge">Best Value</div>
-                <h3 class="plan-name">Yearly</h3>
+                <div class="plan-badge">Meilleur choix</div>
+                <h3 class="plan-name">Annuel</h3>
                 <div class="plan-price" id="price-yearly">50000</div>
                 <div class="plan-currency" id="currency-yearly">XOF</div>
-                <p class="plan-duration">365 days access</p>
+                <p class="plan-duration">365 jours d'accès</p>
                 
                 <ul class="plan-features">
                     <li class="plan-feature">
                         <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                        <span>Unlimited access for 365 days</span>
+                        <span>Accès illimité pendant 365 jours</span>
                     </li>
                     <li class="plan-feature">
                         <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                        <span>Zero advertisements</span>
+                        <span>Zéro publicité</span>
                     </li>
                     <li class="plan-feature">
                         <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                        <span>Ultra-fast downloads</span>
+                        <span>Téléchargements ultra-rapides</span>
                     </li>
                     <li class="plan-feature">
                         <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                        <span>VIP support 24/7</span>
+                        <span>Support VIP 24/7</span>
                     </li>
                 </ul>
                 
-                <button class="btn btn-primary" onclick="selectPlan('yearly')">Choose Plan</button>
+                <button class="btn btn-primary" onclick="selectPlan('yearly')">Choisir cette formule</button>
             </div>
         </section>
 
-        <!-- Payment Methods -->
+        <!-- Méthodes de Paiement -->
         <section class="card payment-methods">
-            <h3 style="margin-bottom: var(--space-sm); text-align: center; font-size: 1.125rem;">Payment Methods</h3>
+            <h3 style="margin-bottom: var(--space-sm); text-align: center; font-size: 1.125rem;">Méthodes de paiement</h3>
             <p style="color: var(--text-secondary); text-align: center; margin-bottom: var(--space-lg); font-size: 0.875rem;">
-                Select your preferred payment method
+                Sélectionnez votre moyen de paiement préféré
             </p>
             
             <div class="payment-grid" id="paymentGrid">
                 <div class="payment-method" onclick="selectPayment('moov', this)">
                     <img src="assets/logos/moov.png" alt="Moov Money" class="payment-logo">
                     <div class="payment-name">Moov Money</div>
-                    <div class="payment-info">Togo | Burkina-F | Benin | Côte d'ivoire | Niger | Mali</div>
+                    <div class="payment-info">Togo | Burkina | Bénin | CIV | Niger | Mali</div>
                 </div>
                 
                 <div class="payment-method" onclick="selectPayment('orange', this)">
                     <img src="assets/logos/orange.png" alt="Orange Money" class="payment-logo">
                     <div class="payment-name">Orange Money</div>
-                    <div class="payment-info">Africa</div>
+                    <div class="payment-info">Afrique</div>
                 </div>
                 
                 <div class="payment-method" onclick="selectPayment('mtn', this)">
                     <img src="assets/logos/mtn.png" alt="MTN Money" class="payment-logo">
                     <div class="payment-name">MTN Money</div>
-                    <div class="payment-info">Africa</div>
+                    <div class="payment-info">Afrique</div>
+                </div>
+                
+                <div class="payment-method" onclick="selectPayment('mixx', this)">
+                    <img src="assets/logos/mixx.png" alt="Mixx by Yas" class="payment-logo">
+                    <div class="payment-name">Mixx by Yas</div>
+                    <div class="payment-info">🇹🇬 Togo uniquement</div>
                 </div>
                 
                 <div class="payment-method" onclick="selectPayment('ecobank', this)">
                     <img src="assets/logos/ecobank.png" alt="Ecobank" class="payment-logo">
                     <div class="payment-name">Ecobank</div>
-                    <div class="payment-info">Bank Card</div>
+                    <div class="payment-info">Carte Bancaire</div>
                 </div>
                 
                 <div class="payment-method" onclick="selectPayment('usdt', this)">
                     <img src="assets/logos/usdt.png" alt="USDT" class="payment-logo">
                     <div class="payment-name">USDT</div>
-                    <div class="payment-info">TRC20/ERC20</div>
+                    <div class="payment-info">TRC20</div>
                 </div>
                 
                 <div class="payment-method" onclick="selectPayment('ton', this)">
                     <img src="assets/logos/ton.png" alt="Toncoin" class="payment-logo">
                     <div class="payment-name">Toncoin</div>
-                    <div class="payment-info">TON Network</div>
+                    <div class="payment-info">Réseau TON</div>
                 </div>
             </div>
             
@@ -569,7 +575,7 @@
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
                     <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                 </svg>
-                Proceed to Payment
+                Procéder au paiement
             </button>
         </section>
 
@@ -579,7 +585,7 @@
     <div class="modal" id="paymentModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title" id="modalTitle">Payment Instructions</h3>
+                <h3 class="modal-title" id="modalTitle">Instructions de paiement</h3>
                 <button class="modal-close" onclick="closeModal()">
                     <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
                 </button>
@@ -594,7 +600,7 @@
             <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
             </svg>
-            <span class="nav-label">Access</span>
+            <span class="nav-label">Accès</span>
         </a>
         <a href="/prime" class="nav-item active">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">

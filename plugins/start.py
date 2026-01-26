@@ -256,8 +256,8 @@ async def start_command(client: Client, message: Message):
             [
                 [InlineKeyboardButton("📢 Chaîne Officielle", url="https://t.me/WorldZPrime")],
                 [
-                    InlineKeyboardButton("ℹ️ À Propos", callback_data="about"),
-                    InlineKeyboardButton("❓ Aide", callback_data="help")
+                    InlineKeyboardButton("ℹ️ Groupe de demande", url="https://t.me/+udEvzGuvVLJjNmQ8"),
+                    InlineKeyboardButton("❓ Aide", url="https://t.me/Kingcey")
                 ],
                 [InlineKeyboardButton("📺 Ma Session", callback_data="check_session")]
             ]
