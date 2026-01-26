@@ -15,7 +15,7 @@ let currentUser = null;
 // Prix par devise (weekly, monthly, yearly)
 const PRICES = {
   XOF: { weekly: 1100, monthly: 3500, yearly: 50000 },
-  CDF: { weekly: 1100, monthly: 4000, yearly: 190000 },
+  CDF: { weekly: 4000, monthly: 14000, yearly: 190000 },
   EUR: { weekly: 1, monthly: 3, yearly: 80 },
   USD: { weekly: 1, monthly: 4, yearly: 90 },
   CRYPTO: { weekly: 1, monthly: 4, yearly: 90 }
@@ -264,18 +264,18 @@ function generateInstructions(method, amount, duration) {
       const code = method === 'moov' ? '*155#' : method === 'orange' ? '#144#' : '*165#';
       specificInstructions = `
         <ol class="instructions-list">
-          <li class="instruction-item">Dial <strong>${code}</strong> on your phone</li>
-          <li class="instruction-item">Select "Money Transfer"</li>
-          <li class="instruction-item">Enter number: <strong>+225 07 XX XX XX XX</strong></li>
-          <li class="instruction-item">Amount: <strong>${amount} ${currency}</strong></li>
-          <li class="instruction-item">Confirm transaction</li>
-          <li class="instruction-item">Send screenshot to bot with your Telegram ID: <strong>${currentUser?.id}</strong></li>
+          <li class="instruction-item">Pays accepté:  <strong>Togo | Burkina-F | Benin | Côte d'ivoire | Niger | Mali</strong></li>
+          <li class="instruction-item">Selectionner le moyen et le pays de transfert (Togo ou Burkina)</li>
+          <li class="instruction-item">Envoyer le motant à ce numéro: <strong>+228 98 64 27 27</strong></li>
+          <li class="instruction-item">Motant: <strong>${amount} ${currency}</strong></li>
+          <li class="instruction-item">Confirmé la transaction</li>
+          <li class="instruction-item">Envoyer la capture d'écran de paiement à l'admin.  Votre Telegram ID: <strong>${currentUser?.id}</strong></li>
         </ol>
         <button class="btn btn-primary" style="width: 100%; margin-top: var(--space-md);" onclick="contactSupport()">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
             <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
           </svg>
-          Contact Support
+          Envoyer la capture d'écran
         </button>
       `;
       break;
