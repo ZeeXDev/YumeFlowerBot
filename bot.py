@@ -6,6 +6,7 @@ import pyromod.listen
 from pyrogram import Client
 from pyrogram.enums import ParseMode
 import sys
+import os
 from datetime import datetime
 from config import *
 
@@ -18,8 +19,19 @@ name = """
 # =======================
 class Bot(Client):
     def __init__(self):
+        # SUPPRIMER l'ancien fichier session pour éviter l'erreur AUTH_KEY_DUPLICATED
+        session_name = "Bot"
+        for ext in ['', '.session', '.session-journal', '.session-shm', '.session-wal']:
+            file = f"{session_name}{ext}"
+            if os.path.exists(file):
+                try:
+                    os.remove(file)
+                    print(f"[INIT] Fichier {file} supprimé")
+                except:
+                    pass
+        
         super().__init__(
-            name="Bot",
+            name=session_name,
             api_hash=API_HASH,
             api_id=APP_ID,
             plugins={"root": "plugins"},
