@@ -68,14 +68,18 @@ async def check_user_access(client: Client, user_id: int, message: Message) -> t
     
     await message.reply_text(
         "<b>🔒 ACCÈS BLOQUÉ</b>\n\n"
-        "Pour télécharger ce fichier, vous devez :\n\n"
-        "1️⃣ <b>Version Gratuite</b>\n"
-        "   • Regarder une publicité\n"
-        f"   • {await db.get_free_session_duration()} minutes d'accès\n\n"
-        "2️⃣ <b>Version Premium</b>\n"
-        "   • Accès illimité\n"
-        "   • Sans publicités\n\n"
-        "<i>Cliquez sur une option ci-dessous :</i>",
+        "Pour débloquer ce fichier et commencer votre téléchargement, choisissez votre mode d'accès :\n\n"
+        "<b>1️⃣ Version Gratuite 🆓</b>\n"
+        "   • Cliquez ci-dessous pour regarder une courte publicité\n"
+        "   • ⏱️ Déblocage de <b>10 minutes</b> pour télécharger votre contenu\n"
+        "   • Recommandé pour un téléchargement unique\n\n"
+        "<b>2️⃣ Version Premium ⭐</b>\n"
+        "   • 🔓 Accès immédiat sans publicité\n"
+        "   • ⏳ Durée illimitée (téléchargez quand vous voulez)\n"
+        "   • 🚫 Aucune interruption ni attente\n\n"
+        "<b>📹 Vous ne savez pas comment faire ?</b>\n"
+        "<a href=\"https://t.me/zeexclub/563\">🎥 Voir le tutoriel vidéo explicatif</a>\n\n"
+        "<i>👇 Cliquez sur une option ci-dessous pour continuer :</i>",
         reply_markup=keyboard
     )
     return False, None
