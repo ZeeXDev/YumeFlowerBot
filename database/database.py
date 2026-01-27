@@ -298,40 +298,12 @@ class Rohit:
             return 0
 
     async def can_watch_ad(self, user_id: int) -> bool:
-        """Vérifie si l'utilisateur peut regarder une nouvelle pub (anti-spam)"""
-        session = await self.get_user_session(user_id)
-        
-        # Si pas de session ou pas de last_ad_watch, il peut regarder
-        if not session or not session.get('last_ad_watch'):
-            return True
-        
-        try:
-            last_watch_str = session['last_ad_watch']
-            if last_watch_str.endswith('Z'):
-                last_watch = datetime.fromisoformat(last_watch_str.replace('Z', '+00:00'))
-            else:
-                last_watch = datetime.fromisoformat(last_watch_str)
-                if last_watch.tzinfo is None:
-                    last_watch = last_watch.replace(tzinfo=timezone.utc)
-            
-            now = datetime.now(timezone.utc)
-            time_diff = now - last_watch
-            
-            # Debug
-            hours_left = 20 - (time_diff.total_seconds() / 3600)
-            print(f"[DEBUG] Last watch: {last_watch}, Now: {now}, Hours left to wait: {hours_left:.2f}")
-            
-            # Peut regarder une pub si 20h se sont écoulées
-            can_watch = time_diff >= timedelta(hours=20)
-            
-            if not can_watch:
-                print(f"[DEBUG] User {user_id} must wait {hours_left:.2f} more hours")
-            
-            return can_watch
-            
-        except Exception as e:
-            print(f"[ERROR] Erreur vérification can_watch_ad: {e}")
-            return True  # En cas d'erreur, on autorise pour ne pas bloquer l'user
+        """
+        VÉRIFICATION DÉSACTIVÉE - SPAM AUTORISÉ
+        Les utilisateurs peuvent regarder des pubs en boucle sans limite de temps
+        """
+        # Toujours retourner True pour permettre le spam de pubs
+        return True
 
     async def force_reset_ad_timer(self, user_id: int) -> None:
         """Reset le timer de pub (pour tests ou admin)"""
