@@ -27,7 +27,7 @@ API_HASH = os.environ.get("API_HASH", "30db27d9e56d854fb5e943723268db32")
 # CONFIGURATION BASE DE DONNÉES & CHANNEL
 # ==========================================
 
-CHANNEL_ID = int(os.environ.get("CHANNEL_ID", "-1002841653181"))
+CHANNEL_ID = int(os.environ.get("CHANNEL_ID", "-1003173430503"))
 OWNER = os.environ.get("OWNER", "ZeeXDevBot")
 OWNER_ID = int(os.environ.get("OWNER_ID", "8140299716"))
 
