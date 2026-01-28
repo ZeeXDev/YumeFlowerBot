@@ -63,22 +63,22 @@ async def check_user_access(client: Client, user_id: int, message: Message) -> t
         [InlineKeyboardButton(
             "⭐ Devenir Premium", 
             web_app=WebAppInfo(url=f"{web_app_url}/prime.html")
-        )]
+        )],
+        [InlineKeyboardButton(
+            "Comment ça marche ?", url="https://t.me/zeexclub/563")]
     ])
     
     await message.reply_text(
         "<b>🔒 ACCÈS BLOQUÉ</b>\n\n"
-        "Pour débloquer ce fichier et commencer votre téléchargement, choisissez votre mode d'accès :\n\n"
-        "<blockquote expandable><b>1️⃣ Version Gratuite 🆓</b>\n"
-        "   • Cliquez ci-dessous pour regarder une courte publicité\n"
-        "   • ⏱️ Déblocage de <b>10 minutes</b> pour télécharger votre contenu\n"
-        "   • Recommandé pour un téléchargement unique\n\n</blockquote>"
-        "<blockquote expandable><b>2️⃣ Version Premium ⭐</b>\n"
+        "Vous n'aviez pas de session active :\n\n"
+        "<b>1️⃣ Version Gratuite 🆓</b>\n"
+        "   • Pour recupérer ce(s)  fichier(s), vous devez d'abord regarder une pub\n"
+        "   • ⏱️ Vous aurez un accès gratuit pendant <b>10 minutes</b> pour télécharger votre contenu\n\n"
+        "<b>2️⃣ Version Premium ⭐</b>\n"
         "   • 🔓 Accès immédiat sans publicité\n"
         "   • ⏳ Durée illimitée (téléchargez quand vous voulez)\n"
-        "   • 🚫 Aucune interruption ni attente\n\n</blockquote>"
+        "   • 🚫 Aucune interruption ni attente\n\n"
         "<b>📹 Vous ne savez pas comment faire ?</b>\n"
-        "<a href='https://t.me/zeexclub/563'>🎥 Voir le tutoriel vidéo explicatif</a>\n\n"
         "<i>👇 Cliquez sur une option ci-dessous pour continuer :</i>",
         reply_markup=keyboard
     )

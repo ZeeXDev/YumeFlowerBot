@@ -77,7 +77,7 @@ HELP_TXT = "<b><blockquote>Besoin d'aide ?</blockquote></b>"
 ABOUT_TXT = "<b><blockquote>◈ Ceci est un bot OpenSource qui vous offre des fichiers d'Animes/Manga Propulsé par @AnimeCey & @MangaCey</blockquote></b>"
 
 START_MSG = os.environ.get("START_MESSAGE", 
-    "<b>👋 Bienvenue, {first} !</b>\n\nCe bot est une <b>extension de stockage</b> dédiée à <a href='https://t.me/ZeeXClub'>@ZeeXClub</a>.\n\n<blockquote>📁 <b>Comment ça marche ?</b></blockquote>\nLes fichiers (films, séries, animes) sont stockés ici et accessibles via des liens générés sur notre canal principal.\n\n🤖 <b>Pour chercher du contenu :</b>\n\nAllez à notre canal principal ou faite des demandes à travers les commentaires <a href='https://t.me/WaraMugiBot'>@WaraMugiBot</a>\n\n⚠️ <i>Ce bot ne répond qu'aux liens de fichiers provenant de @ZeeXClub.</i>")
+    "<b>👋 Bienvenue, {first} !</b>\n\nCe bot est une <b>extension de stockage</b> dédiée à <a href='https://t.me/ZeeXClub'>@ZeeXClub</a>.\n\n\n<blockquote>Propulsé par: <a href='t.me/WorldZPrime'>Buble Watch</a>\n© 2026</blockquote>")
 
 FORCE_MSG = os.environ.get("FORCE_SUB_MESSAGE", 
     "Salut {first}\n\n<b>Impossible de récupérer ce(s) fichier(s) : vous n'êtes pas membre de ce(s) canal(aux). Pour y accéder, rejoignez d'abord le(s) canal(aux), puis réessayez de récupérer les fichiers...</b>")
