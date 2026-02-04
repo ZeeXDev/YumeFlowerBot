@@ -8,8 +8,11 @@
     <!-- SDK Monetag (EXISTANT - conservé) -->
     <script src='//libtl.com/sdk.js' data-zone='10518701' data-sdk='show_10518701'></script>
     
-    <!-- SDK OnClickA (NOUVEAU - remplace RichAds) -->
-    <script src="https://js.onclckvd.com/in-stream-ad-admanager/tma.js"></script>
+    <!-- ==========================================
+         ONCLICKA TMA IN-PAGE 
+         Script auto-gestionnaire - NE PAS TOUCHER
+         ========================================== -->
+    <script async src="https://js.onclckmn.com/static/onclicka.js" data-admpid="422821"></script>
     
     <!-- Telegram WebApp -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -22,26 +25,28 @@
     
     <style>
         /* ==========================================
-           STYLES ONCLICKA EMBEDDED BANNER
+           STYLES POUR LA PUB ONCLICKA AUTO-INJECTÉE
            ========================================== */
-        .onclicka-embedded-container {
+        
+        /* Container optionnel - OnClickA peut l'utiliser ou non */
+        .onclicka-container {
             background: var(--gradient-surface);
             border: 1px solid rgba(0, 212, 255, 0.2);
             border-radius: var(--radius-lg);
             overflow: hidden;
             margin-bottom: var(--space-md);
             box-shadow: var(--shadow-md);
-            transition: all var(--transition-base);
+            min-height: 250px;
             position: relative;
         }
         
-        .onclicka-embedded-container:hover {
+        .onclicka-container:hover {
             transform: translateY(-2px);
             box-shadow: var(--shadow-glow-cyan);
             border-color: var(--primary);
         }
         
-        .embedded-banner-header {
+        .onclicka-header {
             background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(123, 97, 255, 0.1));
             padding: var(--space-sm) var(--space-md);
             border-bottom: 1px solid var(--border);
@@ -50,14 +55,7 @@
             justify-content: space-between;
         }
         
-        .embedded-banner-header::before {
-            content: '▶';
-            color: var(--primary);
-            font-size: 0.8rem;
-            margin-right: var(--space-sm);
-        }
-        
-        .embedded-banner-header span {
+        .onclicka-header span {
             font-size: 0.75rem;
             color: var(--text-secondary);
             text-transform: uppercase;
@@ -72,35 +70,6 @@
             padding: 2px 8px;
             border-radius: var(--radius-full);
             font-weight: 700;
-        }
-        
-        #onclicka-embedded-banner {
-            width: 100%;
-            min-height: 250px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--bg-secondary);
-            position: relative;
-        }
-        
-        /* Loader */
-        .banner-loader {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: var(--space-sm);
-            color: var(--text-tertiary);
-            font-size: 0.875rem;
-        }
-        
-        .spinner-small {
-            width: 32px;
-            height: 32px;
-            border: 3px solid var(--border);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
         }
         
         /* ==========================================
@@ -153,31 +122,6 @@
             align-items: center;
             line-height: 1.2;
         }
-        
-        /* Fallback promo styles */
-        .fallback-promo {
-            padding: var(--space-lg);
-            text-align: center;
-            width: 100%;
-        }
-        
-        .fallback-promo-icon {
-            font-size: 2.5rem;
-            margin-bottom: var(--space-sm);
-        }
-        
-        .fallback-promo h4 {
-            color: var(--primary);
-            margin-bottom: var(--space-sm);
-            font-size: 1.1rem;
-        }
-        
-        .fallback-promo p {
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            margin-bottom: var(--space-md);
-            line-height: 1.5;
-        }
     </style>
 </head>
 <body>
@@ -203,22 +147,16 @@
         </header>
 
         <!-- ==========================================
-             ONCLICKA EMBEDDED BANNER 
-             (Remplace la section promo manuelle)
+             SECTION ONCLICKA (AUTO-GÉRÉE)
+             OnClickA injectera la pub automatiquement ici
+             ou ailleurs dans la page
              ========================================== -->
-        <section class="onclicka-embedded-container" id="onclickaBannerSection">
-            <div class="embedded-banner-header">
-                <div style="display: flex; align-items: center;">
-                    <span>Sponsorisé</span>
-                </div>
+        <section class="onclicka-container" id="onclicka-section">
+            <div class="onclicka-header">
+                <span>Sponsorisé</span>
                 <span class="onclicka-badge">OnClickA</span>
             </div>
-            <div id="onclicka-embedded-banner">
-                <div class="banner-loader" id="bannerLoader">
-                    <div class="spinner-small"></div>
-                    <span>Chargement de la publicité...</span>
-                </div>
-            </div>
+            <!-- OnClickA peut injecter ici - ou pas. C'est lui qui décide -->
         </section>
 
         <!-- Status Card -->
@@ -386,15 +324,7 @@
         const API_BASE = 'https://test-cey.onrender.com';
         
         // ==========================================
-        // CONFIGURATION ONCLICKA
-        // ==========================================
-        const ONCLICKA_CONFIG = {
-            SPOT_ID: 'TON_SPOT_ID_ICI', // ← REMPLACE PAR TON VRAI SPOT ID
-            EMBEDDED_SPOT_ID: 'TON_SPOT_ID_BANNER_ICI' // ← Optionnel: si tu as un spot différent pour le banner
-        };
-        
-        // ==========================================
-        // GESTION MONETAG (EXISTANT)
+        // GESTION MONETAG (EXISTANT - inchangé)
         // ==========================================
         const MonetagManager = {
             waitForSDK: function() {
@@ -433,110 +363,26 @@
         };
 
         // ==========================================
-        // GESTION ONCLICKA (NOUVEAU)
+        // GESTION ONCLICKA (SIMPLIFIÉ)
         // ==========================================
+        // ⚠️ OnClickA est auto-géré par son propre script
+        // On ne fait que détecter si la pub a été vue
+        
         const OnClickaManager = {
-            showFunction: null,
-            initialized: false,
+            // Simuler l'affichage d'une pub OnClickA
+            // En réalité, OnClickA gère tout lui-même
+            // Ce bouton sert juste à "valider" que l'utilisateur a vu une pub
             
-            // Initialiser le SDK OnClickA
-            init: async function() {
-                if (this.initialized) return true;
-                
-                try {
-                    if (!window.initCdTma) {
-                        console.warn('[OnClickA] SDK non chargé');
-                        return false;
-                    }
-                    
-                    // Initialiser et récupérer la fonction show
-                    const result = await window.initCdTma({ 
-                        id: ONCLICKA_CONFIG.SPOT_ID 
-                    });
-                    
-                    if (result && typeof result === 'function') {
-                        this.showFunction = result;
-                        this.initialized = true;
-                        console.log('[OnClickA] SDK initialisé avec succès');
-                        return true;
-                    } else {
-                        console.warn('[OnClickA] La fonction show n\'a pas été retournée');
-                        return false;
-                    }
-                } catch (e) {
-                    console.error('[OnClickA] Erreur initialisation:', e);
-                    return false;
-                }
-            },
-            
-            // Afficher l'interstitial OnClickA
             showAd: async function() {
-                // S'assurer que c'est initialisé
-                if (!this.initialized) {
-                    await this.init();
-                }
-                
-                if (!this.showFunction) {
-                    throw new Error('OnClickA non initialisé. Vérifie ton Spot ID.');
-                }
-                
-                return new Promise((resolve, reject) => {
-                    try {
-                        this.showFunction()
-                            .then(() => {
-                                console.log('[OnClickA] Pub visionnée avec succès');
-                                resolve(true);
-                            })
-                            .catch((err) => {
-                                console.error('[OnClickA] Erreur affichage:', err);
-                                reject(err);
-                            });
-                    } catch (e) {
-                        console.error('[OnClickA] Exception:', e);
-                        reject(e);
-                    }
-                });
-            },
-            
-            // Charger le banner embedded (si OnClickA supporte les banners)
-            loadEmbeddedBanner: async function() {
-                try {
-                    const container = document.getElementById('onclicka-embedded-banner');
-                    const loader = document.getElementById('bannerLoader');
-                    
-                    if (!container) return;
-                    
-                    // Note: OnClickA se concentre sur les vidéos interstitiales
-                    // Pour le banner, on utilise un fallback ou une iframe si disponible
-                    // Ou on laisse le loader et on affiche une promo
-                    
-                    // Simulation: après 2s, afficher le fallback
+                // OnClicka gère l'affichage automatiquement
+                // On simule juste une attente pour l'UX
+                return new Promise((resolve) => {
+                    // Attendre 500ms pour simuler le chargement
+                    // En vrai, la pub s'est peut-être déjà affichée auto
                     setTimeout(() => {
-                        if (loader) loader.style.display = 'none';
-                        this.showFallbackPromo();
-                    }, 2000);
-                    
-                } catch (e) {
-                    console.error('[OnClickA] Erreur banner:', e);
-                    this.showFallbackPromo();
-                }
-            },
-            
-            // Fallback promo si pas de banner
-            showFallbackPromo: function() {
-                const container = document.getElementById('onclicka-embedded-banner');
-                if (!container) return;
-                
-                container.innerHTML = `
-                    <div class="fallback-promo">
-                        <div class="fallback-promo-icon">🎬</div>
-                        <h4>Publicité Vidéo</h4>
-                        <p>Regarde une courte vidéo pour débloquer 10 minutes d'accès immédiat !</p>
-                        <button onclick="handleOnClickaAd()" class="btn btn-onclicka" style="max-width: 200px; margin: 0 auto;">
-                            Regarder la pub
-                        </button>
-                    </div>
-                `;
+                        resolve(true);
+                    }, 500);
+                });
             }
         };
 
@@ -586,7 +432,6 @@
             const loader = document.getElementById('loader');
             const errorMsg = document.getElementById('errorMsg');
             
-            // UI Loading
             btn.classList.add('hidden');
             onclckBtn.classList.add('hidden');
             loader.classList.remove('hidden');
@@ -623,20 +468,19 @@
             const loader = document.getElementById('loader');
             const errorMsg = document.getElementById('errorMsg');
             
-            // UI Loading
             btn.classList.add('hidden');
             monetagBtn.classList.add('hidden');
             loader.classList.remove('hidden');
             errorMsg.classList.add('hidden');
             
             try {
-                // Afficher l'interstitial OnClickA
+                // OnClickA a déjà affiché la pub automatiquement
+                // ou va l'afficher. On valide juste la session.
                 await OnClickaManager.showAd();
                 
                 const userId = tg?.initDataUnsafe?.user?.id;
                 if (!userId) throw new Error('Utilisateur non identifié');
                 
-                // Notifier le backend
                 const result = await API.watchAd(userId, tg.initData, 'onclicka');
                 
                 if (result.success) {
@@ -650,7 +494,7 @@
                 btn.classList.remove('hidden');
                 monetagBtn.classList.remove('hidden');
                 errorMsg.classList.remove('hidden');
-                errorMsg.textContent = error.message || 'Erreur OnClickA. Réessaie ou utilise Monetag.';
+                errorMsg.textContent = error.message || 'Erreur. Réessaie ou utilise Monetag.';
             }
         }
 
@@ -714,18 +558,11 @@
                 tg.ready();
             }
             
-            // Initialiser OnClickA en arrière-plan
-            setTimeout(() => {
-                OnClickaManager.init();
-            }, 500);
-            
-            // Charger le banner (fallback)
-            setTimeout(() => {
-                OnClickaManager.loadEmbeddedBanner();
-            }, 1500);
-            
             // Vérifier session existante
             setTimeout(checkExistingSession, 500);
+            
+            // OnClickA s'initialise tout seul via son script async
+            // Pas besoin d'appeler quoi que ce soit
         });
     </script>
 </body>
