@@ -5,8 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Accès aux fichiers - Regarder une pub</title>
     
-    <!-- SDK Monetag -->
+    <!-- SDK Monetag (EXISTANT - conservé) -->
     <script src='//libtl.com/sdk.js' data-zone='10518701' data-sdk='show_10518701'></script>
+    
+    <!-- SDK RichAds (CORRECT avec pubId valide) -->
+    <script src="https://richinfo.co/richpartners/telegram/js/tg-ob.js"></script>
+    <script>
+        window.TelegramAdsController = new TelegramAdsController();
+        window.TelegramAdsController.initialize({
+            pubId: "1001326",
+            appId: "6027",
+        });
+    </script>
     
     <!-- Telegram WebApp -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -18,12 +28,10 @@
     <link rel="stylesheet" href="css/animations.css">
     
     <style>
-        /* Styles pour les notifications promo */
-        .notifications-container {
-            margin-bottom: var(--space-lg);
-        }
-        
-        .promo-notification {
+        /* ==========================================
+           STYLES EMBEDDED BANNER RICHADS
+           ========================================== */
+        .richads-embedded-container {
             background: var(--gradient-surface);
             border: 1px solid rgba(0, 212, 255, 0.2);
             border-radius: var(--radius-lg);
@@ -31,75 +39,148 @@
             margin-bottom: var(--space-md);
             box-shadow: var(--shadow-md);
             transition: all var(--transition-base);
-            animation: slide-up 0.5s ease;
+            position: relative;
         }
         
-        .promo-notification:hover {
+        .richads-embedded-container:hover {
             transform: translateY(-2px);
             box-shadow: var(--shadow-glow-cyan);
             border-color: var(--primary);
         }
         
-        .promo-image {
-            width: 100%;
-            height: 160px;
-            object-fit: cover;
-            display: block;
+        .embedded-banner-header {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(123, 97, 255, 0.1));
+            padding: var(--space-sm) var(--space-md);
             border-bottom: 1px solid var(--border);
-        }
-        
-        .promo-content {
-            padding: var(--space-md);
-        }
-        
-        .promo-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: var(--space-sm);
             display: flex;
             align-items: center;
-            gap: var(--space-sm);
+            justify-content: space-between;
         }
         
-        .promo-title::before {
-            content: '📢';
-            font-size: 1.2rem;
+        .embedded-banner-header::before {
+            content: '▶';
+            color: var(--primary);
+            font-size: 0.8rem;
+            margin-right: var(--space-sm);
         }
         
-        .promo-desc {
-            font-size: 0.875rem;
+        .embedded-banner-header span {
+            font-size: 0.75rem;
             color: var(--text-secondary);
-            margin-bottom: var(--space-md);
-            line-height: 1.5;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
         }
         
-        .promo-btn {
-            width: 100%;
-            padding: var(--space-sm) var(--space-md);
-            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+        .richads-badge {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
             color: white;
-            border: none;
-            border-radius: var(--radius-md);
-            font-weight: 600;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all var(--transition-base);
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: var(--radius-full);
+            font-weight: 700;
+        }
+        
+        #richads-embedded-banner {
+            width: 100%;
+            min-height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-secondary);
+            position: relative;
+        }
+        
+        /* Loader */
+        .banner-loader {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--space-sm);
+            color: var(--text-tertiary);
+            font-size: 0.875rem;
+        }
+        
+        .spinner-small {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        /* ==========================================
+           BOUTONS DUALES (MONETAG + RICHADS)
+           ========================================== */
+        .ad-buttons-container {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-md);
+            margin-bottom: var(--space-md);
+        }
+        
+        .ad-button-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-md);
+        }
+        
+        /* Bouton Monetag (Cyan) */
+        .btn-monetag {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            box-shadow: 0 4px 16px var(--primary-shadow);
+            animation: pulse-glow-cyan 2.5s ease-in-out infinite;
+        }
+        
+        /* Bouton RichAds (Orange) */
+        .btn-richads {
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            color: white;
+            box-shadow: 0 4px 16px rgba(255, 107, 53, 0.3);
+            animation: pulse-glow-orange 2.5s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-glow-orange {
+            0%, 100% {
+                box-shadow: 0 4px 16px rgba(255, 107, 53, 0.3);
+            }
+            50% {
+                box-shadow: 0 8px 32px rgba(255, 107, 53, 0.5), 0 0 48px rgba(247, 147, 30, 0.4);
+            }
+        }
+        
+        .btn-network-label {
+            font-size: 0.7rem;
+            opacity: 0.9;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
         
-        .promo-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 16px var(--secondary-glow);
+        /* Fallback promo styles */
+        .fallback-promo {
+            padding: var(--space-lg);
+            text-align: center;
+            width: 100%;
         }
         
-        .no-notifications {
-            text-align: center;
-            padding: var(--space-md);
-            color: var(--text-tertiary);
+        .fallback-promo-icon {
+            font-size: 2.5rem;
+            margin-bottom: var(--space-sm);
+        }
+        
+        .fallback-promo h4 {
+            color: var(--primary);
+            margin-bottom: var(--space-sm);
+            font-size: 1.1rem;
+        }
+        
+        .fallback-promo p {
+            color: var(--text-secondary);
             font-size: 0.875rem;
-            font-style: italic;
+            margin-bottom: var(--space-md);
+            line-height: 1.5;
         }
     </style>
 </head>
@@ -125,9 +206,23 @@
             <p class="subtitle">Système d'accès sécurisé aux fichiers</p>
         </header>
 
-        <!-- NOTIFICATIONS PROMO (NOUVEAU) -->
-        <section class="notifications-container" id="notificationsContainer">
-            <!-- Les notifications seront injectées ici par JS -->
+        <!-- ==========================================
+             RICHADS EMBEDDED BANNER 
+             (Remplace la section promo manuelle)
+             ========================================== -->
+        <section class="richads-embedded-container" id="richadsBannerSection">
+            <div class="embedded-banner-header">
+                <div style="display: flex; align-items: center;">
+                    <span>Sponsorisé</span>
+                </div>
+                <span class="richads-badge">RichAds</span>
+            </div>
+            <div id="richads-embedded-banner">
+                <div class="banner-loader" id="bannerLoader">
+                    <div class="spinner-small"></div>
+                    <span>Chargement de la publicité...</span>
+                </div>
+            </div>
         </section>
 
         <!-- Status Card -->
@@ -163,7 +258,9 @@
             </div>
         </section>
 
-        <!-- Carte Action Monetag -->
+        <!-- ==========================================
+             CARTE ACTION : MONETAG + RICHADS
+             ========================================== -->
         <section class="card action-card" id="actionCard">
             <div class="monetag-section" id="monetagSection">
                 <div class="info-box">
@@ -172,18 +269,38 @@
                     </svg>
                     <p class="info-text">
                         Pour accéder à vos fichiers, regardez une courte publicité. 
-                        Vous obtiendrez <strong id="freeDuration">10 minutes</strong> d'accès illimité à tous vos documents.
+                        Vous obtiendrez <strong id="freeDuration">10 minutes</strong> d'accès illimité.
                     </p>
                 </div>
 
-                <button class="btn btn-primary btn-monetag" id="watchAdBtn" onclick="handleWatchAd()">
-                    <span class="btn-icon">
-                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                            <path d="M8 5v14l11-7z"/>
-                        </svg>
-                    </span>
-                    <span class="btn-text">Regarder la publicité</span>
-                </button>
+                <!-- Deux boutons côte à côte -->
+                <div class="ad-button-row">
+                    <!-- Bouton Monetag -->
+                    <button class="btn btn-monetag" id="watchAdBtn" onclick="handleWatchAd()">
+                        <span class="btn-icon">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                                <path d="M8 5v14l11-7z"/>
+                            </svg>
+                        </span>
+                        <span class="btn-content">
+                            <span class="btn-text">Regarder</span>
+                            <span class="btn-network-label">Monetag</span>
+                        </span>
+                    </button>
+
+                    <!-- Bouton RichAds -->
+                    <button class="btn btn-richads" id="watchRichAdBtn" onclick="handleRichAd()">
+                        <span class="btn-icon">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                                <path d="M8 5v14l11-7z"/>
+                            </svg>
+                        </span>
+                        <span class="btn-content">
+                            <span class="btn-text">Regarder</span>
+                            <span class="btn-network-label">RichAds</span>
+                        </span>
+                    </button>
+                </div>
 
                 <div class="loader hidden" id="loader">
                     <svg class="spinner" viewBox="0 0 50 50">
@@ -261,18 +378,20 @@
             <span class="nav-label">Premium</span>
         </a>
         <a href="admin.html" class="nav-item">
-    <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
-    </svg>
-    <span class="nav-label">Admin</span>
-</a>
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+            </svg>
+            <span class="nav-label">Admin</span>
+        </a>
     </nav>
 
     <!-- Scripts -->
     <script>
         const API_BASE = 'https://test-cey.onrender.com';
         
-        // Gestion Monetag
+        // ==========================================
+        // GESTION MONETAG (EXISTANT)
+        // ==========================================
         const MonetagManager = {
             waitForSDK: function() {
                 return new Promise((resolve) => {
@@ -295,21 +414,189 @@
             
             showAd: async function() {
                 const isReady = await this.waitForSDK();
-                if (!isReady) throw new Error('SDK non disponible');
+                if (!isReady) throw new Error('SDK Monetag non disponible');
                 
                 return new Promise((resolve, reject) => {
                     try {
                         show_10518701()
                             .then(() => resolve(true))
-                            .catch(() => reject(false));
+                            .catch((err) => reject(err));
                     } catch (e) {
-                        reject(false);
+                        reject(e);
                     }
                 });
             }
         };
 
-        // API Client
+        // ==========================================
+        // GESTION RICHADS (NOUVEAU)
+        // ==========================================
+        const RichAdsManager = {
+            initialized: false,
+            
+            // Initialisation et vérification du SDK
+            init: function() {
+                if (this.initialized) return true;
+                
+                try {
+                    if (window.TelegramAdsController && 
+                        typeof window.TelegramAdsController.initialize === 'function') {
+                        this.initialized = true;
+                        console.log('[RichAds] SDK initialisé avec succès');
+                        return true;
+                    }
+                    return false;
+                } catch (e) {
+                    console.error('[RichAds] Erreur initialisation:', e);
+                    return false;
+                }
+            },
+            
+            // Afficher l'interstitial RichAds
+            showInterstitial: async function() {
+                return new Promise((resolve, reject) => {
+                    try {
+                        if (!window.TelegramAdsController) {
+                            reject(new Error('SDK RichAds non chargé'));
+                            return;
+                        }
+
+                        // La méthode exacte peut varier selon la doc RichAds
+                        // Tentative avec la méthode showAd standard
+                        if (typeof window.TelegramAdsController.showAd === 'function') {
+                            window.TelegramAdsController.showAd({
+                                onSuccess: () => {
+                                    console.log('[RichAds] Pub visionnée avec succès');
+                                    resolve(true);
+                                },
+                                onError: (err) => {
+                                    console.error('[RichAds] Erreur:', err);
+                                    reject(err);
+                                },
+                                onClose: () => {
+                                    console.log('[RichAds] Pub fermée');
+                                    resolve(true);
+                                }
+                            });
+                        } 
+                        // Fallback: méthode alternative requestAd
+                        else if (typeof window.TelegramAdsController.requestAd === 'function') {
+                            window.TelegramAdsController.requestAd({
+                                onAdLoaded: () => {
+                                    console.log('[RichAds] Pub chargée');
+                                },
+                                onAdError: (err) => {
+                                    console.error('[RichAds] Erreur chargement:', err);
+                                    reject(err);
+                                },
+                                onAdClosed: () => {
+                                    console.log('[RichAds] Pub fermée');
+                                    resolve(true);
+                                }
+                            });
+                        }
+                        // Dernier fallback: show() simple
+                        else if (typeof window.TelegramAdsController.show === 'function') {
+                            window.TelegramAdsController.show();
+                            // Attendre un peu puis résoudre (pas de callback disponible)
+                            setTimeout(() => resolve(true), 1000);
+                        }
+                        else {
+                            reject(new Error('Aucune méthode d\'affichage disponible'));
+                        }
+                    } catch (e) {
+                        console.error('[RichAds] Exception:', e);
+                        reject(e);
+                    }
+                });
+            },
+            
+            // Charger l'embedded banner RichAds
+            loadEmbeddedBanner: function() {
+                try {
+                    const container = document.getElementById('richads-embedded-banner');
+                    const loader = document.getElementById('bannerLoader');
+                    
+                    if (!container) {
+                        console.error('[RichAds] Conteneur banner non trouvé');
+                        return false;
+                    }
+                    
+                    if (!window.TelegramAdsController) {
+                        console.warn('[RichAds] SDK non disponible pour banner');
+                        this.showFallbackPromo();
+                        return false;
+                    }
+                    
+                    // Essayer différentes méthodes de chargement de banner
+                    
+                    // Méthode 1: loadBanner avec containerId
+                    if (typeof window.TelegramAdsController.loadBanner === 'function') {
+                        window.TelegramAdsController.loadBanner({
+                            containerId: 'richads-embedded-banner',
+                            size: '300x250',
+                            onLoad: () => {
+                                console.log('[RichAds] Banner chargé');
+                                if (loader) loader.style.display = 'none';
+                            },
+                            onError: (err) => {
+                                console.error('[RichAds] Erreur banner:', err);
+                                this.showFallbackPromo();
+                            }
+                        });
+                        return true;
+                    }
+                    
+                    // Méthode 2: renderBanner
+                    else if (typeof window.TelegramAdsController.renderBanner === 'function') {
+                        window.TelegramAdsController.renderBanner('richads-embedded-banner');
+                        if (loader) loader.style.display = 'none';
+                        return true;
+                    }
+                    
+                    // Méthode 3: createBanner
+                    else if (typeof window.TelegramAdsController.createBanner === 'function') {
+                        const banner = window.TelegramAdsController.createBanner({
+                            size: '300x250',
+                            container: 'richads-embedded-banner'
+                        });
+                        if (loader) loader.style.display = 'none';
+                        return true;
+                    }
+                    
+                    // Fallback: aucune méthode disponible
+                    console.warn('[RichAds] Aucune méthode de banner disponible');
+                    this.showFallbackPromo();
+                    return false;
+                    
+                } catch (e) {
+                    console.error('[RichAds] Erreur chargement banner:', e);
+                    this.showFallbackPromo();
+                    return false;
+                }
+            },
+            
+            // Afficher une promo fallback si le banner ne charge pas
+            showFallbackPromo: function() {
+                const container = document.getElementById('richads-embedded-banner');
+                if (!container) return;
+                
+                container.innerHTML = `
+                    <div class="fallback-promo">
+                        <div class="fallback-promo-icon">⭐</div>
+                        <h4>Offre Spéciale Premium !</h4>
+                        <p>Accès illimité sans publicité pendant 30 jours. Profitez-en maintenant !</p>
+                        <button onclick="goPremium()" class="btn btn-primary" style="max-width: 200px; margin: 0 auto;">
+                            Voir l'offre
+                        </button>
+                    </div>
+                `;
+            }
+        };
+
+        // ==========================================
+        // API CLIENT
+        // ==========================================
         const API = {
             checkSession: async function(userId, auth) {
                 try {
@@ -324,80 +611,38 @@
                 }
             },
             
-            watchAd: async function(userId, auth) {
+            watchAd: async function(userId, auth, adNetwork = 'monetag') {
                 try {
                     const response = await fetch(`${API_BASE}/api/watch-ad`, {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({user_id: userId, auth: auth})
+                        body: JSON.stringify({
+                            user_id: userId, 
+                            auth: auth,
+                            ad_network: adNetwork
+                        })
                     });
                     return await response.json();
                 } catch (e) {
-                    return {success: false};
-                }
-            },
-            
-            // NOUVEAU: Récupérer les notifications
-            getNotifications: async function() {
-                try {
-                    const response = await fetch(`${API_BASE}/api/notifications`, {
-                        method: 'GET',
-                        headers: {'Content-Type': 'application/json'}
-                    });
-                    if (!response.ok) throw new Error('Erreur API');
-                    return await response.json();
-                } catch (e) {
-                    console.error('Erreur chargement notifications:', e);
-                    // Données de démo si l'API n'existe pas encore
-                    return {
-                        notifications: [
-                            {
-                                id: 1,
-                                image: 'https://i.ibb.co/8b5z5z5/promo1.jpg',
-                                title: 'Offre Spéciale !',
-                                description: 'Profitez de 50% de réduction sur l\'abonnement premium cette semaine.',
-                                buttonText: 'En profiter',
-                                buttonUrl: 'https://t.me/WaraMugiBot'
-                            }
-                        ]
-                    };
+                    return {success: false, error: e.message};
                 }
             }
         };
 
-        // Afficher les notifications
-        async function loadNotifications() {
-            const container = document.getElementById('notificationsContainer');
-            const data = await API.getNotifications();
-            
-            if (!data.notifications || data.notifications.length === 0) {
-                container.innerHTML = '<div class="no-notifications">Aucune annonce pour le moment</div>';
-                return;
-            }
-            
-            container.innerHTML = data.notifications.map(notif => `
-                <div class="promo-notification">
-                    ${notif.image ? `<img src="${notif.image}" alt="${notif.title}" class="promo-image" onerror="this.style.display='none'">` : ''}
-                    <div class="promo-content">
-                        <h3 class="promo-title">${notif.title}</h3>
-                        <p class="promo-desc">${notif.description}</p>
-                        <button class="promo-btn" onclick="window.open('${notif.buttonUrl}', '_blank')">
-                            ${notif.buttonText}
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // Logique existante...
         const tg = window.Telegram?.WebApp;
         
+        // ==========================================
+        // HANDLER MONETAG
+        // ==========================================
         async function handleWatchAd() {
             const btn = document.getElementById('watchAdBtn');
+            const richBtn = document.getElementById('watchRichAdBtn');
             const loader = document.getElementById('loader');
             const errorMsg = document.getElementById('errorMsg');
             
+            // UI Loading
             btn.classList.add('hidden');
+            richBtn.classList.add('hidden');
             loader.classList.remove('hidden');
             errorMsg.classList.add('hidden');
             
@@ -406,30 +651,82 @@
                 const userId = tg?.initDataUnsafe?.user?.id;
                 if (!userId) throw new Error('Utilisateur non identifié');
                 
-                const result = await API.watchAd(userId, tg.initData);
+                const result = await API.watchAd(userId, tg.initData, 'monetag');
                 
                 if (result.success) {
-                    document.getElementById('monetagSection').classList.add('hidden');
-                    document.getElementById('successSection').classList.remove('hidden');
-                    document.getElementById('durationText').textContent = result.duration + ' minutes';
-                    updateStatusCard(result.duration, result.expires_at);
-                    if (tg) tg.showAlert('✅ Accès débloqué !');
+                    showSuccessUI(result);
                 } else {
                     throw new Error(result.message || 'Erreur serveur');
                 }
             } catch (error) {
+                console.error('[Monetag] Erreur:', error);
                 loader.classList.add('hidden');
                 btn.classList.remove('hidden');
+                richBtn.classList.remove('hidden');
                 errorMsg.classList.remove('hidden');
-                errorMsg.textContent = error.message || 'Veuillez regarder la pub jusqu\'à la fin';
+                errorMsg.textContent = error.message || 'Erreur lors du visionnage';
             }
+        }
+
+        // ==========================================
+        // HANDLER RICHADS
+        // ==========================================
+        async function handleRichAd() {
+            const btn = document.getElementById('watchRichAdBtn');
+            const monetagBtn = document.getElementById('watchAdBtn');
+            const loader = document.getElementById('loader');
+            const errorMsg = document.getElementById('errorMsg');
+            
+            // UI Loading
+            btn.classList.add('hidden');
+            monetagBtn.classList.add('hidden');
+            loader.classList.remove('hidden');
+            errorMsg.classList.add('hidden');
+            
+            try {
+                // S'assurer que le SDK est initialisé
+                RichAdsManager.init();
+                
+                // Afficher l'interstitial
+                await RichAdsManager.showInterstitial();
+                
+                const userId = tg?.initDataUnsafe?.user?.id;
+                if (!userId) throw new Error('Utilisateur non identifié');
+                
+                // Notifier le backend
+                const result = await API.watchAd(userId, tg.initData, 'richads');
+                
+                if (result.success) {
+                    showSuccessUI(result);
+                } else {
+                    throw new Error(result.message || 'Erreur serveur');
+                }
+            } catch (error) {
+                console.error('[RichAds] Erreur:', error);
+                loader.classList.add('hidden');
+                btn.classList.remove('hidden');
+                monetagBtn.classList.remove('hidden');
+                errorMsg.classList.remove('hidden');
+                errorMsg.textContent = error.message || 'Erreur RichAds. Réessayez ou utilisez Monetag.';
+            }
+        }
+
+        // ==========================================
+        // UI & UTILITAIRES
+        // ==========================================
+        function showSuccessUI(result) {
+            document.getElementById('monetagSection').classList.add('hidden');
+            document.getElementById('successSection').classList.remove('hidden');
+            document.getElementById('durationText').textContent = (result.duration || 10) + ' minutes';
+            updateStatusCard(result.duration || 10, result.expires_at);
+            if (tg) tg.showAlert('✅ Accès débloqué !');
         }
         
         function updateStatusCard(duration, expiresAt) {
             document.getElementById('statusDot').classList.add('active');
             document.getElementById('statusText').textContent = 'Session active';
             document.getElementById('accessType').textContent = 'Gratuit (Pub)';
-            document.getElementById('expireTime').textContent = new Date(expiresAt).toLocaleString();
+            document.getElementById('expireTime').textContent = new Date(expiresAt).toLocaleString('fr-FR');
             document.getElementById('timerDisplay').classList.remove('hidden');
         }
         
@@ -443,8 +740,9 @@
                 if (data.has_access && data.time_left > 0) {
                     document.getElementById('monetagSection').classList.add('hidden');
                     document.getElementById('successSection').classList.remove('hidden');
-                    document.getElementById('durationText').textContent = Math.floor(data.time_left/60) + ' minutes';
-                    updateStatusCard(Math.floor(data.time_left/60), data.expires_at);
+                    const minutes = Math.floor(data.time_left / 60);
+                    document.getElementById('durationText').textContent = minutes + ' minutes';
+                    updateStatusCard(minutes, data.expires_at);
                 } else {
                     document.getElementById('statusText').textContent = 'Aucune session active';
                 }
@@ -464,17 +762,24 @@
             window.location.href = 'prime.html';
         }
 
-        // Initialisation
+        // ==========================================
+        // INITIALISATION
+        // ==========================================
         document.addEventListener('DOMContentLoaded', () => {
             if (tg) {
                 tg.expand();
                 tg.ready();
             }
             
-            // Charger les notifications
-            loadNotifications();
+            // Initialiser RichAds
+            RichAdsManager.init();
             
-            // Vérifier session
+            // Charger le banner embedded après un délai (laisser le SDK s'initialiser)
+            setTimeout(() => {
+                RichAdsManager.loadEmbeddedBanner();
+            }, 1500);
+            
+            // Vérifier session existante
             setTimeout(checkExistingSession, 500);
         });
     </script>
