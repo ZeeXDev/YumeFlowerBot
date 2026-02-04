@@ -8,15 +8,8 @@
     <!-- SDK Monetag (EXISTANT - conservé) -->
     <script src='//libtl.com/sdk.js' data-zone='10518701' data-sdk='show_10518701'></script>
     
-    <!-- SDK RichAds (CORRECT avec pubId valide) -->
-    <script src="https://richinfo.co/richpartners/telegram/js/tg-ob.js"></script>
-    <script>
-        window.TelegramAdsController = new TelegramAdsController();
-        window.TelegramAdsController.initialize({
-            pubId: "1001326",
-            appId: "6027",
-        });
-    </script>
+    <!-- SDK OnClickA (NOUVEAU - remplace RichAds) -->
+    <script src="https://js.onclckvd.com/in-stream-ad-admanager/tma.js"></script>
     
     <!-- Telegram WebApp -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -29,9 +22,9 @@
     
     <style>
         /* ==========================================
-           STYLES EMBEDDED BANNER RICHADS
+           STYLES ONCLICKA EMBEDDED BANNER
            ========================================== */
-        .richads-embedded-container {
+        .onclicka-embedded-container {
             background: var(--gradient-surface);
             border: 1px solid rgba(0, 212, 255, 0.2);
             border-radius: var(--radius-lg);
@@ -42,7 +35,7 @@
             position: relative;
         }
         
-        .richads-embedded-container:hover {
+        .onclicka-embedded-container:hover {
             transform: translateY(-2px);
             box-shadow: var(--shadow-glow-cyan);
             border-color: var(--primary);
@@ -72,8 +65,8 @@
             font-weight: 600;
         }
         
-        .richads-badge {
-            background: linear-gradient(135deg, #ff6b35, #f7931e);
+        .onclicka-badge {
+            background: linear-gradient(135deg, #ff4757, #ff6348);
             color: white;
             font-size: 0.65rem;
             padding: 2px 8px;
@@ -81,7 +74,7 @@
             font-weight: 700;
         }
         
-        #richads-embedded-banner {
+        #onclicka-embedded-banner {
             width: 100%;
             min-height: 250px;
             display: flex;
@@ -111,19 +104,13 @@
         }
         
         /* ==========================================
-           BOUTONS DUALES (MONETAG + RICHADS)
+           BOUTONS DUALES (MONETAG + ONCLICKA)
            ========================================== */
-        .ad-buttons-container {
-            display: flex;
-            flex-direction: column;
-            gap: var(--space-md);
-            margin-bottom: var(--space-md);
-        }
-        
         .ad-button-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: var(--space-md);
+            margin-bottom: var(--space-md);
         }
         
         /* Bouton Monetag (Cyan) */
@@ -134,20 +121,20 @@
             animation: pulse-glow-cyan 2.5s ease-in-out infinite;
         }
         
-        /* Bouton RichAds (Orange) */
-        .btn-richads {
-            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+        /* Bouton OnClickA (Rouge/Orange) */
+        .btn-onclicka {
+            background: linear-gradient(135deg, #ff4757 0%, #ff6348 100%);
             color: white;
-            box-shadow: 0 4px 16px rgba(255, 107, 53, 0.3);
-            animation: pulse-glow-orange 2.5s ease-in-out infinite;
+            box-shadow: 0 4px 16px rgba(255, 71, 87, 0.3);
+            animation: pulse-glow-red 2.5s ease-in-out infinite;
         }
         
-        @keyframes pulse-glow-orange {
+        @keyframes pulse-glow-red {
             0%, 100% {
-                box-shadow: 0 4px 16px rgba(255, 107, 53, 0.3);
+                box-shadow: 0 4px 16px rgba(255, 71, 87, 0.3);
             }
             50% {
-                box-shadow: 0 8px 32px rgba(255, 107, 53, 0.5), 0 0 48px rgba(247, 147, 30, 0.4);
+                box-shadow: 0 8px 32px rgba(255, 71, 87, 0.5), 0 0 48px rgba(255, 99, 72, 0.4);
             }
         }
         
@@ -156,6 +143,15 @@
             opacity: 0.9;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            display: block;
+            margin-top: 2px;
+        }
+        
+        .btn-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1.2;
         }
         
         /* Fallback promo styles */
@@ -207,17 +203,17 @@
         </header>
 
         <!-- ==========================================
-             RICHADS EMBEDDED BANNER 
+             ONCLICKA EMBEDDED BANNER 
              (Remplace la section promo manuelle)
              ========================================== -->
-        <section class="richads-embedded-container" id="richadsBannerSection">
+        <section class="onclicka-embedded-container" id="onclickaBannerSection">
             <div class="embedded-banner-header">
                 <div style="display: flex; align-items: center;">
                     <span>Sponsorisé</span>
                 </div>
-                <span class="richads-badge">RichAds</span>
+                <span class="onclicka-badge">OnClickA</span>
             </div>
-            <div id="richads-embedded-banner">
+            <div id="onclicka-embedded-banner">
                 <div class="banner-loader" id="bannerLoader">
                     <div class="spinner-small"></div>
                     <span>Chargement de la publicité...</span>
@@ -259,7 +255,7 @@
         </section>
 
         <!-- ==========================================
-             CARTE ACTION : MONETAG + RICHADS
+             CARTE ACTION : MONETAG + ONCLICKA
              ========================================== -->
         <section class="card action-card" id="actionCard">
             <div class="monetag-section" id="monetagSection">
@@ -288,8 +284,8 @@
                         </span>
                     </button>
 
-                    <!-- Bouton RichAds -->
-                    <button class="btn btn-richads" id="watchRichAdBtn" onclick="handleRichAd()">
+                    <!-- Bouton OnClickA -->
+                    <button class="btn btn-onclicka" id="watchOnClickaBtn" onclick="handleOnClickaAd()">
                         <span class="btn-icon">
                             <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
                                 <path d="M8 5v14l11-7z"/>
@@ -297,7 +293,7 @@
                         </span>
                         <span class="btn-content">
                             <span class="btn-text">Regarder</span>
-                            <span class="btn-network-label">RichAds</span>
+                            <span class="btn-network-label">OnClickA</span>
                         </span>
                     </button>
                 </div>
@@ -390,6 +386,14 @@
         const API_BASE = 'https://test-cey.onrender.com';
         
         // ==========================================
+        // CONFIGURATION ONCLICKA
+        // ==========================================
+        const ONCLICKA_CONFIG = {
+            SPOT_ID: 'TON_SPOT_ID_ICI', // ← REMPLACE PAR TON VRAI SPOT ID
+            EMBEDDED_SPOT_ID: 'TON_SPOT_ID_BANNER_ICI' // ← Optionnel: si tu as un spot différent pour le banner
+        };
+        
+        // ==========================================
         // GESTION MONETAG (EXISTANT)
         // ==========================================
         const MonetagManager = {
@@ -429,165 +433,107 @@
         };
 
         // ==========================================
-        // GESTION RICHADS (NOUVEAU)
+        // GESTION ONCLICKA (NOUVEAU)
         // ==========================================
-        const RichAdsManager = {
+        const OnClickaManager = {
+            showFunction: null,
             initialized: false,
             
-            // Initialisation et vérification du SDK
-            init: function() {
+            // Initialiser le SDK OnClickA
+            init: async function() {
                 if (this.initialized) return true;
                 
                 try {
-                    if (window.TelegramAdsController && 
-                        typeof window.TelegramAdsController.initialize === 'function') {
-                        this.initialized = true;
-                        console.log('[RichAds] SDK initialisé avec succès');
-                        return true;
+                    if (!window.initCdTma) {
+                        console.warn('[OnClickA] SDK non chargé');
+                        return false;
                     }
-                    return false;
+                    
+                    // Initialiser et récupérer la fonction show
+                    const result = await window.initCdTma({ 
+                        id: ONCLICKA_CONFIG.SPOT_ID 
+                    });
+                    
+                    if (result && typeof result === 'function') {
+                        this.showFunction = result;
+                        this.initialized = true;
+                        console.log('[OnClickA] SDK initialisé avec succès');
+                        return true;
+                    } else {
+                        console.warn('[OnClickA] La fonction show n\'a pas été retournée');
+                        return false;
+                    }
                 } catch (e) {
-                    console.error('[RichAds] Erreur initialisation:', e);
+                    console.error('[OnClickA] Erreur initialisation:', e);
                     return false;
                 }
             },
             
-            // Afficher l'interstitial RichAds
-            showInterstitial: async function() {
+            // Afficher l'interstitial OnClickA
+            showAd: async function() {
+                // S'assurer que c'est initialisé
+                if (!this.initialized) {
+                    await this.init();
+                }
+                
+                if (!this.showFunction) {
+                    throw new Error('OnClickA non initialisé. Vérifie ton Spot ID.');
+                }
+                
                 return new Promise((resolve, reject) => {
                     try {
-                        if (!window.TelegramAdsController) {
-                            reject(new Error('SDK RichAds non chargé'));
-                            return;
-                        }
-
-                        // La méthode exacte peut varier selon la doc RichAds
-                        // Tentative avec la méthode showAd standard
-                        if (typeof window.TelegramAdsController.showAd === 'function') {
-                            window.TelegramAdsController.showAd({
-                                onSuccess: () => {
-                                    console.log('[RichAds] Pub visionnée avec succès');
-                                    resolve(true);
-                                },
-                                onError: (err) => {
-                                    console.error('[RichAds] Erreur:', err);
-                                    reject(err);
-                                },
-                                onClose: () => {
-                                    console.log('[RichAds] Pub fermée');
-                                    resolve(true);
-                                }
+                        this.showFunction()
+                            .then(() => {
+                                console.log('[OnClickA] Pub visionnée avec succès');
+                                resolve(true);
+                            })
+                            .catch((err) => {
+                                console.error('[OnClickA] Erreur affichage:', err);
+                                reject(err);
                             });
-                        } 
-                        // Fallback: méthode alternative requestAd
-                        else if (typeof window.TelegramAdsController.requestAd === 'function') {
-                            window.TelegramAdsController.requestAd({
-                                onAdLoaded: () => {
-                                    console.log('[RichAds] Pub chargée');
-                                },
-                                onAdError: (err) => {
-                                    console.error('[RichAds] Erreur chargement:', err);
-                                    reject(err);
-                                },
-                                onAdClosed: () => {
-                                    console.log('[RichAds] Pub fermée');
-                                    resolve(true);
-                                }
-                            });
-                        }
-                        // Dernier fallback: show() simple
-                        else if (typeof window.TelegramAdsController.show === 'function') {
-                            window.TelegramAdsController.show();
-                            // Attendre un peu puis résoudre (pas de callback disponible)
-                            setTimeout(() => resolve(true), 1000);
-                        }
-                        else {
-                            reject(new Error('Aucune méthode d\'affichage disponible'));
-                        }
                     } catch (e) {
-                        console.error('[RichAds] Exception:', e);
+                        console.error('[OnClickA] Exception:', e);
                         reject(e);
                     }
                 });
             },
             
-            // Charger l'embedded banner RichAds
-            loadEmbeddedBanner: function() {
+            // Charger le banner embedded (si OnClickA supporte les banners)
+            loadEmbeddedBanner: async function() {
                 try {
-                    const container = document.getElementById('richads-embedded-banner');
+                    const container = document.getElementById('onclicka-embedded-banner');
                     const loader = document.getElementById('bannerLoader');
                     
-                    if (!container) {
-                        console.error('[RichAds] Conteneur banner non trouvé');
-                        return false;
-                    }
+                    if (!container) return;
                     
-                    if (!window.TelegramAdsController) {
-                        console.warn('[RichAds] SDK non disponible pour banner');
+                    // Note: OnClickA se concentre sur les vidéos interstitiales
+                    // Pour le banner, on utilise un fallback ou une iframe si disponible
+                    // Ou on laisse le loader et on affiche une promo
+                    
+                    // Simulation: après 2s, afficher le fallback
+                    setTimeout(() => {
+                        if (loader) loader.style.display = 'none';
                         this.showFallbackPromo();
-                        return false;
-                    }
-                    
-                    // Essayer différentes méthodes de chargement de banner
-                    
-                    // Méthode 1: loadBanner avec containerId
-                    if (typeof window.TelegramAdsController.loadBanner === 'function') {
-                        window.TelegramAdsController.loadBanner({
-                            containerId: 'richads-embedded-banner',
-                            size: '300x250',
-                            onLoad: () => {
-                                console.log('[RichAds] Banner chargé');
-                                if (loader) loader.style.display = 'none';
-                            },
-                            onError: (err) => {
-                                console.error('[RichAds] Erreur banner:', err);
-                                this.showFallbackPromo();
-                            }
-                        });
-                        return true;
-                    }
-                    
-                    // Méthode 2: renderBanner
-                    else if (typeof window.TelegramAdsController.renderBanner === 'function') {
-                        window.TelegramAdsController.renderBanner('richads-embedded-banner');
-                        if (loader) loader.style.display = 'none';
-                        return true;
-                    }
-                    
-                    // Méthode 3: createBanner
-                    else if (typeof window.TelegramAdsController.createBanner === 'function') {
-                        const banner = window.TelegramAdsController.createBanner({
-                            size: '300x250',
-                            container: 'richads-embedded-banner'
-                        });
-                        if (loader) loader.style.display = 'none';
-                        return true;
-                    }
-                    
-                    // Fallback: aucune méthode disponible
-                    console.warn('[RichAds] Aucune méthode de banner disponible');
-                    this.showFallbackPromo();
-                    return false;
+                    }, 2000);
                     
                 } catch (e) {
-                    console.error('[RichAds] Erreur chargement banner:', e);
+                    console.error('[OnClickA] Erreur banner:', e);
                     this.showFallbackPromo();
-                    return false;
                 }
             },
             
-            // Afficher une promo fallback si le banner ne charge pas
+            // Fallback promo si pas de banner
             showFallbackPromo: function() {
-                const container = document.getElementById('richads-embedded-banner');
+                const container = document.getElementById('onclicka-embedded-banner');
                 if (!container) return;
                 
                 container.innerHTML = `
                     <div class="fallback-promo">
-                        <div class="fallback-promo-icon">⭐</div>
-                        <h4>Offre Spéciale Premium !</h4>
-                        <p>Accès illimité sans publicité pendant 30 jours. Profitez-en maintenant !</p>
-                        <button onclick="goPremium()" class="btn btn-primary" style="max-width: 200px; margin: 0 auto;">
-                            Voir l'offre
+                        <div class="fallback-promo-icon">🎬</div>
+                        <h4>Publicité Vidéo</h4>
+                        <p>Regarde une courte vidéo pour débloquer 10 minutes d'accès immédiat !</p>
+                        <button onclick="handleOnClickaAd()" class="btn btn-onclicka" style="max-width: 200px; margin: 0 auto;">
+                            Regarder la pub
                         </button>
                     </div>
                 `;
@@ -636,13 +582,13 @@
         // ==========================================
         async function handleWatchAd() {
             const btn = document.getElementById('watchAdBtn');
-            const richBtn = document.getElementById('watchRichAdBtn');
+            const onclckBtn = document.getElementById('watchOnClickaBtn');
             const loader = document.getElementById('loader');
             const errorMsg = document.getElementById('errorMsg');
             
             // UI Loading
             btn.classList.add('hidden');
-            richBtn.classList.add('hidden');
+            onclckBtn.classList.add('hidden');
             loader.classList.remove('hidden');
             errorMsg.classList.add('hidden');
             
@@ -662,17 +608,17 @@
                 console.error('[Monetag] Erreur:', error);
                 loader.classList.add('hidden');
                 btn.classList.remove('hidden');
-                richBtn.classList.remove('hidden');
+                onclckBtn.classList.remove('hidden');
                 errorMsg.classList.remove('hidden');
                 errorMsg.textContent = error.message || 'Erreur lors du visionnage';
             }
         }
 
         // ==========================================
-        // HANDLER RICHADS
+        // HANDLER ONCLICKA
         // ==========================================
-        async function handleRichAd() {
-            const btn = document.getElementById('watchRichAdBtn');
+        async function handleOnClickaAd() {
+            const btn = document.getElementById('watchOnClickaBtn');
             const monetagBtn = document.getElementById('watchAdBtn');
             const loader = document.getElementById('loader');
             const errorMsg = document.getElementById('errorMsg');
@@ -684,17 +630,14 @@
             errorMsg.classList.add('hidden');
             
             try {
-                // S'assurer que le SDK est initialisé
-                RichAdsManager.init();
-                
-                // Afficher l'interstitial
-                await RichAdsManager.showInterstitial();
+                // Afficher l'interstitial OnClickA
+                await OnClickaManager.showAd();
                 
                 const userId = tg?.initDataUnsafe?.user?.id;
                 if (!userId) throw new Error('Utilisateur non identifié');
                 
                 // Notifier le backend
-                const result = await API.watchAd(userId, tg.initData, 'richads');
+                const result = await API.watchAd(userId, tg.initData, 'onclicka');
                 
                 if (result.success) {
                     showSuccessUI(result);
@@ -702,12 +645,12 @@
                     throw new Error(result.message || 'Erreur serveur');
                 }
             } catch (error) {
-                console.error('[RichAds] Erreur:', error);
+                console.error('[OnClickA] Erreur:', error);
                 loader.classList.add('hidden');
                 btn.classList.remove('hidden');
                 monetagBtn.classList.remove('hidden');
                 errorMsg.classList.remove('hidden');
-                errorMsg.textContent = error.message || 'Erreur RichAds. Réessayez ou utilisez Monetag.';
+                errorMsg.textContent = error.message || 'Erreur OnClickA. Réessaie ou utilise Monetag.';
             }
         }
 
@@ -771,12 +714,14 @@
                 tg.ready();
             }
             
-            // Initialiser RichAds
-            RichAdsManager.init();
-            
-            // Charger le banner embedded après un délai (laisser le SDK s'initialiser)
+            // Initialiser OnClickA en arrière-plan
             setTimeout(() => {
-                RichAdsManager.loadEmbeddedBanner();
+                OnClickaManager.init();
+            }, 500);
+            
+            // Charger le banner (fallback)
+            setTimeout(() => {
+                OnClickaManager.loadEmbeddedBanner();
             }, 1500);
             
             // Vérifier session existante
