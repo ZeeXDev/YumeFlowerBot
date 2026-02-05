@@ -9,10 +9,9 @@
     <script src='//libtl.com/sdk.js' data-zone='10518701' data-sdk='show_10518701'></script>
     
     <!-- ==========================================
-         ONCLICKA TMA IN-PAGE 
-         Script auto-gestionnaire - NE PAS TOUCHER
+         SDK ONCLICKA (Documentation officielle)
          ========================================== -->
-    <script async src="https://js.onclckmn.com/static/onclicka.js" data-admpid="422821"></script>
+    <script src="https://js.onclckvd.com/in-stream-ad-admanager/tma.js"></script>
     
     <!-- Telegram WebApp -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -25,28 +24,26 @@
     
     <style>
         /* ==========================================
-           STYLES POUR LA PUB ONCLICKA AUTO-INJECTÉE
+           STYLES EMBEDDED BANNER ONCLICKA
            ========================================== */
-        
-        /* Container optionnel - OnClickA peut l'utiliser ou non */
-        .onclicka-container {
+        .onclicka-embedded-container {
             background: var(--gradient-surface);
             border: 1px solid rgba(0, 212, 255, 0.2);
             border-radius: var(--radius-lg);
             overflow: hidden;
             margin-bottom: var(--space-md);
             box-shadow: var(--shadow-md);
-            min-height: 250px;
+            transition: all var(--transition-base);
             position: relative;
         }
         
-        .onclicka-container:hover {
+        .onclicka-embedded-container:hover {
             transform: translateY(-2px);
             box-shadow: var(--shadow-glow-cyan);
             border-color: var(--primary);
         }
         
-        .onclicka-header {
+        .embedded-banner-header {
             background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(123, 97, 255, 0.1));
             padding: var(--space-sm) var(--space-md);
             border-bottom: 1px solid var(--border);
@@ -55,7 +52,14 @@
             justify-content: space-between;
         }
         
-        .onclicka-header span {
+        .embedded-banner-header::before {
+            content: '▶';
+            color: var(--primary);
+            font-size: 0.8rem;
+            margin-right: var(--space-sm);
+        }
+        
+        .embedded-banner-header span {
             font-size: 0.75rem;
             color: var(--text-secondary);
             text-transform: uppercase;
@@ -70,6 +74,35 @@
             padding: 2px 8px;
             border-radius: var(--radius-full);
             font-weight: 700;
+        }
+        
+        #onclicka-embedded-banner {
+            width: 100%;
+            min-height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-secondary);
+            position: relative;
+        }
+        
+        /* Loader */
+        .banner-loader {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--space-sm);
+            color: var(--text-tertiary);
+            font-size: 0.875rem;
+        }
+        
+        .spinner-small {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
         
         /* ==========================================
@@ -122,6 +155,31 @@
             align-items: center;
             line-height: 1.2;
         }
+        
+        /* Fallback promo styles */
+        .fallback-promo {
+            padding: var(--space-lg);
+            text-align: center;
+            width: 100%;
+        }
+        
+        .fallback-promo-icon {
+            font-size: 2.5rem;
+            margin-bottom: var(--space-sm);
+        }
+        
+        .fallback-promo h4 {
+            color: var(--primary);
+            margin-bottom: var(--space-sm);
+            font-size: 1.1rem;
+        }
+        
+        .fallback-promo p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: var(--space-md);
+            line-height: 1.5;
+        }
     </style>
 </head>
 <body>
@@ -147,16 +205,22 @@
         </header>
 
         <!-- ==========================================
-             SECTION ONCLICKA (AUTO-GÉRÉE)
-             OnClickA injectera la pub automatiquement ici
-             ou ailleurs dans la page
+             ONCLICKA EMBEDDED BANNER 
+             (Remplace la section promo manuelle)
              ========================================== -->
-        <section class="onclicka-container" id="onclicka-section">
-            <div class="onclicka-header">
-                <span>Sponsorisé</span>
+        <section class="onclicka-embedded-container" id="onclickaBannerSection">
+            <div class="embedded-banner-header">
+                <div style="display: flex; align-items: center;">
+                    <span>Sponsorisé</span>
+                </div>
                 <span class="onclicka-badge">OnClickA</span>
             </div>
-            <!-- OnClickA peut injecter ici - ou pas. C'est lui qui décide -->
+            <div id="onclicka-embedded-banner">
+                <div class="banner-loader" id="bannerLoader">
+                    <div class="spinner-small"></div>
+                    <span>Chargement de la publicité...</span>
+                </div>
+            </div>
         </section>
 
         <!-- Status Card -->
@@ -319,12 +383,23 @@
         </a>
     </nav>
 
-    <!-- Scripts -->
+    <!-- ==========================================
+         INITIALISATION ONCLICKA (Documentation officielle)
+         ========================================== -->
+    <script>
+        // Initialize the ad engine and retrieve the SHOW method
+        // SPOT ID: 6109845
+        window.initCdTma?.({ id: '6109845' })
+            .then(show => window.showOnClicka = show)
+            .catch(e => console.log('[OnClickA] Erreur initialisation:', e));
+    </script>
+
+    <!-- Scripts application -->
     <script>
         const API_BASE = 'https://test-cey.onrender.com';
         
         // ==========================================
-        // GESTION MONETAG (EXISTANT - inchangé)
+        // GESTION MONETAG (EXISTANT)
         // ==========================================
         const MonetagManager = {
             waitForSDK: function() {
@@ -363,25 +438,29 @@
         };
 
         // ==========================================
-        // GESTION ONCLICKA (SIMPLIFIÉ)
+        // GESTION ONCLICKA (Documentation officielle)
         // ==========================================
-        // ⚠️ OnClickA est auto-géré par son propre script
-        // On ne fait que détecter si la pub a été vue
-        
         const OnClickaManager = {
-            // Simuler l'affichage d'une pub OnClickA
-            // En réalité, OnClickA gère tout lui-même
-            // Ce bouton sert juste à "valider" que l'utilisateur a vu une pub
-            
+            // Afficher l'interstitial OnClickA
+            // Utilise window.showOnClicka récupéré lors de l'init
             showAd: async function() {
-                // OnClicka gère l'affichage automatiquement
-                // On simule juste une attente pour l'UX
-                return new Promise((resolve) => {
-                    // Attendre 500ms pour simuler le chargement
-                    // En vrai, la pub s'est peut-être déjà affichée auto
-                    setTimeout(() => {
-                        resolve(true);
-                    }, 500);
+                return new Promise((resolve, reject) => {
+                    // Vérifier si la fonction show est disponible
+                    if (!window.showOnClicka) {
+                        reject(new Error('OnClickA non initialisé. Attends quelques secondes et réessaie.'));
+                        return;
+                    }
+                    
+                    // Activer la méthode SHOW récupérée
+                    window.showOnClicka()
+                        .then(() => {
+                            console.log('[OnClickA] Pub visionnée avec succès');
+                            resolve(true);
+                        })
+                        .catch((e) => {
+                            console.log('[OnClickA] Erreur:', e);
+                            reject(e);
+                        });
                 });
             }
         };
@@ -460,7 +539,7 @@
         }
 
         // ==========================================
-        // HANDLER ONCLICKA
+        // HANDLER ONCLICKA (Documentation officielle)
         // ==========================================
         async function handleOnClickaAd() {
             const btn = document.getElementById('watchOnClickaBtn');
@@ -474,13 +553,14 @@
             errorMsg.classList.add('hidden');
             
             try {
-                // OnClickA a déjà affiché la pub automatiquement
-                // ou va l'afficher. On valide juste la session.
+                // Activer la méthode SHOW récupérée lors de l'init
+                // Retourne une Promise avec le résultat du visionnage
                 await OnClickaManager.showAd();
                 
                 const userId = tg?.initDataUnsafe?.user?.id;
                 if (!userId) throw new Error('Utilisateur non identifié');
                 
+                // Notifier le backend
                 const result = await API.watchAd(userId, tg.initData, 'onclicka');
                 
                 if (result.success) {
@@ -494,7 +574,7 @@
                 btn.classList.remove('hidden');
                 monetagBtn.classList.remove('hidden');
                 errorMsg.classList.remove('hidden');
-                errorMsg.textContent = error.message || 'Erreur. Réessaie ou utilise Monetag.';
+                errorMsg.textContent = error.message || 'Erreur OnClickA. Réessaie ou utilise Monetag.';
             }
         }
 
@@ -560,9 +640,6 @@
             
             // Vérifier session existante
             setTimeout(checkExistingSession, 500);
-            
-            // OnClickA s'initialise tout seul via son script async
-            // Pas besoin d'appeler quoi que ce soit
         });
     </script>
 </body>
