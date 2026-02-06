@@ -55,6 +55,16 @@ async def check_user_access(client: Client, user_id: int, message: Message) -> t
     
     print(f"[DEBUG] Redirection vers Mini App: {web_app_url}")
     
+    # RÉCUPÉRER LE LIEN ORIGINAL pour le bouton "Cliquez ici après la pub"
+    # Le lien est dans message.text (ex: /start Z2V0LTE1Nzc5OTE4MDYxODEyMTktMTU4OTAyNjcxMzkxNjc1Mg)
+    orig_post_link = None
+    try:
+        if message.text and len(message.text) > 7:
+            base64_part = message.text.split(" ", 1)[1] if " " in message.text else message.text.split(" ", 1)[0]
+            orig_post_link = f"https://t.me/{client.username}?start={base64_part}"
+    except:
+        pass
+    
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton(
             "📺 Débloquer (Regarder Pub)", 
@@ -65,23 +75,32 @@ async def check_user_access(client: Client, user_id: int, message: Message) -> t
             web_app=WebAppInfo(url=f"{web_app_url}/prime.html")
         )],
         [InlineKeyboardButton(
-            "Comment ça marche ?", url="https://t.me/zeexclub/563")]
+            "❓ Comment ça marche ?", url="https://t.me/zeexclub/563")]
     ])
     
-    await message.reply_text(
+    # Message avec le lien de retour si disponible
+    return_text = (
         "<b>🔒 ACCÈS BLOQUÉ</b>\n\n"
-        "Vous n'aviez pas de session active :\n\n"
+        "Vous n'avez pas de session active :\n\n"
         "<b>1️⃣ Version Gratuite 🆓</b>\n"
-        "   • Pour recupérer ce(s)  fichier(s), vous devez d'abord regarder une pub\n"
+        "   • Pour récupérer ce(s) fichier(s), vous devez d'abord regarder une pub\n"
         "   • ⏱️ Vous aurez un accès gratuit pendant <b>10 minutes</b> pour télécharger votre contenu\n\n"
         "<b>2️⃣ Version Premium ⭐</b>\n"
         "   • 🔓 Accès immédiat sans publicité\n"
         "   • ⏳ Durée illimitée (téléchargez quand vous voulez)\n"
         "   • 🚫 Aucune interruption ni attente\n\n"
         "<b>📹 Vous ne savez pas comment faire ?</b>\n"
-        "<i>👇 Cliquez sur une option ci-dessous pour continuer :</i>",
-        reply_markup=keyboard
+        "<i>👇 Cliquez sur une option ci-dessous pour continuer :</i>"
     )
+    
+    # Ajouter le lien de retour si on l'a récupéré
+    if orig_post_link:
+        return_text += (
+            f"\n\n<b>🎯 Une fois la publicité regardée :</b>\n"
+            f"👉 <a href='{orig_post_link}'>Cliquez Ici 🚀</a> pour récupérer votre fichier"
+        )
+    
+    await message.reply_text(return_text, reply_markup=keyboard)
     return False, None
 
 
@@ -402,6 +421,162 @@ async def give_premium_session(client: Client, message: Message):
         )
     except Exception as e:
         await message.reply_text(f"❌ Erreur: <code>{str(e)}</code>", quote=True)
+
+
+# ============================================================
+# COMMANDE ADMIN /DELPRIME - SUPPRIMER UNE SESSION
+# ============================================================
+
+@Bot.on_message(filters.command("delprime") & filters.private & admin)
+async def delete_premium_session(client: Client, message: Message):
+    """Supprime la session d'un utilisateur: /delprime user_id"""
+    try:
+        args = message.command
+        if len(args) < 2:
+            return await message.reply_text(
+                "<b>❌ Utilisation incorrecte</b>\n\n"
+                "<code>/delprime user_id</code>\n\n"
+                "<b>Exemple:</b>\n"
+                "<code>/delprime 123456789</code>",
+                quote=True
+            )
+        
+        user_id = int(args[1])
+        
+        # Vérifier si l'utilisateur a une session
+        session = await db.get_user_session(user_id)
+        if not session:
+            return await message.reply_text(
+                f"<b>⚠️ Aucune session trouvée</b>\n\n"
+                f"L'utilisateur <code>{user_id}</code> n'a pas de session active.",
+                quote=True
+            )
+        
+        # Supprimer la session
+        await db.remove_session(user_id)
+        
+        await message.reply_text(
+            f"<b>✅ Session Supprimée</b>\n\n"
+            f"<b>User ID:</b> <code>{user_id}</code>\n"
+            f"<b>Type:</b> {session.get('type', 'inconnu').upper()}\n\n"
+            f"<i>L'utilisateur doit maintenant regarder une pub ou acheter Premium pour accéder aux fichiers.</i>",
+            quote=True
+        )
+        
+        # Notifier l'utilisateur
+        try:
+            await client.send_message(
+                user_id,
+                "<b>⏰ Votre session a expiré</b>\n\n"
+                "Votre accès Premium/Gratuit a été révoqué par un administrateur.\n\n"
+                "Pour continuer à télécharger des fichiers :\n"
+                "• 📺 Regardez une publicité\n"
+                "• ⭐ Achetez un accès Premium\n\n"
+                "<i>Ce message est automatique.</i>"
+            )
+        except Exception as e:
+            await message.reply_text(
+                f"<b>⚠️ Note:</b> Impossible de notifier l'utilisateur ({e})",
+                quote=True
+            )
+            
+    except ValueError:
+        await message.reply_text(
+            "❌ User ID doit être un nombre entier",
+            quote=True
+        )
+    except Exception as e:
+        await message.reply_text(f"❌ Erreur: <code>{str(e)}</code>", quote=True)
+
+
+# ============================================================
+# COMMANDE ADMIN /BROADCAST - DIFFUSION À TOUS LES UTILISATEURS
+# ============================================================
+
+@Bot.on_message(filters.command("broadcast") & filters.private & admin)
+async def broadcast_message(client: Client, message: Message):
+    """
+    Diffuse un message à tous les utilisateurs du bot.
+    Usage: Répondre à un message avec /broadcast
+    """
+    # Vérifier si c'est une réponse à un message
+    if not message.reply_to_message:
+        return await message.reply_text(
+            "<b>❌ Utilisation incorrecte</b>\n\n"
+            "Cette commande doit être utilisée en réponse à un message.\n\n"
+            "<b>Exemple:</b>\n"
+            "1. Envoyez ou transférez le message à diffuser\n"
+            "2. Répondez à ce message avec <code>/broadcast</code>",
+            quote=True
+        )
+    
+    # Confirmation avant envoi
+    target_msg = message.reply_to_message
+    
+    # Compter les utilisateurs
+    all_users = await db.full_userbase()
+    total_users = len(all_users)
+    
+    if total_users == 0:
+        return await message.reply_text(
+            "<b>⚠️ Aucun utilisateur</b>\n\n"
+            "La base de données ne contient aucun utilisateur.",
+            quote=True
+        )
+    
+    # Message de confirmation
+    confirm_msg = await message.reply_text(
+        f"<b>📢 Confirmation de diffusion</b>\n\n"
+        f"<b>Nombre d'utilisateurs:</b> {total_users}\n"
+        f"<b>Type de message:</b> {target_msg.media or 'Texte'}\n\n"
+        f"<i>Envoi en cours...</i>",
+        quote=True
+    )
+    
+    # Statistiques
+    sent_count = 0
+    failed_count = 0
+    blocked_count = 0
+    
+    # Envoyer à tous les utilisateurs
+    for user_id in all_users:
+        try:
+            # Copier le message (conserve le formatage, médias, etc.)
+            await target_msg.copy(user_id)
+            sent_count += 1
+            
+            # Petite pause pour éviter le rate limit
+            await asyncio.sleep(0.1)
+            
+        except UserIsBlocked:
+            blocked_count += 1
+            print(f"[BROADCAST] User {user_id} a bloqué le bot")
+        except InputUserDeactivated:
+            blocked_count += 1
+            print(f"[BROADCAST] User {user_id} est désactivé")
+        except FloodWait as e:
+            await asyncio.sleep(e.x)
+            try:
+                await target_msg.copy(user_id)
+                sent_count += 1
+            except:
+                failed_count += 1
+        except Exception as e:
+            failed_count += 1
+            print(f"[BROADCAST] Erreur pour user {user_id}: {e}")
+    
+    # Résultat final
+    result_text = (
+        f"<b>✅ Diffusion terminée</b>\n\n"
+        f"📊 <b>Statistiques:</b>\n"
+        f"• ✅ Envoyés: {sent_count}\n"
+        f"• ❌ Échoués: {failed_count}\n"
+        f"• 🚫 Bloqués/Désactivés: {blocked_count}\n"
+        f"• 📊 Total: {total_users}\n\n"
+        f"<i>Le message a été diffusé à tous les utilisateurs actifs.</i>"
+    )
+    
+    await confirm_msg.edit_text(result_text)
 
 
 # ============================================================
