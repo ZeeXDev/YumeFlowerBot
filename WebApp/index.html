@@ -586,7 +586,7 @@
             document.getElementById('successSection').classList.remove('hidden');
             document.getElementById('durationText').textContent = (result.duration || 10) + ' minutes';
             updateStatusCard(result.duration || 10, result.expires_at);
-            if (tg) tg.showAlert('✅ Accès débloqué !');
+            if (tg) tg.showAlert('✅  Félicitation Accès débloqué !');
         }
         
         function updateStatusCard(duration, expiresAt) {
