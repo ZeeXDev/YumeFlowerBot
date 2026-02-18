@@ -48,7 +48,7 @@ def verify_telegram_auth(auth_data: str) -> dict:
             return None
         
         # Créer la data check string (triée par clés)
-        data_check_string = '\n'.join([f"{k}={v}" for k, v in sorted(data.items()) if k != 'hash'])
+        data_check_string = '\\n'.join([f"{k}={v}" for k, v in sorted(data.items()) if k != 'hash'])
         
         # Clé secrète = SHA256 du bot token
         secret_key = hashlib.sha256(TG_BOT_TOKEN.encode()).digest()
@@ -145,9 +145,361 @@ async def health_check(request):
             "error": str(e)
         }, status=500)
 
+# ============================================================
+# API POUR SYSTÈME DE CLONAGE - ID_PUBS
+# ============================================================
+
+@routes.post("/api/verify-id-pubs")
+async def api_verify_id_pubs(request):
+    """Vérifie un ID_PUBS et retourne les infos du bot"""
+    try:
+        data = await request.json()
+        id_pubs = data.get('id_pubs', '').strip().upper()
+        
+        logger.info(f"Vérification ID_PUBS: {id_pubs}")
+        
+        if not id_pubs:
+            return web.json_response({
+                'success': False,
+                'error': 'ID_PUBS manquant'
+            }, status=400)
+        
+        # Chercher le bot par ID_PUBS
+        id_data = await db.get_id_codes(id_pubs=id_pubs)
+        
+        if not id_data:
+            return web.json_response({
+                'success': False,
+                'error': 'ID_PUBS invalide'
+            })
+        
+        bot_data = await db.get_cloned_bot(id_data['bot_id'])
+        
+        if not bot_data:
+            return web.json_response({
+                'success': False,
+                'error': 'Bot non trouvé'
+            })
+        
+        return web.json_response({
+            'success': True,
+            'bot': {
+                'id': bot_data['_id'],
+                'username': bot_data['bot_username'],
+                'name': bot_data.get('bot_username', 'Bot')
+            },
+            'id_pubs': id_pubs
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in verify-id-pubs: {e}")
+        return web.json_response({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@routes.post("/api/watch-ad-clone")
+async def api_watch_ad_clone(request):
+    """
+    Active une session gratuite après visionnage de pub pour un bot cloné
+    Nécessite l'ID_PUBS pour identifier le bot
+    """
+    try:
+        data = await request.json()
+        user_id = data.get('user_id')
+        id_pubs = data.get('id_pubs', '').strip().upper()
+        auth = data.get('auth')
+        
+        logger.info(f"Watch ad clone - User: {user_id}, ID_PUBS: {id_pubs}")
+        
+        if not user_id or not id_pubs:
+            return web.json_response({
+                'success': False,
+                'error': 'Paramètres manquants'
+            }, status=400)
+        
+        # Vérifier l'ID_PUBS
+        id_data = await db.get_id_codes(id_pubs=id_pubs)
+        
+        if not id_data:
+            return web.json_response({
+                'success': False,
+                'error': 'ID_PUBS invalide'
+            })
+        
+        bot_id = id_data['bot_id']
+        bot_data = await db.get_cloned_bot(bot_id)
+        
+        if not bot_data:
+            return web.json_response({
+                'success': False,
+                'error': 'Bot non trouvé'
+            })
+        
+        # Vérifier auth Telegram (optionnel mais recommandé)
+        if auth:
+            user_data = verify_telegram_auth(auth)
+            if user_data and int(user_data.get('id', 0)) != int(user_id):
+                logger.warning(f"Mismatch user_id: {user_id} vs {user_data.get('id')}")
+        
+        # Vérifier si déjà session active pour CE bot
+        if await db.has_active_session(user_id, bot_id):
+            return web.json_response({
+                'success': False,
+                'message': 'Session déjà active pour ce bot'
+            })
+        
+        # Créer session gratuite pour CE bot spécifique
+        duration = await db.get_free_session_duration()
+        session = await db.create_free_session(user_id, duration, bot_id)
+        
+        # Incrémenter les stats
+        await db.increment_bot_stat(bot_id, 'total_ads_watched')
+        
+        # AJOUTER DES GAINS AU BOT (monétisation)
+        # $0.01 par impression (exemple)
+        earning_per_ad = 0.01
+        await db.add_earning(bot_id, earning_per_ad, 'ad_impression')
+        
+        logger.info(f"Session créée pour user {user_id} sur bot {bot_id}")
+        logger.info(f"Gains ajoutés au bot {bot_id}: ${earning_per_ad}")
+        
+        return web.json_response({
+            'success': True,
+            'duration': duration,
+            'expires_at': session.get('expires_at'),
+            'bot_username': bot_data['bot_username'],
+            'message': 'Session activée avec succès'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in watch-ad-clone: {e}")
+        logger.error(traceback.format_exc())
+        return web.json_response({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@routes.post("/api/check-session-clone")
+async def api_check_session_clone(request):
+    """Vérifie si l'utilisateur a une session active pour un bot spécifique"""
+    try:
+        data = await request.json()
+        user_id = data.get('user_id')
+        id_pubs = data.get('id_pubs', '').strip().upper()
+        
+        if not user_id or not id_pubs:
+            return web.json_response({
+                'success': False,
+                'error': 'Paramètres manquants'
+            }, status=400)
+        
+        # Trouver le bot par ID_PUBS
+        id_data = await db.get_id_codes(id_pubs=id_pubs)
+        
+        if not id_data:
+            return web.json_response({
+                'success': False,
+                'error': 'ID_PUBS invalide'
+            })
+        
+        bot_id = id_data['bot_id']
+        
+        # Vérifier session pour CE bot
+        has_session = await db.has_active_session(user_id, bot_id)
+        time_left = await db.get_session_time_left(user_id, bot_id) if has_session else 0
+        session = await db.get_user_session(user_id, bot_id) if has_session else None
+        
+        return web.json_response({
+            'success': True,
+            'has_access': has_session and time_left > 0,
+            'time_left': time_left,
+            'expires_at': session.get('expires_at') if session else None,
+            'type': session.get('type') if session else None,
+            'bot_id': bot_id
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in check-session-clone: {e}")
+        return web.json_response({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+# ============================================================
+# API PAGE MAÎTRE
+# ============================================================
+
+@routes.post("/api/master/login")
+async def api_master_login(request):
+    """Connexion à la page Maître avec ID_CODE"""
+    try:
+        data = await request.json()
+        id_code = data.get('id_code', '').strip().upper()
+        auth = data.get('auth')
+        
+        logger.info(f"Tentative connexion maître avec ID_CODE")
+        
+        if not id_code:
+            return web.json_response({
+                'success': False,
+                'error': 'ID_CODE manquant'
+            }, status=400)
+        
+        # Vérifier l'ID_CODE
+        id_data = await db.get_id_codes(id_code=id_code)
+        
+        if not id_data:
+            return web.json_response({
+                'success': False,
+                'error': 'ID_CODE invalide'
+            })
+        
+        # Vérifier auth Telegram si fourni
+        if auth:
+            user_data = verify_telegram_auth(auth)
+            if user_data:
+                # Vérifier que l'utilisateur est bien le maître
+                master_id = id_data['master_id']
+                if int(user_data.get('id', 0)) != master_id:
+                    logger.warning(f"Tentative accès maître non autorisée: {user_data.get('id')} vs {master_id}")
+                    return web.json_response({
+                        'success': False,
+                        'error': 'Non autorisé'
+                    }, status=403)
+        
+        bot_data = await db.get_cloned_bot(id_data['bot_id'])
+        earnings = await db.get_bot_earnings(id_data['bot_id'])
+        
+        return web.json_response({
+            'success': True,
+            'bot': {
+                'id': bot_data['_id'],
+                'username': bot_data['bot_username'],
+                'created_at': bot_data['created_at']
+            },
+            'id_pubs': id_data['id_pubs'],
+            'earnings': {
+                'balance': earnings['balance'] if earnings else 0,
+                'total_earned': earnings['total_earned'] if earnings else 0,
+                'total_withdrawn': earnings['total_withdrawn'] if earnings else 0
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in master login: {e}")
+        return web.json_response({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@routes.post("/api/master/withdraw")
+async def api_master_withdraw(request):
+    """Demande de retrait pour un maître"""
+    try:
+        data = await request.json()
+        id_code = data.get('id_code', '').strip().upper()
+        amount = float(data.get('amount', 0))
+        method = data.get('method', 'crypto')
+        
+        if not id_code or amount <= 0:
+            return web.json_response({
+                'success': False,
+                'error': 'Paramètres invalides'
+            }, status=400)
+        
+        # Vérifier ID_CODE
+        id_data = await db.get_id_codes(id_code=id_code)
+        if not id_data:
+            return web.json_response({
+                'success': False,
+                'error': 'ID_CODE invalide'
+            })
+        
+        bot_id = id_data['bot_id']
+        
+        # Effectuer le retrait
+        result = await db.request_withdrawal(bot_id, amount, method)
+        
+        if result['success']:
+            logger.info(f"Retrait demandé pour bot {bot_id}: ${amount}")
+        
+        return web.json_response(result)
+        
+    except Exception as e:
+        logger.error(f"Error in master withdraw: {e}")
+        return web.json_response({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@routes.post("/api/master/regenerate-code")
+async def api_master_regenerate_code(request):
+    """Régénère l'ID_CODE et ID_PUBS"""
+    try:
+        data = await request.json()
+        id_code = data.get('id_code', '').strip().upper()
+        auth = data.get('auth')
+        
+        if not id_code:
+            return web.json_response({
+                'success': False,
+                'error': 'ID_CODE manquant'
+            }, status=400)
+        
+        # Vérifier ID_CODE et auth
+        id_data = await db.get_id_codes(id_code=id_code)
+        if not id_data:
+            return web.json_response({
+                'success': False,
+                'error': 'ID_CODE invalide'
+            })
+        
+        # Vérifier auth
+        if auth:
+            user_data = verify_telegram_auth(auth)
+            if user_data:
+                if int(user_data.get('id', 0)) != id_data['master_id']:
+                    return web.json_response({
+                        'success': False,
+                        'error': 'Non autorisé'
+                    }, status=403)
+        
+        # Régénérer
+        new_codes = await db.regenerate_id_code(id_data['bot_id'], id_data['master_id'])
+        
+        if new_codes:
+            logger.info(f"ID_CODE régénéré pour bot {id_data['bot_id']}")
+            return web.json_response({
+                'success': True,
+                'id_pubs': new_codes['id_pubs'],
+                'id_code': new_codes['id_code']
+            })
+        else:
+            return web.json_response({
+                'success': False,
+                'error': 'Erreur lors de la régénération'
+            })
+            
+    except Exception as e:
+        logger.error(f"Error in regenerate code: {e}")
+        return web.json_response({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+# ============================================================
+# API EXISTANTES (conservées)
+# ============================================================
+
 @routes.post("/api/check-session")
 async def api_check_session(request):
-    """Vérifie si l'utilisateur a une session active"""
+    """Vérifie si l'utilisateur a une session active (bot mère)"""
     try:
         data = await request.json()
         user_id = data.get('user_id')
@@ -158,16 +510,7 @@ async def api_check_session(request):
         if not user_id:
             return web.json_response({'error': 'Missing user_id'}, status=400)
         
-        # Vérifier auth (optionnel pour le debug, mais recommandé en prod)
-        if auth:
-            user_data = verify_telegram_auth(auth)
-            if not user_data:
-                logger.warning(f"Auth invalide pour user {user_id}")
-                # On continue quand même pour tester, mais on log
-            else:
-                logger.info(f"Auth valide pour user {user_data.get('id')}")
-        
-        # Vérifier session
+        # Vérifier session pour bot mère (pas de bot_id)
         try:
             has_session = await db.has_active_session(user_id)
             time_left = await db.get_session_time_left(user_id) if has_session else 0
@@ -197,16 +540,16 @@ async def api_check_session(request):
             'traceback': traceback.format_exc()
         }, status=500)
 
+
 @routes.post("/api/watch-ad")
 async def api_watch_ad(request):
-    """Active une session gratuite après visionnage de pub"""
+    """Active une session gratuite après visionnage de pub (bot mère)"""
     try:
         data = await request.json()
         user_id = data.get('user_id')
         auth = data.get('auth')
         
         logger.info(f"Watch ad - User: {user_id}")
-        logger.info(f"Auth data: {auth[:100] if auth else 'None'}...")
         
         if not user_id:
             return web.json_response({'error': 'Missing user_id'}, status=400)
@@ -215,12 +558,7 @@ async def api_watch_ad(request):
         if auth:
             user_data = verify_telegram_auth(auth)
             if not user_data:
-                logger.warning(f"Auth échouée pour user {user_id} - On continue quand même pour debug")
-                # TEMPORAIRE: On désactive la vérif stricte pour tester
-                # if not user_data or int(user_data.get('id', 0)) != int(user_id):
-                #     return web.json_response({'error': 'Unauthorized'}, status=401)
-            else:
-                logger.info(f"Auth OK - Telegram ID: {user_data.get('id')}")
+                logger.warning(f"Auth échouée pour user {user_id}")
         
         # Vérifier si déjà session active
         try:
@@ -234,17 +572,7 @@ async def api_watch_ad(request):
             logger.error(f"Erreur DB has_active_session: {e}")
             return web.json_response({'error': f'DB Error: {str(e)}'}, status=500)
         
-        # Vérifier cooldown
-        try:
-            if not await db.can_watch_ad(user_id):
-                return web.json_response({
-                    'success': False,
-                    'message': 'Please wait before watching another ad'
-                })
-        except Exception as e:
-            logger.error(f"Erreur DB can_watch_ad: {e}")
-        
-        # Créer session gratuite
+        # Créer session gratuite (bot mère, pas de bot_id)
         try:
             duration = await db.get_free_session_duration()
             logger.info(f"Création session - Duration: {duration}min - User: {user_id}")
@@ -273,6 +601,7 @@ async def api_watch_ad(request):
             'error': str(e),
             'traceback': traceback.format_exc()
         }, status=500)
+
 
 @routes.post("/api/payment")
 async def api_payment(request):
@@ -349,12 +678,14 @@ async def api_admin_login(request):
             'error': str(e)
         }, status=500)
 
+
 @routes.get("/api/admin/stats")
 async def api_admin_stats(request):
     """Statistiques admin"""
     try:
         all_users = await db.full_userbase()
-        all_sessions = await db.storage.find_all(db.user_sessions_name)
+        all_sessions = await db.sessions_col.find().to_list(length=None)
+        all_bots = await db.get_all_cloned_bots()
         
         active_sessions = 0
         premium_users = 0
@@ -373,12 +704,21 @@ async def api_admin_stats(request):
                 except:
                     pass
         
+        # Stats des bots clonés
+        total_cloned_balance = 0
+        for bot in all_bots:
+            earnings = await db.get_bot_earnings(bot['_id'])
+            if earnings:
+                total_cloned_balance += earnings['balance']
+        
         return web.json_response({
             'success': True,
             'total_users': len(all_users),
             'active_sessions': active_sessions,
             'premium_users': premium_users,
             'free_users': free_users,
+            'cloned_bots': len(all_bots),
+            'cloned_bots_balance': total_cloned_balance,
             'config': {
                 'free_session_duration': await db.get_free_session_duration()
             }
@@ -391,11 +731,47 @@ async def api_admin_stats(request):
             'error': str(e)
         }, status=500)
 
+
+@routes.post("/api/admin/credit-bot")
+async def api_admin_credit_bot(request):
+    """Crédite le solde d'un bot (owner only)"""
+    try:
+        data = await request.json()
+        bot_id = data.get('bot_id')
+        amount = float(data.get('amount', 0))
+        
+        if not bot_id:
+            return web.json_response({
+                'success': False,
+                'error': 'bot_id manquant'
+            }, status=400)
+        
+        success = await db.admin_credit_balance(bot_id, amount)
+        
+        if success:
+            logger.info(f"Bot {bot_id} crédité de ${amount}")
+            return web.json_response({
+                'success': True,
+                'message': f'Bot crédité de ${amount}'
+            })
+        else:
+            return web.json_response({
+                'success': False,
+                'error': 'Erreur lors du crédit'
+            })
+            
+    except Exception as e:
+        logger.error(f"Error in admin credit bot: {e}")
+        return web.json_response({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
 @routes.get("/api/notifications")
 async def get_notifications(request):
     """Récupère les notifications promo actives"""
     try:
-        # Récupérer depuis la DB ou retourner un tableau vide par défaut
         notifications = await db.get_notifications() if hasattr(db, 'get_notifications') else []
         return web.json_response({
             'success': True,
@@ -407,11 +783,11 @@ async def get_notifications(request):
             'error': str(e)
         }, status=500)
 
+
 @routes.post("/api/admin/notifications")
 async def update_notifications(request):
     """Met à jour les notifications (admin only)"""
     try:
-        # Vérifier auth admin ici si nécessaire
         data = await request.json()
         notifications = data.get('notifications', [])
         

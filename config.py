@@ -19,7 +19,7 @@ from logging.handlers import RotatingFileHandler
 # CONFIGURATION BOT TELEGRAM
 # ==========================================
 
-TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "8020965278:AAEf0tseiDuGkiJ70n2RDL4iOtITrQ7XK_s")
+TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "8020965278:AAHufBBoK-USIL8kKUcm5Y2a-PFe8M8iUnI")
 APP_ID = int(os.environ.get("APP_ID", "25926022"))
 API_HASH = os.environ.get("API_HASH", "30db27d9e56d854fb5e943723268db32")
 
@@ -103,6 +103,12 @@ CMD_TXT = """<blockquote><b>» Commandes administrateur :</b></blockquote>
 <b>›› /admins :</b> Obtenir la liste des administrateurs
 <b>›› /prime :</b> Donner une session premium à un utilisateur (ex: /prime 123456 3600)
 <b>›› /removesession :</b> Supprimer la session d'un utilisateur
+
+<b>›› /clone :</b> Cloner le bot (créer votre propre bot)
+<b>›› /gestion :</b> Gérer votre bot cloné
+<b>›› /list :</b> Liste des bots clonés (Owner uniquement)
+<b>›› /bots :</b> Vue d'ensemble des bots (Owner uniquement)
+<b>›› /stats :</b> Statistiques de votre bot
 """
 
 # ==========================================
@@ -140,3 +146,20 @@ logging.getLogger("pyrogram").setLevel(logging.WARNING)
 
 def LOGGER(name: str) -> logging.Logger:
     return logging.getLogger(name)
+
+
+# ==========================================
+# CONFIGURATION SYSTÈME DE CLONAGE
+# ==========================================
+
+# Username du bot mère (pour le bouton "Créer votre propre bot")
+MOTHER_BOT_USERNAME = os.environ.get("MOTHER_BOT_USERNAME", "YumeFlowerBot")
+
+# Gain par impression (en dollars)
+EARNING_PER_IMPRESSION = float(os.environ.get("EARNING_PER_IMPRESSION", "0.001"))
+
+# Seuil minimum de retrait (en dollars)
+MIN_WITHDRAWAL_AMOUNT = float(os.environ.get("MIN_WITHDRAWAL_AMOUNT", "7.00"))
+
+# Durée par défaut des sessions gratuites (minutes)
+DEFAULT_FREE_SESSION_MINUTES = int(os.environ.get("DEFAULT_FREE_SESSION_MINUTES", "10"))

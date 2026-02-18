@@ -10,6 +10,9 @@ from pyrogram.errors import FloodWait
 from database.database import *
 
 
+# ==========================================
+# FONCTIONS EXISTANTES
+# ==========================================
 
 async def check_admin(filter, client, update):
     try:
@@ -157,5 +160,96 @@ def get_exp_time(seconds):
             result += f'{int(period_value)} {period_name}'
     return result
 
+
+# ==========================================
+# FILTRES EXISTANTS
+# ==========================================
+
 subscribed = filters.create(is_subscribed)
 admin = filters.create(check_admin)
+
+
+# ==========================================
+# FONCTIONS POUR SYSTÈME DE CLONAGE
+# ==========================================
+
+async def is_owner(user_id: int) -> bool:
+    """Vérifie si l'utilisateur est l'OWNER"""
+    return user_id == OWNER_ID
+
+
+async def is_master(bot_id: int, user_id: int) -> bool:
+    """Vérifie si l'utilisateur est le MAITRE d'un bot"""
+    return await db.is_bot_master(bot_id, user_id)
+
+
+async def is_clone_admin(bot_id: int, user_id: int) -> bool:
+    """Vérifie si l'utilisateur est ADMIN d'un bot (maitre ou admin)"""
+    role = await db.get_user_bot_role(bot_id, user_id)
+    return role in ['maitre', 'admin']
+
+
+async def get_user_clone_role(bot_id: int, user_id: int) -> str:
+    """Récupère le rôle d'un utilisateur sur un bot"""
+    if user_id == OWNER_ID:
+        return 'owner'
+    return await db.get_user_bot_role(bot_id, user_id)
+
+
+async def can_manage_bot(bot_id: int, user_id: int) -> bool:
+    """Vérifie si l'utilisateur peut gérer un bot"""
+    if user_id == OWNER_ID:
+        return True
+    role = await db.get_user_bot_role(bot_id, user_id)
+    return role in ['maitre', 'admin']
+
+
+async def check_clone_admin(filter, client, update):
+    """Filtre pour vérifier si l'utilisateur est admin d'un bot cloné"""
+    try:
+        user_id = update.from_user.id
+        
+        # OWNER peut tout faire
+        if user_id == OWNER_ID:
+            return True
+        
+        # Vérifier si l'utilisateur est MAITRE ou ADMIN d'au moins un bot
+        all_bots = await db.get_all_cloned_bots()
+        for bot in all_bots:
+            role = await db.get_user_bot_role(bot['_id'], user_id)
+            if role in ['maitre', 'admin']:
+                return True
+        
+        return False
+    except Exception as e:
+        print(f"! Exception in check_clone_admin: {e}")
+        return False
+
+
+async def check_master(filter, client, update):
+    """Filtre pour vérifier si l'utilisateur est MAITRE d'au moins un bot"""
+    try:
+        user_id = update.from_user.id
+        
+        # OWNER peut tout faire
+        if user_id == OWNER_ID:
+            return True
+        
+        # Vérifier si l'utilisateur est MAITRE d'au moins un bot
+        all_bots = await db.get_all_cloned_bots()
+        for bot in all_bots:
+            if await db.is_bot_master(bot['_id'], user_id):
+                return True
+        
+        return False
+    except Exception as e:
+        print(f"! Exception in check_master: {e}")
+        return False
+
+
+# ==========================================
+# NOUVEAUX FILTRES POUR CLONAGE
+# ==========================================
+
+clone_admin = filters.create(check_clone_admin)
+master = filters.create(check_master)

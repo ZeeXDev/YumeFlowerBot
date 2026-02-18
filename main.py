@@ -1,3 +1,5 @@
+# Creating updated main.py with clone system integration
+
 import asyncio
 import os
 from aiohttp import web
@@ -30,6 +32,18 @@ async def main():
     print("✅ Bot démarré avec succès!")
     print("⏳ Le bot est en ligne et écoute les messages...")
 
+    # ============================================================
+    # DÉMARRAGE DES BOTS CLONÉS
+    # ============================================================
+    try:
+        print("🔄 Initialisation des bots clonés...")
+        from clone import init_cloned_bots
+        await init_cloned_bots()
+        print("✅ Bots clonés initialisés!")
+    except Exception as e:
+        print(f"⚠️ Erreur lors du démarrage des bots clonés: {e}")
+    # ============================================================
+
     # Garder le programme en vie indéfiniment
     await asyncio.Event().wait()
 
@@ -37,6 +51,6 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print("\n🛑 Arrêt demandé par l'utilisateur")
+        print("\\n🛑 Arrêt demandé par l'utilisateur")
     except Exception as e:
         print(f"❌ Erreur fatale: {e}")
