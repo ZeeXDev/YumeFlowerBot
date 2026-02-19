@@ -1,7 +1,7 @@
 # Creating updated main.py with clone system integration
 
-import asyncio
 import os
+import asyncio
 from aiohttp import web
 from plugins.web_server import web_server
 from bot import Bot
