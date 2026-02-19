@@ -1,14 +1,25 @@
-# Creating updated main.py with clone system integration
-
+# Tout en haut, avant tout
 import os
+import sys
 import asyncio
+import logging
+
+# Configuration logging avant tout
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+
+# Puis les autres imports
 from aiohttp import web
-from plugins.web_server import web_server
 from bot import Bot
 import pyrogram.utils
 
 # Configuration Pyrogram (évite les erreurs d'ID de canal)
 pyrogram.utils.MIN_CHANNEL_ID = -1009147483647
+
+# Import web_server APRÈS la config de base
+from plugins.web_server import web_server
 
 async def main():
     # Démarrage du serveur web (Mini App + API)
@@ -51,6 +62,8 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print("\\n🛑 Arrêt demandé par l'utilisateur")
+        print("\n🛑 Arrêt demandé par l'utilisateur")
     except Exception as e:
         print(f"❌ Erreur fatale: {e}")
+        import traceback
+        traceback.print_exc()
