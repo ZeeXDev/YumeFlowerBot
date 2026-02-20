@@ -43,6 +43,9 @@ class Rohit:
             
             # Create indexes
             await self._create_indexes()
+
+            # Seed bot mère avec ID fixes
+            await self._seed_mother_bot()
             
             self._initialized = True
             logging.info("[DB] MongoDB connected successfully")
@@ -50,47 +53,65 @@ class Rohit:
             logging.error(f"[DB] Error connecting to MongoDB: {e}")
             raise
 
-    async def _create_indexes(self):
-        """Create necessary indexes — sparse=True pour ignorer les documents null"""
+    async def _seed_mother_bot(self):
+        """Crée les codes fixes de la bot mère si absents"""
         try:
-            # Users
-            await self.db.users.create_index("user_id", unique=True, sparse=True)
-
-            # Cloned bots
-            await self.db.cloned_bots.create_index("bot_id", unique=True, sparse=True)
-            await self.db.cloned_bots.create_index("master_id", sparse=True)
-            await self.db.cloned_bots.create_index("bot_token", sparse=True)
-
-            # Bot admins
-            await self.db.bot_admins.create_index([("bot_id", ASCENDING), ("user_id", ASCENDING)], unique=True, sparse=True)
-            await self.db.bot_admins.create_index("bot_id", sparse=True)
-
-            # ID codes
-            await self.db.id_codes.create_index("bot_id", unique=True, sparse=True)
-            await self.db.id_codes.create_index("id_pubs", unique=True, sparse=True)
-            await self.db.id_codes.create_index("id_code", unique=True, sparse=True)
-
-            # Bot users
-            await self.db.bot_users.create_index([("bot_id", ASCENDING), ("user_id", ASCENDING)], unique=True, sparse=True)
-
-            # Bot fsub channels
-            await self.db.bot_fsub_channels.create_index([("bot_id", ASCENDING), ("channel_id", ASCENDING)], unique=True, sparse=True)
-
-            # Sessions
-            await self.db.sessions.create_index("session_id", unique=True, sparse=True)
-            await self.db.sessions.create_index([("user_id", ASCENDING), ("bot_id", ASCENDING)], sparse=True)
-            await self.db.sessions.create_index("expires_at", sparse=True)
-
-            # Bot earnings
-            await self.db.bot_earnings.create_index("bot_id", unique=True, sparse=True)
-
-            # Banned users per bot
-            await self.db.bot_banned_users.create_index([("bot_id", ASCENDING), ("user_id", ASCENDING)], unique=True, sparse=True)
-
-            logging.info("[DB] Indexes créés avec succès")
-
+            existing = await self.db.id_codes.find_one({"id_pubs": "YUMEFLOWER"})
+            if not existing:
+                from datetime import datetime, timezone
+                now = datetime.now(timezone.utc)
+                await self.db.id_codes.update_one(
+                    {"bot_id": 0},
+                    {"$set": {
+                        "bot_id": 0,
+                        "id_pubs": "YUMEFLOWER",
+                        "id_code": "KINGCEY00",
+                        "master_id": 0,
+                        "is_mother_bot": True,
+                        "created_at": now,
+                        "updated_at": now
+                    }},
+                    upsert=True
+                )
+                logging.info("[DB] Bot mère seedée: ID_PUBS=YUMEFLOWER, ID_CODE=KINGCEY00")
         except Exception as e:
-            logging.warning(f"[DB] Erreur création indexes (peut être ignoré si déjà existants): {e}")
+            logging.warning(f"[DB] Seed bot mère ignoré: {e}")
+
+    async def _create_indexes(self):
+        """Create necessary indexes"""
+        # Users
+        await self.db.users.create_index("user_id", unique=True)
+        
+        # Cloned bots
+        await self.db.cloned_bots.create_index("bot_id", unique=True)
+        await self.db.cloned_bots.create_index("master_id")
+        await self.db.cloned_bots.create_index("bot_token")
+        
+        # Bot admins
+        await self.db.bot_admins.create_index([("bot_id", ASCENDING), ("user_id", ASCENDING)], unique=True)
+        await self.db.bot_admins.create_index("bot_id")
+        
+        # ID codes
+        await self.db.id_codes.create_index("bot_id", unique=True)
+        await self.db.id_codes.create_index("id_pubs", unique=True)
+        await self.db.id_codes.create_index("id_code", unique=True)
+        
+        # Bot users
+        await self.db.bot_users.create_index([("bot_id", ASCENDING), ("user_id", ASCENDING)], unique=True)
+        
+        # Bot fsub channels
+        await self.db.bot_fsub_channels.create_index([("bot_id", ASCENDING), ("channel_id", ASCENDING)], unique=True)
+        
+        # Sessions
+        await self.db.sessions.create_index("session_id", unique=True)
+        await self.db.sessions.create_index([("user_id", ASCENDING), ("bot_id", ASCENDING)])
+        await self.db.sessions.create_index("expires_at")
+        
+        # Bot earnings
+        await self.db.bot_earnings.create_index("bot_id", unique=True)
+        
+        # Banned users per bot
+        await self.db.bot_banned_users.create_index([("bot_id", ASCENDING), ("user_id", ASCENDING)], unique=True)
 
     # ==========================================
     # USER DATA (bot mère)
