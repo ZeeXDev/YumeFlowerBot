@@ -1,647 +1,440 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Accès aux fichiers - Regarder une pub</title>
-    
-    <!-- SDK Monetag (EXISTANT - conservé) -->
-    <script src='//libtl.com/sdk.js' data-zone='10518701' data-sdk='show_10518701'></script>
-    
-    <!-- ==========================================
-         SDK ONCLICKA (Documentation officielle)
-         ========================================== -->
-    <script src="https://js.onclckvd.com/in-stream-ad-admanager/tma.js"></script>
-    
-    <!-- Telegram WebApp -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <!-- CSS -->
-    <link rel="stylesheet" href="css/variables.css">
-    <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/animations.css">
-    <link rel="stylesheet" href="css/style.css">
-    
-    <style>
-        /* ==========================================
-           STYLES EMBEDDED BANNER ONCLICKA
-           ========================================== */
-        .onclicka-embedded-container {
-            background: var(--gradient-surface);
-            border: 1px solid rgba(0, 212, 255, 0.2);
-            border-radius: var(--radius-lg);
-            overflow: hidden;
-            margin-bottom: var(--space-md);
-            box-shadow: var(--shadow-md);
-            transition: all var(--transition-base);
-            position: relative;
-        }
-        
-        .onclicka-embedded-container:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-glow-cyan);
-            border-color: var(--primary);
-        }
-        
-        .embedded-banner-header {
-            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(123, 97, 255, 0.1));
-            padding: var(--space-sm) var(--space-md);
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        .embedded-banner-header::before {
-            content: '▶';
-            color: var(--primary);
-            font-size: 0.8rem;
-            margin-right: var(--space-sm);
-        }
-        
-        .embedded-banner-header span {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 600;
-        }
-        
-        .onclicka-badge {
-            background: linear-gradient(135deg, #ff4757, #ff6348);
-            color: white;
-            font-size: 0.65rem;
-            padding: 2px 8px;
-            border-radius: var(--radius-full);
-            font-weight: 700;
-        }
-        
-        #onclicka-embedded-banner {
-            width: 100%;
-            min-height: 250px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--bg-secondary);
-            position: relative;
-        }
-        
-        /* Loader */
-        .banner-loader {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: var(--space-sm);
-            color: var(--text-tertiary);
-            font-size: 0.875rem;
-        }
-        
-        .spinner-small {
-            width: 32px;
-            height: 32px;
-            border: 3px solid var(--border);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        
-        /* ==========================================
-           BOUTONS DUALES (MONETAG + ONCLICKA)
-           ========================================== */
-        .ad-button-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: var(--space-md);
-            margin-bottom: var(--space-md);
-        }
-        
-        /* Bouton Monetag (Cyan) */
-        .btn-monetag {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            color: white;
-            box-shadow: 0 4px 16px var(--primary-shadow);
-            animation: pulse-glow-cyan 2.5s ease-in-out infinite;
-        }
-        
-        /* Bouton OnClickA (Rouge/Orange) */
-        .btn-onclicka {
-            background: linear-gradient(135deg, #ff4757 0%, #ff6348 100%);
-            color: white;
-            box-shadow: 0 4px 16px rgba(255, 71, 87, 0.3);
-            animation: pulse-glow-red 2.5s ease-in-out infinite;
-        }
-        
-        @keyframes pulse-glow-red {
-            0%, 100% {
-                box-shadow: 0 4px 16px rgba(255, 71, 87, 0.3);
-            }
-            50% {
-                box-shadow: 0 8px 32px rgba(255, 71, 87, 0.5), 0 0 48px rgba(255, 99, 72, 0.4);
-            }
-        }
-        
-        .btn-network-label {
-            font-size: 0.7rem;
-            opacity: 0.9;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: block;
-            margin-top: 2px;
-        }
-        
-        .btn-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            line-height: 1.2;
-        }
-        
-        /* Fallback promo styles */
-        .fallback-promo {
-            padding: var(--space-lg);
-            text-align: center;
-            width: 100%;
-        }
-        
-        .fallback-promo-icon {
-            font-size: 2.5rem;
-            margin-bottom: var(--space-sm);
-        }
-        
-        .fallback-promo h4 {
-            color: var(--primary);
-            margin-bottom: var(--space-sm);
-            font-size: 1.1rem;
-        }
-        
-        .fallback-promo p {
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            margin-bottom: var(--space-md);
-            line-height: 1.5;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>YumeFlower — Accès Fichiers</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<!-- Monetag SDK -->
+<script src='//libtl.com/sdk.js' data-zone='10518701' data-sdk='show_10518701'></script>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/pages.css">
 </head>
 <body>
-    <!-- Background -->
-    <div class="bg-gradient"></div>
-    
-    <main class="container">
-        
-        <!-- Header -->
-        <header class="header">
-            <div class="logo-wrapper">
-                <div class="logo">
-                    <div class="logo-inner">
-                        <svg viewBox="0 0 24 24" class="logo-icon" fill="currentColor">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
-                        </svg>
-                    </div>
-                </div>
-                <div class="pulse-ring"></div>
-            </div>
-            <h1 class="title">STOCKAGE DE FICHIERS</h1>
-            <p class="subtitle">Système d'accès sécurisé aux fichiers</p>
-        </header>
 
-        <!-- ==========================================
-             ONCLICKA EMBEDDED BANNER 
-             (Remplace la section promo manuelle)
-             ========================================== -->
-        <section class="onclicka-embedded-container" id="onclickaBannerSection">
-            <div class="embedded-banner-header">
-                <div style="display: flex; align-items: center;">
-                    <span>Sponsorisé</span>
-                </div>
-                <span class="onclicka-badge">OnClickA</span>
-            </div>
-            <div id="onclicka-embedded-banner">
-                <div class="banner-loader" id="bannerLoader">
-                    <div class="spinner-small"></div>
-                    <span>Chargement de la publicité...</span>
-                </div>
-            </div>
-        </section>
+<!-- Fond animé -->
+<div class="bg-container">
+  <div class="bg-grid"></div>
+  <div class="bg-glow bg-glow-red"></div>
+  <div class="bg-glow bg-glow-blue"></div>
+  <div class="bg-noise"></div>
+</div>
 
-        <!-- Status Card -->
-        <section class="card status-card" id="statusCard">
-            <div class="status-header">
-                <div class="status-badge" id="statusBadge">
-                    <span class="status-dot" id="statusDot"></span>
-                    <span class="status-text" id="statusText">Vérification du statut...</span>
-                </div>
-                <div class="timer-display hidden" id="timerDisplay">
-                    <span class="timer-value" id="timerValue">--:--</span>
-                    <span class="timer-label">restant</span>
-                </div>
-            </div>
-            
-            <div class="status-details">
-                <div class="detail-row">
-                    <span class="detail-label">Type d'accès</span>
-                    <span class="detail-value" id="accessType">-</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Expire dans</span>
-                    <span class="detail-value" id="expireTime">-</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Fichiers disponibles</span>
-                    <span class="detail-value">Illimité</span>
-                </div>
-            </div>
+<!-- Toast -->
+<div id="toast"></div>
 
-            <div class="progress-bar hidden" id="progressBar">
-                <div class="progress-fill" id="progressFill"></div>
-            </div>
-        </section>
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page-wrapper">
 
-        <!-- ==========================================
-             CARTE ACTION : MONETAG + ONCLICKA
-             ========================================== -->
-        <section class="card action-card" id="actionCard">
-            <div class="monetag-section" id="monetagSection">
-                <div class="info-box">
-                    <svg class="info-icon" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
-                    </svg>
-                    <p class="info-text">
-                        Pour accéder à vos fichiers, regardez une courte publicité. 
-                        Vous obtiendrez <strong id="freeDuration">10 minutes</strong> d'accès illimité.
-                    </p>
-                </div>
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="header-title">YUMEFLOWER</div>
+    <div class="header-sub">Accès Sécurisé aux Fichiers</div>
+  </div>
 
-                <!-- Deux boutons côte à côte -->
-                <div class="ad-button-row">
-                    <!-- Bouton Monetag -->
-                    <button class="btn btn-monetag" id="watchAdBtn" onclick="handleWatchAd()">
-                        <span class="btn-icon">
-                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                                <path d="M8 5v14l11-7z"/>
-                            </svg>
-                        </span>
-                        <span class="btn-content">
-                            <span class="btn-text">Regarder</span>
-                            <span class="btn-network-label">Monetag</span>
-                        </span>
-                    </button>
+  <!-- ── STEP 1 : Saisie ID_PUBS ── -->
+  <div id="step-input">
 
-                    <!-- Bouton OnClickA -->
-                    <button class="btn btn-onclicka" id="watchOnClickaBtn" onclick="handleOnClickaAd()">
-                        <span class="btn-icon">
-                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                                <path d="M8 5v14l11-7z"/>
-                            </svg>
-                        </span>
-                        <span class="btn-content">
-                            <span class="btn-text">Regarder</span>
-                            <span class="btn-network-label">OnClickA</span>
-                        </span>
-                    </button>
-                </div>
+    <div class="card accent card-center" style="margin-bottom:22px;">
+      <div class="card-top-bar"></div>
+      <div class="access-lock-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF1A1A" stroke-width="1.8" stroke-linecap="round">
+          <rect x="3" y="11" width="18" height="11" rx="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </div>
+      <div class="card-title">ACCÈS REQUIS</div>
+      <p class="card-text">Entrez l'<strong style="color:#fff">ID_PUBS</strong> du bot pour débloquer l'accès à vos fichiers.</p>
+    </div>
 
-                <div class="loader hidden" id="loader">
-                    <svg class="spinner" viewBox="0 0 50 50">
-                        <circle class="path" cx="25" cy="25" r="20" fill="none"></circle>
-                    </svg>
-                    <span class="loader-text">Chargement de la pub...</span>
-                </div>
+    <div class="input-group">
+      <label class="input-label" for="id-pubs-input">ID_PUBS du bot</label>
+      <input
+        class="input-field input-code"
+        id="id-pubs-input"
+        type="text"
+        placeholder="AB3X9KLM2QWE"
+        maxlength="16"
+        autocomplete="off"
+        autocorrect="off"
+        spellcheck="false"
+      >
+      <div class="input-hint" id="input-hint"></div>
+    </div>
 
-                <div class="error-message hidden" id="errorMsg">
-                    Veuillez regarder la publicité jusqu'à la fin pour débloquer l'accès
-                </div>
-            </div>
+    <button class="btn btn-red" id="btn-verify" onclick="verifyIdPubs()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      Vérifier l'ID_PUBS
+    </button>
 
-            <div class="success-section hidden" id="successSection">
-                <div class="success-icon">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                    </svg>
-                </div>
-                <h3 class="success-title">Accès accordé !</h3>
-                <p class="success-text">Vous avez <span id="durationText">10 minutes</span> pour télécharger vos fichiers</p>
-                
-                <button class="btn btn-secondary" onclick="openBot()">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                        <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
-                    </svg>
-                    Ouvrir le bot Telegram
-                </button>
-            </div>
-        </section>
+    <div class="divider"></div>
 
-        <!-- Quick Stats -->
-        <section class="card" style="padding: var(--space-md);">
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-md); text-align: center;">
-                <div>
-                    <div style="font-size: 1.25rem; font-weight: 700; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">24/7</div>
-                    <div style="font-size: 0.7rem; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px;">Disponible</div>
-                </div>
-                <div>
-                    <div style="font-size: 1.25rem; font-weight: 700; background: var(--gradient-success); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Rapide</div>
-                    <div style="font-size: 0.7rem; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px;">Téléchargement</div>
-                </div>
-                <div>
-                    <div style="font-size: 1.25rem; font-weight: 700; background: linear-gradient(135deg, var(--secondary), var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Sécurisé</div>
-                    <div style="font-size: 0.7rem; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px;">Stockage</div>
-                </div>
-            </div>
-        </section>
+    <div class="card">
+      <div class="card-title" style="font-size:15px;margin-bottom:14px;">Comment ça marche ?</div>
+      <div class="step-flow">
+        <div class="step-item">
+          <div class="step-num red">1</div>
+          <div class="step-content">
+            <div class="step-title">Collez l'ID_PUBS</div>
+            <div class="step-desc">L'identifiant unique se trouve sur le message d'accès bloqué du bot Telegram.</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num blue">2</div>
+          <div class="step-content">
+            <div class="step-title">Regardez une pub</div>
+            <div class="step-desc">Quelques secondes de publicité suffisent pour débloquer votre accès.</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num green">3</div>
+          <div class="step-content">
+            <div class="step-title">Session activée</div>
+            <div class="step-desc">Retournez sur le bot et récupérez vos fichiers immédiatement.</div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-        <!-- Promo Premium -->
-        <section class="card promo-card">
-            <p class="promo-text">Vous voulez un accès illimité sans publicité ?</p>
-            <button class="btn btn-outline" onclick="goPremium()">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-                </svg>
-                Passer à Premium
-            </button>
-        </section>
+  </div>
 
-    </main>
+  <!-- ── STEP 2 : Confirmation bot trouvé ── -->
+  <div id="step-confirm" style="display:none;">
 
-    <!-- Navigation -->
-    <nav class="bottom-nav">
-        <a href="index.html" class="nav-item active">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-            </svg>
-            <span class="nav-label">Accès</span>
-        </a>
-        <a href="prime.html" class="nav-item">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-            </svg>
-            <span class="nav-label">Premium</span>
-        </a>
-        <a href="admin.html" class="nav-item">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
-            </svg>
-            <span class="nav-label">Admin</span>
-        </a>
-    </nav>
+    <div class="card accent bot-found-card" style="margin-bottom:18px;">
+      <div class="card-top-bar"></div>
+      <div style="margin-bottom:12px;">
+        <span class="badge badge-green"><span class="badge-dot"></span>Bot vérifié</span>
+      </div>
+      <div class="bot-found-avatar" id="confirm-avatar">B</div>
+      <div class="bot-found-name" id="confirm-bot-name">@BotName</div>
+      <div class="bot-found-meta">
+        ID_PUBS : <code id="confirm-id-pubs-display">--</code>
+      </div>
+    </div>
 
-    <!-- ==========================================
-         INITIALISATION ONCLICKA (Documentation officielle)
-         ========================================== -->
-    <script>
-        // Initialize the ad engine and retrieve the SHOW method
-        // SPOT ID: 6109845
-        window.initCdTma?.({ id: '6109845' })
-            .then(show => window.showOnClicka = show)
-            .catch(e => console.log('[OnClickA] Erreur initialisation:', e));
-    </script>
+    <div class="card" style="margin-bottom:16px;">
+      <div class="session-detail-row">
+        <span class="info-key">Durée session</span>
+        <span class="badge badge-blue" id="confirm-duration">10 min</span>
+      </div>
+      <div class="session-detail-row">
+        <span class="info-key">Type d'accès</span>
+        <span class="badge badge-red">Gratuit via pub</span>
+      </div>
+      <div class="session-detail-row" style="border:none">
+        <span class="info-key">Réseau pub</span>
+        <span class="info-val">Monetag</span>
+      </div>
+    </div>
 
-    <!-- Scripts application -->
-    <script>
-        const API_BASE = 'https://test-cey.onrender.com';
-        
-        // ==========================================
-        // GESTION MONETAG (EXISTANT)
-        // ==========================================
-        const MonetagManager = {
-            waitForSDK: function() {
-                return new Promise((resolve) => {
-                    let attempts = 0;
-                    const maxAttempts = 50;
-                    
-                    const check = () => {
-                        attempts++;
-                        if (typeof show_10518701 === 'function') {
-                            resolve(true);
-                        } else if (attempts >= maxAttempts) {
-                            resolve(false);
-                        } else {
-                            setTimeout(check, 100);
-                        }
-                    };
-                    check();
-                });
-            },
-            
-            showAd: async function() {
-                const isReady = await this.waitForSDK();
-                if (!isReady) throw new Error('SDK Monetag non disponible');
-                
-                return new Promise((resolve, reject) => {
-                    try {
-                        show_10518701()
-                            .then(() => resolve(true))
-                            .catch((err) => reject(err));
-                    } catch (e) {
-                        reject(e);
-                    }
-                });
-            }
-        };
+    <button class="btn btn-red" id="btn-watch-ad" onclick="launchAd()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Regarder la pub &amp; Débloquer
+    </button>
 
-        // ==========================================
-        // GESTION ONCLICKA (Documentation officielle)
-        // ==========================================
-        const OnClickaManager = {
-            // Afficher l'interstitial OnClickA
-            // Utilise window.showOnClicka récupéré lors de l'init
-            showAd: async function() {
-                return new Promise((resolve, reject) => {
-                    // Vérifier si la fonction show est disponible
-                    if (!window.showOnClicka) {
-                        reject(new Error('OnClickA non initialisé. Attends quelques secondes et réessaie.'));
-                        return;
-                    }
-                    
-                    // Activer la méthode SHOW récupérée
-                    window.showOnClicka()
-                        .then(() => {
-                            console.log('[OnClickA] Pub visionnée avec succès');
-                            resolve(true);
-                        })
-                        .catch((e) => {
-                            console.log('[OnClickA] Erreur:', e);
-                            reject(e);
-                        });
-                });
-            }
-        };
+    <button class="btn btn-outline" onclick="resetToInput()" style="margin-top:10px;">
+      Changer d'ID_PUBS
+    </button>
 
-        // ==========================================
-        // API CLIENT
-        // ==========================================
-        const API = {
-            checkSession: async function(userId, auth) {
-                try {
-                    const response = await fetch(`${API_BASE}/api/check-session`, {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({user_id: userId, auth: auth})
-                    });
-                    return await response.json();
-                } catch (e) {
-                    return {has_access: false};
-                }
-            },
-            
-            watchAd: async function(userId, auth, adNetwork = 'monetag') {
-                try {
-                    const response = await fetch(`${API_BASE}/api/watch-ad`, {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({
-                            user_id: userId, 
-                            auth: auth,
-                            ad_network: adNetwork
-                        })
-                    });
-                    return await response.json();
-                } catch (e) {
-                    return {success: false, error: e.message};
-                }
-            }
-        };
+  </div>
 
-        const tg = window.Telegram?.WebApp;
-        
-        // ==========================================
-        // HANDLER MONETAG
-        // ==========================================
-        async function handleWatchAd() {
-            const btn = document.getElementById('watchAdBtn');
-            const onclckBtn = document.getElementById('watchOnClickaBtn');
-            const loader = document.getElementById('loader');
-            const errorMsg = document.getElementById('errorMsg');
-            
-            btn.classList.add('hidden');
-            onclckBtn.classList.add('hidden');
-            loader.classList.remove('hidden');
-            errorMsg.classList.add('hidden');
-            
-            try {
-                await MonetagManager.showAd();
-                const userId = tg?.initDataUnsafe?.user?.id;
-                if (!userId) throw new Error('Utilisateur non identifié');
-                
-                const result = await API.watchAd(userId, tg.initData, 'monetag');
-                
-                if (result.success) {
-                    showSuccessUI(result);
-                } else {
-                    throw new Error(result.message || 'Erreur serveur');
-                }
-            } catch (error) {
-                console.error('[Monetag] Erreur:', error);
-                loader.classList.add('hidden');
-                btn.classList.remove('hidden');
-                onclckBtn.classList.remove('hidden');
-                errorMsg.classList.remove('hidden');
-                errorMsg.textContent = error.message || 'Erreur lors du visionnage';
-            }
-        }
+  <!-- ── STEP 3 : Session active + timer ── -->
+  <div id="step-success" style="display:none;">
 
-        // ==========================================
-        // HANDLER ONCLICKA (Documentation officielle)
-        // ==========================================
-        async function handleOnClickaAd() {
-            const btn = document.getElementById('watchOnClickaBtn');
-            const monetagBtn = document.getElementById('watchAdBtn');
-            const loader = document.getElementById('loader');
-            const errorMsg = document.getElementById('errorMsg');
-            
-            btn.classList.add('hidden');
-            monetagBtn.classList.add('hidden');
-            loader.classList.remove('hidden');
-            errorMsg.classList.add('hidden');
-            
-            try {
-                // Activer la méthode SHOW récupérée lors de l'init
-                // Retourne une Promise avec le résultat du visionnage
-                await OnClickaManager.showAd();
-                
-                const userId = tg?.initDataUnsafe?.user?.id;
-                if (!userId) throw new Error('Utilisateur non identifié');
-                
-                // Notifier le backend
-                const result = await API.watchAd(userId, tg.initData, 'onclicka');
-                
-                if (result.success) {
-                    showSuccessUI(result);
-                } else {
-                    throw new Error(result.message || 'Erreur serveur');
-                }
-            } catch (error) {
-                console.error('[OnClickA] Erreur:', error);
-                loader.classList.add('hidden');
-                btn.classList.remove('hidden');
-                monetagBtn.classList.remove('hidden');
-                errorMsg.classList.remove('hidden');
-                errorMsg.textContent = error.message || 'Erreur OnClickA. Réessaie ou utilise Monetag.';
-            }
-        }
+    <div class="icon-circle success">
+      <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#00C850" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
 
-        // ==========================================
-        // UI & UTILITAIRES
-        // ==========================================
-        function showSuccessUI(result) {
-            document.getElementById('monetagSection').classList.add('hidden');
-            document.getElementById('successSection').classList.remove('hidden');
-            document.getElementById('durationText').textContent = (result.duration || 10) + ' minutes';
-            updateStatusCard(result.duration || 10, result.expires_at);
-            if (tg) tg.showAlert('✅  Félicitation Accès débloqué !');
-        }
-        
-        function updateStatusCard(duration, expiresAt) {
-            document.getElementById('statusDot').classList.add('active');
-            document.getElementById('statusText').textContent = 'Session active';
-            document.getElementById('accessType').textContent = 'Gratuit (Pub)';
-            document.getElementById('expireTime').textContent = new Date(expiresAt).toLocaleString('fr-FR');
-            document.getElementById('timerDisplay').classList.remove('hidden');
-        }
-        
-        async function checkExistingSession() {
-            try {
-                const userId = tg?.initDataUnsafe?.user?.id;
-                if (!userId) return;
-                
-                const data = await API.checkSession(userId, tg.initData);
-                
-                if (data.has_access && data.time_left > 0) {
-                    document.getElementById('monetagSection').classList.add('hidden');
-                    document.getElementById('successSection').classList.remove('hidden');
-                    const minutes = Math.floor(data.time_left / 60);
-                    document.getElementById('durationText').textContent = minutes + ' minutes';
-                    updateStatusCard(minutes, data.expires_at);
-                } else {
-                    document.getElementById('statusText').textContent = 'Aucune session active';
-                }
-            } catch (e) {
-                document.getElementById('statusText').textContent = 'Erreur de connexion';
-            }
-        }
-        
-        function openBot() {
-            if (tg) {
-                tg.close();
-                setTimeout(() => window.location.href = 'https://t.me/WaraMugiBot', 100);
-            }
-        }
-        
-        function goPremium() {
-            window.location.href = 'prime.html';
-        }
+    <div class="success-header">
+      <div class="success-title">SESSION ACTIVE</div>
+      <div class="success-subtitle">Retournez sur le bot Telegram<br>et envoyez votre lien de fichier.</div>
+    </div>
 
-        // ==========================================
-        // INITIALISATION
-        // ==========================================
-        document.addEventListener('DOMContentLoaded', () => {
-            if (tg) {
-                tg.expand();
-                tg.ready();
-            }
-            
-            // Vérifier session existante
-            setTimeout(checkExistingSession, 500);
-        });
-    </script>
+    <!-- Anneau timer -->
+    <div class="timer-ring">
+      <svg class="timer-svg" width="110" height="110" viewBox="0 0 110 110">
+        <defs>
+          <linearGradient id="timerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#FF1A1A"/>
+            <stop offset="100%" stop-color="#1E90FF"/>
+          </linearGradient>
+        </defs>
+        <circle class="timer-track" cx="55" cy="55" r="47"/>
+        <circle class="timer-progress" id="timer-circle"
+          cx="55" cy="55" r="47"
+          stroke="url(#timerGrad)"
+          stroke-dasharray="295.31"
+          stroke-dashoffset="0"/>
+      </svg>
+      <div class="timer-inner">
+        <div class="timer-num" id="timer-display">10:00</div>
+        <div class="timer-label">restant</div>
+      </div>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-bar">
+        <div class="progress-fill" id="timer-bar" style="width:100%"></div>
+      </div>
+      <div class="progress-meta">
+        <span>Session en cours</span>
+        <span id="timer-pct">100%</span>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="card" style="text-align:center;">
+      <div class="card-text">
+        Bot : <strong style="color:#fff" id="success-bot-name">@BotName</strong>
+      </div>
+    </div>
+
+    <button class="btn btn-outline" onclick="resetToInput()" style="margin-top:4px;">
+      Utiliser un autre bot
+    </button>
+
+  </div>
+
+</div>
+
+<!-- NAV FLOTTANTE -->
+<nav class="nav-float">
+  <button class="nav-btn active" onclick="location.href='index.html'">
+    <span class="nav-icon">
+      <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </span>
+    <span class="nav-text">Accès</span>
+  </button>
+  <button class="nav-btn" onclick="location.href='prime.html'">
+    <span class="nav-icon">
+      <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    </span>
+    <span class="nav-text">Premium</span>
+  </button>
+  <button class="nav-btn" onclick="location.href='clone.html'">
+    <span class="nav-icon">
+      <svg viewBox="0 0 24 24"><path d="M8 17l-2-2 2-2"/><path d="M16 7l2 2-2 2"/><line x1="6" y1="15" x2="18" y2="9"/></svg>
+    </span>
+    <span class="nav-text">Clone</span>
+  </button>
+  <button class="nav-btn" onclick="location.href='master.html'">
+    <span class="nav-icon">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </span>
+    <span class="nav-text">Maître</span>
+  </button>
+</nav>
+
+<script src="js/app.js"></script>
+<script src="js/tg.js"></script>
+<script src="js/api.js"></script>
+<script src="js/timer.js"></script>
+<script>
+// ── STATE ─────────────────────────────────────────────────
+let state = {
+  idPubs: null,
+  botData: null,
+  sessionDuration: 600, // 10 min défaut en secondes
+};
+
+// ── INIT ──────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  // Auto-fill depuis URL param ou start_param Telegram
+  const param = TG.getStartParam();
+  if (param) {
+    const input = document.getElementById('id-pubs-input');
+    if (input) { input.value = param.toUpperCase(); }
+  }
+
+  // Vérifier si session déjà active
+  const cached = App.Store.get('active_session');
+  if (cached && cached.expires_at) {
+    const secsLeft = Timer.secondsFromExpiry(cached.expires_at);
+    if (secsLeft > 30) {
+      state.idPubs = cached.id_pubs;
+      state.botData = cached.bot;
+      showSuccessStep(secsLeft, cached.id_pubs, cached.bot_name || '');
+      return;
+    } else {
+      App.Store.remove('active_session');
+    }
+  }
+
+  App.staggerIn('#step-input .card, #step-input .input-group, #step-input .btn', 100, 80);
+});
+
+// ── STEP 1 : VÉRIFIER ID_PUBS ────────────────────────────
+async function verifyIdPubs() {
+  const input = document.getElementById('id-pubs-input');
+  const idPubs = input.value.trim().toUpperCase();
+  const hint = document.getElementById('input-hint');
+
+  // Validation locale
+  if (!idPubs || idPubs.length < 6) {
+    input.classList.add('error');
+    hint.textContent = 'ID_PUBS trop court.';
+    hint.className = 'input-hint error';
+    TG.hapticError();
+    return;
+  }
+
+  input.classList.remove('error');
+  hint.textContent = '';
+  hint.className = 'input-hint';
+
+  App.setLoading('btn-verify', true);
+  TG.hapticLight();
+
+  const res = await API.verifyIdPubs(idPubs);
+
+  App.setLoading('btn-verify', false);
+
+  if (!res.ok || !res.data.success) {
+    input.classList.add('error');
+    hint.textContent = res.data.error || 'ID_PUBS introuvable. Vérifiez et réessayez.';
+    hint.className = 'input-hint error';
+    App.Toast.error('ID_PUBS invalide');
+    TG.hapticError();
+    return;
+  }
+
+  // Succès
+  state.idPubs  = idPubs;
+  state.botData = res.data.bot;
+  TG.hapticSuccess();
+  showConfirmStep(res.data.bot, idPubs);
+}
+
+// ── STEP 2 : CONFIRMATION ────────────────────────────────
+function showConfirmStep(bot, idPubs) {
+  App.hide('step-input');
+  App.show('step-confirm');
+
+  const name = bot.username || bot.name || 'Bot';
+  App.setText('confirm-bot-name', `@${name}`);
+  App.setText('confirm-id-pubs-display', idPubs);
+
+  // Avatar initiale
+  const av = document.getElementById('confirm-avatar');
+  if (av) av.textContent = name[0]?.toUpperCase() || 'B';
+
+  App.animateIn(document.getElementById('step-confirm'), 50);
+}
+
+// ── STEP 3 : LANCER PUB MONETAG ──────────────────────────
+function launchAd() {
+  const userId = TG.getUserId();
+  if (!userId) {
+    App.Toast.error('Impossible de récupérer votre ID Telegram');
+    return;
+  }
+
+  TG.hapticMedium();
+  App.setLoading('btn-watch-ad', true);
+
+  // Lancer la pub Monetag
+  App.MonetAd.show(
+    // ── Pub terminée → activer la session ──
+    async () => {
+      App.setLoading('btn-watch-ad', false);
+      await activateSession(userId);
+    },
+    // ── Erreur pub ──
+    () => {
+      App.setLoading('btn-watch-ad', false);
+      App.Toast.error('Erreur lors de la pub. Réessayez.');
+    }
+  );
+}
+
+async function activateSession(userId) {
+  const auth = TG.getAuth();
+  const res = await API.watchAdClone(userId, state.idPubs, auth);
+
+  if (!res.ok || !res.data.success) {
+    // Session peut-être déjà active
+    if (res.data.message?.includes('déjà active')) {
+      App.Toast.info('Session déjà active !');
+      // Vérifier le temps restant
+      const check = await API.checkSessionClone(userId, state.idPubs);
+      if (check.data.has_access) {
+        const secs = check.data.time_left || 600;
+        showSuccessStep(secs, state.idPubs, state.botData?.username || '');
+      }
+    } else {
+      App.Toast.error(res.data.error || 'Erreur activation session');
+    }
+    return;
+  }
+
+  TG.hapticSuccess();
+
+  const duration = (res.data.duration || 10) * 60;
+  const expiresAt = res.data.expires_at;
+  const botName = res.data.bot_username || state.botData?.username || '';
+
+  // Sauvegarder en cache
+  App.Store.set('active_session', {
+    id_pubs: state.idPubs,
+    bot: state.botData,
+    bot_name: botName,
+    expires_at: expiresAt
+  });
+
+  showSuccessStep(duration, state.idPubs, botName, expiresAt);
+}
+
+// ── STEP SUCCÈS + TIMER ───────────────────────────────────
+function showSuccessStep(seconds, idPubs, botName, expiresAt = null) {
+  App.hide('step-input');
+  App.hide('step-confirm');
+  App.show('step-success');
+
+  App.setText('success-bot-name', botName ? `@${botName}` : '');
+  App.animateIn(document.getElementById('step-success'), 50);
+
+  const totalSecs = expiresAt ? Timer.secondsFromExpiry(expiresAt) : seconds;
+
+  Timer.startWithRing({
+    seconds: totalSecs,
+    circle:  document.getElementById('timer-circle'),
+    bar:     document.getElementById('timer-bar'),
+    display: document.getElementById('timer-display'),
+    pctEl:   document.getElementById('timer-pct'),
+    onEnd: () => {
+      App.Store.remove('active_session');
+      App.Toast.info('Session expirée. Regardez une nouvelle pub.', 5000);
+      resetToInput();
+    }
+  });
+}
+
+// ── RESET ─────────────────────────────────────────────────
+function resetToInput() {
+  Timer.stop();
+  state = { idPubs: null, botData: null, sessionDuration: 600 };
+
+  App.hide('step-confirm');
+  App.hide('step-success');
+  App.show('step-input');
+
+  const input = document.getElementById('id-pubs-input');
+  if (input) { input.value = ''; input.classList.remove('error'); }
+
+  const hint = document.getElementById('input-hint');
+  if (hint) { hint.textContent = ''; hint.className = 'input-hint'; }
+}
+
+// ── ENTER KEY ─────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const step1 = document.getElementById('step-input');
+    if (step1 && step1.style.display !== 'none') verifyIdPubs();
+  }
+});
+</script>
 </body>
 </html>

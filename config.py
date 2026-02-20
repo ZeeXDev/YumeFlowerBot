@@ -19,7 +19,7 @@ from logging.handlers import RotatingFileHandler
 # CONFIGURATION BOT TELEGRAM
 # ==========================================
 
-TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "8020965278:AAHufBBoK-USIL8kKUcm5Y2a-PFe8M8iUnI")
+TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "8020965278:AAEdbGIXLo8s3PAhqzJSDnSRCS5UCq68qGU")
 APP_ID = int(os.environ.get("APP_ID", "25926022"))
 API_HASH = os.environ.get("API_HASH", "30db27d9e56d854fb5e943723268db32")
 
@@ -66,21 +66,21 @@ TG_BOT_WORKERS = int(os.environ.get("TG_BOT_WORKERS", "200"))
 # MÉDIAS & IMAGES
 # ==========================================
 
-START_PIC = os.environ.get("START_PIC", "https://files.catbox.moe/68v7dr.jpg")
-FORCE_PIC = os.environ.get("FORCE_PIC", "https://ibb.co/nNSsK23f")
+START_PIC = os.environ.get("START_PIC", "https://files.catbox.moe/tor45x.jpg")
+FORCE_PIC = os.environ.get("FORCE_PIC", "https://files.catbox.moe/42lm1v.jpg")
 
 # ==========================================
 # TEXTES & MESSAGES
 # ==========================================
 
 HELP_TXT = "<b><blockquote>Besoin d'aide ?</blockquote></b>"
-ABOUT_TXT = "<b><blockquote>◈ Ceci est un bot OpenSource qui vous offre des fichiers d'Animes/Manga Propulsé par @AnimeCey & @MangaCey</blockquote></b>"
+ABOUT_TXT = "<b><blockquote>◈ 🌸 Kyaa～ ! Salut Abdoul ! ૮₍ ˶ᵔ ᵕ ᵔ˶ ₎ა ♡  \nMoi c'est YumeFlower～ la petite fleur magique qui garde tous tes animes et mangas préférés ! 🌷💕  \nC'est un bot open-source propulsé par @kingceyy～\nJe t'offre plein de jolis fichiers d'animes/manga, juste pour toi～ !  \nViens jouer avec moi tous les jours, hein ? On va regarder des trucs trop kawaii ensemble～ !!! ✨\nNya\~ ♡</blockquote></b>"
 
 START_MSG = os.environ.get("START_MESSAGE", 
-    "<b>👋 Bienvenue, {first} !</b>\n\nCe bot est une <b>extension de stockage</b> dédiée à <a href='https://t.me/ZeeXClub'>@ZeeXClub</a>.\n\n\n<blockquote>Propulsé par: <a href='t.me/WorldZPrime'>Buble Watch</a>\n© 2026</blockquote>")
+    "<b>Nyaaaa～ !!! ♡(≧▽≦)♡\n\nKonnnnichiwaaaa {first} !!</b>\n\nMoi c'est YumeFlower～ la plus mignonne des bots de stockage ૮₍ ˶ᵔ ᵕ ᵔ˶ ₎ა🌸\nJe garde tous tes fichiers bien au chaud ♡ \nEt je peux même te donner des plein de mini-moi !\nTes clones pourront poster des choses trop kawaii… et hop ! Tu gagnes de l'argent avec～ ✧*｡٩(ˊᗜˋ*)و✧\n <blockquote>On va s'amuser grave hein ? Dis oui dis oui dis oui～ !!! 💖🌟</blockquote>")
 
 FORCE_MSG = os.environ.get("FORCE_SUB_MESSAGE", 
-    "Salut {first}\n\n<b>Impossible de récupérer ce(s) fichier(s) : vous n'êtes pas membre de ce(s) canal(aux). Pour y accéder, rejoignez d'abord le(s) canal(aux), puis réessayez de récupérer les fichiers...</b>")
+    "<b>🌸 うぅ… sniff sniff… ♡\nOnii-chan / onee-chan… je suis trop désoléeaaa… (T_T)\n/nImpossible de te donner les fichiers… parce que tu n'es pas encore dans le(s) canal(aux) secret(s)… ૮₍ ˶•‌︿•‌˶ ₎ა💦 \n\nRejoins-les d'abord, s'il te plaaaait… puis réessaie ?\nYumeFlower t'attend avec plein de bisous et de fichiers tout doux… promis juré ! 🌷😢💕\n\n… Ne m'abandonne pas hein ? … ♡</b>")
 
 CMD_TXT = """<blockquote><b>» Commandes administrateur :</b></blockquote>
 

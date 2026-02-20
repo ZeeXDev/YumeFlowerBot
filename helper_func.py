@@ -248,8 +248,89 @@ async def check_master(filter, client, update):
 
 
 # ==========================================
+# FILTRE ADMIN POUR BOTS CLONÉS (admin_filter)
+# ==========================================
+
+async def admin_filter_func(filter, client, update):
+    """Filtre admin pour les commandes des bots clonés"""
+    try:
+        user_id = update.from_user.id
+        
+        # OWNER peut tout faire
+        if user_id == OWNER_ID:
+            return True
+        
+        # Vérifier si c'est un bot cloné et si l'utilisateur est admin/maitre
+        # On récupère l'ID du bot depuis le client
+        try:
+            bot_id = client.me.id
+            role = await db.get_user_bot_role(bot_id, user_id)
+            if role in ['maitre', 'admin']:
+                return True
+        except:
+            pass
+        
+        # Vérifier si admin global
+        if await db.admin_exist(user_id):
+            return True
+            
+        return False
+    except Exception as e:
+        print(f"! Exception in admin_filter: {e}")
+        return False
+
+admin_filter = filters.create(admin_filter_func)
+
+
+# ==========================================
 # NOUVEAUX FILTRES POUR CLONAGE
 # ==========================================
 
 clone_admin = filters.create(check_clone_admin)
 master = filters.create(check_master)
+
+
+# ==========================================
+# FONCTIONS UTILITAIRES SUPPLEMENTAIRES
+# ==========================================
+
+async def get_bot_info_text(bot_id: int) -> str:
+    """Génère un texte informatif sur un bot"""
+    try:
+        bot_data = await db.get_cloned_bot(bot_id)
+        if not bot_data:
+            return "Bot non trouvé"
+        
+        id_codes = await db.get_id_codes(bot_id=bot_id)
+        earnings = await db.get_bot_earnings(bot_id)
+        stats = bot_data.get('stats', {})
+        
+        text = (
+            f"🤖 @{bot_data['bot_username']}\n"
+            f"👤 Maître: {bot_data['master_id']}\n"
+            f"👥 Utilisateurs: {stats.get('total_users', 0)}\n"
+            f"💰 Gains: ${earnings['balance']:.2f if earnings else 0:.2f}\n"
+            f"🆔 ID_PUBS: {id_codes['id_pubs'] if id_codes else 'N/A'}"
+        )
+        return text
+    except Exception as e:
+        return f"Erreur: {e}"
+
+
+def format_bytes(size):
+    """Convertit des bytes en format lisible"""
+    power = 2**10
+    n = 0
+    power_labels = {0: '', 1: 'K', 2: 'M', 3: 'G', 4: 'T'}
+    while size > power:
+        size /= power
+        n += 1
+    return f"{size:.2f} {power_labels[n]}B"
+
+
+def escape_markdown(text: str) -> str:
+    """Échappe les caractères spéciaux Markdown"""
+    chars = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
+    for char in chars:
+        text = text.replace(char, f'\\{char}')
+    return text

@@ -1,4 +1,3 @@
-# Tout en haut, avant tout
 import os
 import sys
 import asyncio
@@ -10,9 +9,7 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 
-# Puis les autres imports
 from aiohttp import web
-from bot import Bot
 import pyrogram.utils
 
 # Configuration Pyrogram (évite les erreurs d'ID de canal)
@@ -37,22 +34,58 @@ async def main():
 
     # Démarrage du bot Telegram
     print("🤖 Démarrage du bot Telegram...")
+    
+    # Import ICI, juste avant de créer l'instance
+    from bot import Bot
+    
+    # CRÉER L'INSTANCE BOT
     bot = Bot()
+    
+    # ============================================================
+    # IMPORT DES PLUGINS - CRITIQUE: APRÈS bot = Bot() mais AVANT start()
+    # ============================================================
+    print("📦 Chargement des plugins...")
+    try:
+        # Force l'import de tous les modules pour enregistrer les handlers
+        import plugins.clone      # /clone
+        import plugins.gestion    # /gestion
+        import plugins.list_bots  # /list, /bots
+        import plugins.stats      # /stats
+        import plugins.start      # /start (déjà chargé mais sécurité)
+        import plugins.admin      # Commandes admin
+        print("✅ Tous les plugins chargés avec succès!")
+    except Exception as e:
+        print(f"❌ Erreur chargement plugins: {e}")
+        import traceback
+        traceback.print_exc()
+    # ============================================================
+    
+    # DÉMARRER LE BOT (charge les plugins et démarre les handlers)
     await bot.start()
     
     print("✅ Bot démarré avec succès!")
     print("⏳ Le bot est en ligne et écoute les messages...")
+
+    # Lancement de la tâche de nettoyage des sessions en arrière-plan
+    try:
+        from plugins.gestion import cleanup_sessions
+        asyncio.create_task(cleanup_sessions())
+        print("🧹 Tâche de nettoyage des sessions lancée en arrière-plan")
+    except Exception as e:
+        print(f"⚠️ Impossible de lancer cleanup_sessions : {e}")
 
     # ============================================================
     # DÉMARRAGE DES BOTS CLONÉS
     # ============================================================
     try:
         print("🔄 Initialisation des bots clonés...")
-        from clone import init_cloned_bots
+        from plugins.clone import init_cloned_bots
         await init_cloned_bots()
         print("✅ Bots clonés initialisés!")
     except Exception as e:
         print(f"⚠️ Erreur lors du démarrage des bots clonés: {e}")
+        import traceback
+        traceback.print_exc()
     # ============================================================
 
     # Garder le programme en vie indéfiniment

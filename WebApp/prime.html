@@ -1,622 +1,239 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium - Accès Sans Publicité</title>
-    
-    <!-- Telegram WebApp -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <!-- CSS -->
-    <link rel="stylesheet" href="css/variables.css">
-    <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="/css/components.css">
-    <link rel="stylesheet" href="css/animations.css">
-    
-    <style>
-        /* Premium Header */
-        .premium-header {
-            text-align: center;
-            margin-bottom: var(--space-xl);
-        }
-        
-        .premium-icon {
-            width: 100px;
-            height: 100px;
-            background: var(--gradient-primary);
-            border-radius: var(--radius-full);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: var(--space-lg);
-            box-shadow: var(--shadow-glow-cyan);
-            animation: float 3s ease-in-out infinite;
-            position: relative;
-        }
-        
-        .premium-icon::before {
-            content: '';
-            position: absolute;
-            inset: -6px;
-            border-radius: var(--radius-full);
-            background: var(--gradient-primary);
-            opacity: 0.2;
-            filter: blur(16px);
-            z-index: -1;
-            animation: pulse-ring 2s ease-out infinite;
-        }
-        
-        .premium-icon svg {
-            width: 56px;
-            height: 56px;
-            fill: white;
-        }
-        
-        .premium-title {
-            font-size: 2.5rem;
-            font-weight: 900;
-            background: var(--gradient-primary);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: var(--space-sm);
-            letter-spacing: -1px;
-        }
-        
-        /* Currency Selector */
-        .currency-selector {
-            display: flex;
-            gap: var(--space-sm);
-            margin-bottom: var(--space-xl);
-            overflow-x: auto;
-            padding-bottom: var(--space-sm);
-            scrollbar-width: none;
-        }
-        
-        .currency-selector::-webkit-scrollbar {
-            display: none;
-        }
-        
-        .currency-btn {
-            padding: var(--space-sm) var(--space-lg);
-            background: var(--bg-secondary);
-            border: 2px solid var(--border);
-            border-radius: var(--radius-md);
-            color: var(--text-secondary);
-            font-weight: 700;
-            cursor: pointer;
-            transition: all var(--transition-base);
-            white-space: nowrap;
-            flex-shrink: 0;
-            font-size: 0.875rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .currency-btn:hover {
-            border-color: var(--border-light);
-            background: var(--bg-tertiary);
-        }
-        
-        .currency-btn.active {
-            background: var(--gradient-primary);
-            border-color: var(--primary);
-            color: white;
-            box-shadow: 0 0 20px var(--primary-glow);
-        }
-        
-        /* Plans Grid */
-        .plans-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: var(--space-lg);
-            margin-bottom: var(--space-xl);
-        }
-        
-        .plan-card {
-            background: var(--surface);
-            border: 2px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: var(--space-xl) var(--space-lg);
-            text-align: center;
-            transition: all var(--transition-base);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .plan-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: var(--gradient-primary);
-            transform: scaleX(0);
-            transition: transform var(--transition-base);
-        }
-        
-        .plan-card:hover {
-            transform: translateY(-8px);
-            border-color: var(--primary);
-            box-shadow: 0 12px 40px rgba(0, 212, 255, 0.25);
-        }
-        
-        .plan-card:hover::before {
-            transform: scaleX(1);
-        }
-        
-        .plan-badge {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            background: var(--gradient-success);
-            color: white;
-            padding: 6px 14px;
-            border-radius: var(--radius-full);
-            font-size: 0.7rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            box-shadow: 0 4px 12px var(--success-glow);
-        }
-        
-        .plan-name {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: var(--space-md);
-        }
-        
-        .plan-price {
-            font-size: 3rem;
-            font-weight: 900;
-            background: var(--gradient-primary);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: var(--space-xs);
-            line-height: 1;
-        }
-        
-        .plan-currency {
-            font-size: 1rem;
-            color: var(--text-tertiary);
-            margin-bottom: var(--space-md);
-        }
-        
-        .plan-duration {
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            margin-bottom: var(--space-lg);
-            font-weight: 500;
-        }
-        
-        .plan-features {
-            list-style: none;
-            margin-bottom: var(--space-xl);
-            text-align: left;
-        }
-        
-        .plan-feature {
-            display: flex;
-            align-items: center;
-            gap: var(--space-sm);
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            margin-bottom: var(--space-sm);
-            padding: var(--space-xs) 0;
-        }
-        
-        .plan-feature svg {
-            width: 20px;
-            height: 20px;
-            fill: var(--success);
-            flex-shrink: 0;
-        }
-        
-        /* Payment Methods */
-        .payment-methods {
-            margin-top: var(--space-xl);
-        }
-        
-        .payment-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: var(--space-md);
-            margin-top: var(--space-md);
-        }
-        
-        .payment-method {
-            background: var(--bg-secondary);
-            border: 2px solid var(--border);
-            border-radius: var(--radius-md);
-            padding: var(--space-md);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: var(--space-sm);
-            cursor: pointer;
-            transition: all var(--transition-base);
-            position: relative;
-        }
-        
-        .payment-method::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: var(--radius-md);
-            background: var(--gradient-primary);
-            opacity: 0;
-            transition: opacity var(--transition-base);
-        }
-        
-        .payment-method:hover {
-            border-color: var(--primary);
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0, 212, 255, 0.2);
-        }
-        
-        .payment-method:hover::before {
-            opacity: 0.05;
-        }
-        
-        .payment-method.selected {
-            border-color: var(--success);
-            background: rgba(0, 255, 170, 0.05);
-            box-shadow: 0 0 24px var(--success-glow);
-        }
-        
-        .payment-logo {
-            width: 48px;
-            height: 48px;
-            object-fit: contain;
-            border-radius: var(--radius-sm);
-            position: relative;
-            z-index: 1;
-        }
-        
-        .payment-name {
-            font-size: 0.875rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            text-align: center;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .payment-info {
-            font-size: 0.7rem;
-            color: var(--text-tertiary);
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            position: relative;
-            z-index: 1;
-        }
-        
-        /* Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: var(--bg-overlay);
-            z-index: var(--z-modal);
-            align-items: center;
-            justify-content: center;
-            padding: var(--space-lg);
-            backdrop-filter: blur(12px);
-        }
-        
-        .modal.active {
-            display: flex;
-            animation: fade-in 0.3s ease;
-        }
-        
-        .modal-content {
-            background: var(--surface);
-            border-radius: var(--radius-lg);
-            padding: var(--space-xl);
-            max-width: 500px;
-            width: 100%;
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow-xl);
-            animation: zoom-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: var(--space-lg);
-            padding-bottom: var(--space-md);
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .modal-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-        
-        .modal-close {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            color: var(--text-secondary);
-            cursor: pointer;
-            padding: var(--space-sm);
-            transition: all var(--transition-fast);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal-close:hover {
-            background: var(--bg-tertiary);
-            color: var(--text-primary);
-        }
-        
-        .modal-close svg {
-            width: 20px;
-            height: 20px;
-            fill: currentColor;
-        }
-        
-        .instructions-list {
-            list-style: none;
-            counter-reset: step;
-        }
-        
-        .instruction-item {
-            counter-increment: step;
-            margin-bottom: var(--space-md);
-            padding-left: var(--space-xl);
-            position: relative;
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            line-height: 1.6;
-        }
-        
-        .instruction-item::before {
-            content: counter(step);
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 28px;
-            height: 28px;
-            background: var(--gradient-primary);
-            border-radius: var(--radius-full);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 0.875rem;
-            color: white;
-        }
-        
-        .instruction-item strong {
-            color: var(--primary);
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>YumeFlower — Premium</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/pages.css">
 </head>
 <body>
-    <div class="bg-gradient"></div>
-    
-    <main class="container">
-        
-        <!-- Header Premium -->
-        <header class="premium-header">
-            <div class="premium-icon">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-                </svg>
-            </div>
-            <h1 class="premium-title">PREMIUM</h1>
-            <p class="subtitle">Accès illimité sans publicité à tous les fichiers</p>
-        </header>
 
-        <!-- Sélecteur de Devise -->
-        <section class="card">
-            <h3 style="margin-bottom: var(--space-md); text-align: center; font-size: 1.125rem;">Choisissez votre devise</h3>
-            <div class="currency-selector">
-                <button class="currency-btn active" onclick="selectCurrency('XOF', this)">XOF</button>
-                <button class="currency-btn" onclick="selectCurrency('CDF', this)">CDF</button>
-                <button class="currency-btn" onclick="selectCurrency('EUR', this)">EUR</button>
-                <button class="currency-btn" onclick="selectCurrency('USD', this)">USD</button>
-                <button class="currency-btn" onclick="selectCurrency('CRYPTO', this)">CRYPTO</button>
-            </div>
-        </section>
+<div class="bg-container">
+  <div class="bg-grid"></div>
+  <div class="bg-glow bg-glow-red"></div>
+  <div class="bg-glow bg-glow-blue"></div>
+  <div class="bg-noise"></div>
+</div>
 
-        <!-- Plans -->
-        <section class="plans-container">
-            <!-- Plan Hebdomadaire -->
-            <div class="plan-card">
-                <h3 class="plan-name">Hebdomadaire</h3>
-                <div class="plan-price" id="price-weekly">1100</div>
-                <div class="plan-currency" id="currency-weekly">XOF</div>
-                <p class="plan-duration">7 jours d'accès</p>
-                
-                <ul class="plan-features">
-                    <li class="plan-feature">
-                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                        <span>Accès illimité pendant 7 jours</span>
-                    </li>
-                    <li class="plan-feature">
-                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                        <span>Zéro publicité</span>
-                    </li>
-                    <li class="plan-feature">
-                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                        <span>Téléchargements rapides</span>
-                    </li>
-                </ul>
-                
-                <button class="btn btn-outline" onclick="selectPlan('weekly')">Choisir cette formule</button>
-            </div>
+<div id="toast"></div>
 
-            <!-- Plan Mensuel -->
-            <div class="plan-card">
-                <h3 class="plan-name">Mensuel</h3>
-                <div class="plan-price" id="price-monthly">3500</div>
-                <div class="plan-currency" id="currency-monthly">XOF</div>
-                <p class="plan-duration">30 jours d'accès</p>
-                
-                <ul class="plan-features">
-                    <li class="plan-feature">
-                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                        <span>Accès illimité pendant 30 jours</span>
-                    </li>
-                    <li class="plan-feature">
-                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                        <span>Zéro publicité</span>
-                    </li>
-                    <li class="plan-feature">
-                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                        <span>Téléchargements rapides</span>
-                    </li>
-                    <li class="plan-feature">
-                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                        <span>Support prioritaire</span>
-                    </li>
-                </ul>
-                
-                <button class="btn btn-outline" onclick="selectPlan('monthly')">Choisir cette formule</button>
-            </div>
+<div class="page-wrapper">
 
-            <!-- Plan Annuel -->
-            <div class="plan-card">
-                <div class="plan-badge">Meilleur choix</div>
-                <h3 class="plan-name">Annuel</h3>
-                <div class="plan-price" id="price-yearly">50000</div>
-                <div class="plan-currency" id="currency-yearly">XOF</div>
-                <p class="plan-duration">365 jours d'accès</p>
-                
-                <ul class="plan-features">
-                    <li class="plan-feature">
-                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                        <span>Accès illimité pendant 365 jours</span>
-                    </li>
-                    <li class="plan-feature">
-                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                        <span>Zéro publicité</span>
-                    </li>
-                    <li class="plan-feature">
-                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                        <span>Téléchargements ultra-rapides</span>
-                    </li>
-                    <li class="plan-feature">
-                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                        <span>Support VIP 24/7</span>
-                    </li>
-                </ul>
-                
-                <button class="btn btn-primary" onclick="selectPlan('yearly')">Choisir cette formule</button>
-            </div>
-        </section>
+  <div class="page-header">
+    <div class="header-title">PREMIUM</div>
+    <div class="header-sub">Accès illimité sans publicité</div>
+  </div>
 
-        <!-- Méthodes de Paiement -->
-        <section class="card payment-methods">
-            <h3 style="margin-bottom: var(--space-sm); text-align: center; font-size: 1.125rem;">Méthodes de paiement</h3>
-            <p style="color: var(--text-secondary); text-align: center; margin-bottom: var(--space-lg); font-size: 0.875rem;">
-                Sélectionnez votre moyen de paiement préféré
-            </p>
-            
-            <div class="payment-grid" id="paymentGrid">
-                <div class="payment-method" onclick="selectPayment('moov', this)">
-                    <img src="assets/logos/moov.png" alt="Moov Money" class="payment-logo">
-                    <div class="payment-name">Moov Money</div>
-                    <div class="payment-info">Togo | Burkina | Bénin | CIV | Niger | Mali</div>
-                </div>
-                
-                <div class="payment-method" onclick="selectPayment('orange', this)">
-                    <img src="assets/logos/orange.png" alt="Orange Money" class="payment-logo">
-                    <div class="payment-name">Orange Money</div>
-                    <div class="payment-info">Afrique</div>
-                </div>
-                
-                <div class="payment-method" onclick="selectPayment('mtn', this)">
-                    <img src="assets/logos/mtn.png" alt="MTN Money" class="payment-logo">
-                    <div class="payment-name">MTN Money</div>
-                    <div class="payment-info">Afrique</div>
-                </div>
-                
-                <div class="payment-method" onclick="selectPayment('mixx', this)">
-                    <img src="assets/logos/mixx.png" alt="Mixx by Yas" class="payment-logo">
-                    <div class="payment-name">Mixx by Yas</div>
-                    <div class="payment-info">🇹🇬 Togo uniquement</div>
-                </div>
-                
-                <div class="payment-method" onclick="selectPayment('ecobank', this)">
-                    <img src="assets/logos/ecobank.png" alt="Ecobank" class="payment-logo">
-                    <div class="payment-name">Ecobank</div>
-                    <div class="payment-info">Carte Bancaire</div>
-                </div>
-                
-                <div class="payment-method" onclick="selectPayment('usdt', this)">
-                    <img src="assets/logos/usdt.png" alt="USDT" class="payment-logo">
-                    <div class="payment-name">USDT</div>
-                    <div class="payment-info">TRC20</div>
-                </div>
-                
-                <div class="payment-method" onclick="selectPayment('ton', this)">
-                    <img src="assets/logos/ton.png" alt="Toncoin" class="payment-logo">
-                    <div class="payment-name">Toncoin</div>
-                    <div class="payment-info">Réseau TON</div>
-                </div>
-            </div>
-            
-            <button class="btn btn-success" style="margin-top: var(--space-xl);" onclick="proceedPayment()" id="payBtn" disabled>
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                </svg>
-                Procéder au paiement
-            </button>
-        </section>
-
-    </main>
-
-    <!-- Modal Instructions -->
-    <div class="modal" id="paymentModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title" id="modalTitle">Instructions de paiement</h3>
-                <button class="modal-close" onclick="closeModal()">
-                    <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-                </button>
-            </div>
-            <div id="modalContent"></div>
-        </div>
+  <!-- HERO -->
+  <div class="premium-hero">
+    <div class="premium-star-wrap">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="1.2">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+      </svg>
     </div>
+    <p class="premium-tagline">
+      Plus de pubs. Accès instantané à tous vos fichiers sur n'importe quel bot cloné.
+    </p>
+  </div>
 
-    <!-- Navigation -->
-    <nav class="bottom-nav">
-        <a href="/" class="nav-item">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-            </svg>
-            <span class="nav-label">Accès</span>
-        </a>
-        <a href="/prime" class="nav-item active">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-            </svg>
-            <span class="nav-label">Premium</span>
-        </a>
-        <a href="/admin" class="nav-item">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
-            </svg>
-            <span class="nav-label">Admin</span>
-        </a>
-    </nav>
+  <!-- STATS -->
+  <div class="stat-row">
+    <div class="stat-box red">
+      <div class="stat-val red">0</div>
+      <div class="stat-key">Pubs</div>
+    </div>
+    <div class="stat-box blue">
+      <div class="stat-val blue">∞</div>
+      <div class="stat-key">Accès</div>
+    </div>
+    <div class="stat-box gold">
+      <div class="stat-val gold">24/7</div>
+      <div class="stat-key">Dispo</div>
+    </div>
+  </div>
 
-    <script src="js/api.js"></script>
-    <script src="js/prime.js"></script>
+  <!-- PLANS -->
+  <div id="plan-weekly" class="plan-card" onclick="selectPlan('weekly')">
+    <div class="plan-info">
+      <div class="plan-name">Plan Hebdomadaire</div>
+      <div class="plan-desc">7 jours d'accès complet</div>
+    </div>
+    <div class="plan-price">
+      <div class="plan-amount text-blue">$0.99</div>
+      <div class="plan-period">/ semaine</div>
+    </div>
+  </div>
+
+  <div id="plan-monthly" class="plan-card popular selected" onclick="selectPlan('monthly')">
+    <div class="plan-info">
+      <div class="plan-name">Plan Mensuel</div>
+      <div class="plan-desc">30 jours d'accès complet</div>
+    </div>
+    <div class="plan-price">
+      <div class="plan-amount text-blue">$2.99</div>
+      <div class="plan-period">/ mois</div>
+    </div>
+  </div>
+
+  <div id="plan-yearly" class="plan-card" onclick="selectPlan('yearly')">
+    <div class="plan-info">
+      <div class="plan-name">Plan Annuel</div>
+      <div class="plan-desc">365 jours — économisez 60%</div>
+    </div>
+    <div class="plan-price">
+      <div class="plan-amount text-red">$14.99</div>
+      <div class="plan-period">/ an</div>
+    </div>
+  </div>
+
+  <!-- MÉTHODES PAIEMENT -->
+  <div class="card" style="margin-top:4px;">
+    <div class="card-title" style="font-size:14px;margin-bottom:14px;">Méthode de paiement</div>
+    <div class="pay-grid">
+      <div class="pay-method selected" id="pm-crypto" onclick="selectPayMethod('crypto')">
+        <div class="pay-method-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#F7931A" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9 8h4.5a2 2 0 0 1 0 4H9v4h4.5a2 2 0 0 0 0-4"/>
+            <line x1="9" y1="12" x2="15" y2="12"/>
+          </svg>
+        </div>
+        <div class="pay-method-name">Crypto</div>
+      </div>
+      <div class="pay-method" id="pm-moov" onclick="selectPayMethod('moov')">
+        <div class="pay-method-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FF6600" stroke-width="1.5">
+            <rect x="2" y="5" width="20" height="14" rx="2"/>
+            <line x1="2" y1="10" x2="22" y2="10"/>
+          </svg>
+        </div>
+        <div class="pay-method-name">Moov Money</div>
+      </div>
+      <div class="pay-method" id="pm-orange" onclick="selectPayMethod('orange')">
+        <div class="pay-method-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FF8000" stroke-width="1.5">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.15 14a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 3.12 3.18h3"/>
+          </svg>
+        </div>
+        <div class="pay-method-name">Orange Money</div>
+      </div>
+      <div class="pay-method" id="pm-ecobank" onclick="selectPayMethod('ecobank')">
+        <div class="pay-method-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#005BAC" stroke-width="1.5">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          </svg>
+        </div>
+        <div class="pay-method-name">Ecobank</div>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn btn-gold" id="btn-pay" style="margin-top:4px;" onclick="initiatePayment()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    Passer Premium — Mensuel $2.99
+  </button>
+
+  <div class="divider"></div>
+
+  <!-- AVANTAGES -->
+  <div class="card">
+    <div class="card-title" style="font-size:15px;margin-bottom:14px;">Avantages Premium</div>
+    <div class="checklist">
+      <div class="checklist-item">
+        <svg class="check-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E90FF" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        <span>Aucune publicité requise</span>
+      </div>
+      <div class="checklist-item">
+        <svg class="check-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E90FF" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        <span>Accès instantané sur tous les bots clonés</span>
+      </div>
+      <div class="checklist-item">
+        <svg class="check-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E90FF" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        <span>Session valable 24h/24, 7j/7</span>
+      </div>
+      <div class="checklist-item">
+        <svg class="check-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E90FF" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        <span>Téléchargements illimités</span>
+      </div>
+      <div class="checklist-item">
+        <svg class="check-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E90FF" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        <span>Support prioritaire</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- NAV -->
+<nav class="nav-float">
+  <button class="nav-btn" onclick="location.href='index.html'">
+    <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+    <span class="nav-text">Accès</span>
+  </button>
+  <button class="nav-btn active" onclick="location.href='prime.html'">
+    <span class="nav-icon"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+    <span class="nav-text">Premium</span>
+  </button>
+  <button class="nav-btn" onclick="location.href='clone.html'">
+    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M8 17l-2-2 2-2"/><path d="M16 7l2 2-2 2"/><line x1="6" y1="15" x2="18" y2="9"/></svg></span>
+    <span class="nav-text">Clone</span>
+  </button>
+  <button class="nav-btn" onclick="location.href='master.html'">
+    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+    <span class="nav-text">Maître</span>
+  </button>
+</nav>
+
+<script src="js/app.js"></script>
+<script src="js/tg.js"></script>
+<script src="js/api.js"></script>
+<script>
+let selectedPlan   = 'monthly';
+let selectedMethod = 'crypto';
+
+const planPrices = {
+  weekly:  { label: 'Hebdomadaire $0.99', price: 0.99 },
+  monthly: { label: 'Mensuel $2.99',      price: 2.99 },
+  yearly:  { label: 'Annuel $14.99',      price: 14.99 },
+};
+
+function selectPlan(plan) {
+  selectedPlan = plan;
+  ['weekly','monthly','yearly'].forEach(p => {
+    const el = document.getElementById(`plan-${p}`);
+    if (el) el.classList.toggle('selected', p === plan);
+  });
+  const info = planPrices[plan];
+  const btn = document.getElementById('btn-pay');
+  if (btn && info) btn.innerHTML = `
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+    </svg>
+    Passer Premium — ${info.label}
+  `;
+  TG.hapticLight();
+}
+
+function selectPayMethod(method) {
+  selectedMethod = method;
+  ['crypto','moov','orange','ecobank'].forEach(m => {
+    const el = document.getElementById(`pm-${m}`);
+    if (el) el.classList.toggle('selected', m === method);
+  });
+  TG.hapticLight();
+}
+
+async function initiatePayment() {
+  App.Toast.info('Paiement bientôt disponible. Revenez très vite !', 4000);
+  TG.hapticWarning();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  App.staggerIn('.plan-card, .card, .btn', 80, 70);
+});
+</script>
 </body>
 </html>

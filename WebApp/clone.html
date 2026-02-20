@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>YumeFlower — Clone ton Bot</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/pages.css">
+</head>
+<body>
+
+<div class="bg-container">
+  <div class="bg-grid"></div>
+  <div class="bg-glow bg-glow-red"></div>
+  <div class="bg-glow bg-glow-blue"></div>
+  <div class="bg-noise"></div>
+</div>
+
+<div id="toast"></div>
+
+<div class="page-wrapper">
+
+  <!-- HERO -->
+  <div class="clone-hero">
+    <div class="clone-hero-title t-gradient">
+      GAGNE<br>DE L'ARGENT
+    </div>
+    <p class="clone-hero-sub">
+      Clone ton propre bot de partage de fichiers.<br>
+      Chaque pub regardée par tes utilisateurs = <strong style="color:#fff">revenus pour toi.</strong>
+    </p>
+  </div>
+
+  <!-- STATS RAPIDES -->
+  <div class="stat-row">
+    <div class="stat-box red">
+      <div class="stat-val red">$2</div>
+      <div class="stat-key">CPM</div>
+    </div>
+    <div class="stat-box blue">
+      <div class="stat-val blue">3</div>
+      <div class="stat-key">Bots max</div>
+    </div>
+    <div class="stat-box green">
+      <div class="stat-val green">$7</div>
+      <div class="stat-key">Retrait min</div>
+    </div>
+  </div>
+
+  <!-- CALCULATRICE DE REVENUS -->
+  <div class="calc-card">
+    <div class="calc-title">SIMULATEUR DE REVENUS</div>
+
+    <div class="calc-slider-wrap">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <span class="t-label">Utilisateurs actifs / jour</span>
+        <span id="slider-val" style="font-size:13px;font-weight:600;color:#fff;">100</span>
+      </div>
+      <input
+        class="calc-slider"
+        type="range"
+        id="users-slider"
+        min="10"
+        max="5000"
+        step="10"
+        value="100"
+        oninput="updateCalc(this.value)"
+      >
+      <div class="calc-slider-meta">
+        <span>10</span>
+        <span>5 000</span>
+      </div>
+    </div>
+
+    <div class="calc-result">
+      <div class="calc-result-label">Revenu estimé / mois</div>
+      <div class="calc-result-val" id="calc-monthly">$6.00</div>
+      <div class="calc-result-period">basé sur $2 CPM · 1 pub/utilisateur/jour</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;">
+      <div style="background:var(--gray3);border-radius:var(--radius-sm);padding:12px;text-align:center;">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">/ jour</div>
+        <div class="t-display t-display-md" style="color:var(--blue)" id="calc-daily">$0.20</div>
+      </div>
+      <div style="background:var(--gray3);border-radius:var(--radius-sm);padding:12px;text-align:center;">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">/ an</div>
+        <div class="t-display t-display-md" style="color:var(--red)" id="calc-yearly">$73</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMMENT ÇA MARCHE -->
+  <div class="card" style="margin-bottom:14px;">
+    <div class="card-title" style="font-size:15px;margin-bottom:14px;">Comment gagner ?</div>
+    <div class="step-flow">
+      <div class="step-item">
+        <div class="step-num red">1</div>
+        <div class="step-content">
+          <div class="step-title">Clone le bot</div>
+          <div class="step-desc">
+            Envoie <code style="background:var(--gray3);padding:2px 7px;border-radius:4px;font-size:12px;">/clone</code>
+            avec ton token BotFather. Configuration en moins d'1 minute.
+          </div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num blue">2</div>
+        <div class="step-content">
+          <div class="step-title">Partage ton ID_PUBS</div>
+          <div class="step-desc">
+            Chaque utilisateur qui regarde une pub sur <strong style="color:#fff">ton</strong> bot te rapporte <strong style="color:#FF1A1A">$0.002</strong>. Plus tu as d'utilisateurs, plus tu gagnes.
+          </div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num green">3</div>
+        <div class="step-content">
+          <div class="step-title">Retire tes gains</div>
+          <div class="step-desc">
+            Dès <strong style="color:#fff">$7</strong> de solde, demande un retrait depuis ta page Maître.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FONCTIONNALITÉS -->
+  <div class="card" style="margin-bottom:14px;">
+    <div class="card-title" style="font-size:15px;margin-bottom:14px;">Fonctionnalités incluses</div>
+    <div class="feature-grid">
+      <div class="feature-item">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF1A1A" stroke-width="1.8">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+          </svg>
+        </div>
+        <div class="feature-label">Liens encodés sécurisés</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1E90FF" stroke-width="1.8">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.15 14a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 3.12 3.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l.27-.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21 18z"/>
+          </svg>
+        </div>
+        <div class="feature-label">Force-Sub canaux</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF1A1A" stroke-width="1.8">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <div class="feature-label">Broadcast utilisateurs</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1E90FF" stroke-width="1.8">
+            <line x1="18" y1="20" x2="18" y2="10"/>
+            <line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6" y1="20" x2="6" y2="14"/>
+          </svg>
+        </div>
+        <div class="feature-label">Stats en temps réel</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF1A1A" stroke-width="1.8">
+            <rect x="3" y="11" width="18" height="11" rx="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+        <div class="feature-label">Système ban utilisateurs</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1E90FF" stroke-width="1.8">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <div class="feature-label">Suppression auto fichiers</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00C850" stroke-width="1.8">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <div class="feature-label">Multi-admins</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="1.8">
+            <line x1="12" y1="1" x2="12" y2="23"/>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+        </div>
+        <div class="feature-label">Revenus Monetag</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RETRAITS DISPONIBLES -->
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-title" style="font-size:15px;margin-bottom:12px;">Méthodes de retrait</div>
+    <div class="withdraw-grid">
+      <div class="withdraw-item">
+        <div class="withdraw-dot"></div>
+        <div class="withdraw-name">Crypto (BTC/USDT)</div>
+      </div>
+      <div class="withdraw-item">
+        <div class="withdraw-dot"></div>
+        <div class="withdraw-name">Moov Money</div>
+      </div>
+      <div class="withdraw-item">
+        <div class="withdraw-dot"></div>
+        <div class="withdraw-name">Orange Money</div>
+      </div>
+      <div class="withdraw-item">
+        <div class="withdraw-dot"></div>
+        <div class="withdraw-name">Ecobank Xpress</div>
+      </div>
+    </div>
+    <div style="margin-top:12px;padding:10px 12px;background:var(--gray3);border-radius:var(--radius-sm);">
+      <span style="font-size:12px;color:var(--muted);">Retrait minimum : </span>
+      <span style="font-size:12px;font-weight:700;color:#00C850;">$7.00</span>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <button class="btn btn-red" onclick="openCloneBot()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="22" y1="2" x2="11" y2="13"/>
+      <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+    </svg>
+    Cloner maintenant sur Telegram
+  </button>
+
+  <div class="sep-text">ou</div>
+
+  <button class="btn btn-outline" onclick="location.href='master.html'">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+      <circle cx="12" cy="7" r="4"/>
+    </svg>
+    Accéder à ma page Maître
+  </button>
+
+</div>
+
+<!-- NAV -->
+<nav class="nav-float">
+  <button class="nav-btn" onclick="location.href='index.html'">
+    <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+    <span class="nav-text">Accès</span>
+  </button>
+  <button class="nav-btn" onclick="location.href='prime.html'">
+    <span class="nav-icon"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+    <span class="nav-text">Premium</span>
+  </button>
+  <button class="nav-btn active" onclick="location.href='clone.html'">
+    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M8 17l-2-2 2-2"/><path d="M16 7l2 2-2 2"/><line x1="6" y1="15" x2="18" y2="9"/></svg></span>
+    <span class="nav-text">Clone</span>
+  </button>
+  <button class="nav-btn" onclick="location.href='master.html'">
+    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+    <span class="nav-text">Maître</span>
+  </button>
+</nav>
+
+<script src="js/app.js"></script>
+<script src="js/tg.js"></script>
+<script src="js/api.js"></script>
+<script>
+
+// Nom du bot mère — à adapter
+const MOTHER_BOT = 'YumeFlowerBot';
+
+function openCloneBot() {
+  TG.hapticMedium();
+  TG.openTelegramLink(`https://t.me/${MOTHER_BOT}?start=clone`);
+}
+
+// ── CALCULATRICE ────────────────────────────────────────
+function updateCalc(users) {
+  users = parseInt(users) || 0;
+  const CPM         = 0.002; // $0.002 par impression
+  const daily       = users * CPM;
+  const monthly     = daily * 30;
+  const yearly      = daily * 365;
+
+  document.getElementById('slider-val').textContent = users.toLocaleString();
+  document.getElementById('calc-daily').textContent  = `$${daily.toFixed(2)}`;
+  document.getElementById('calc-monthly').textContent = `$${monthly.toFixed(2)}`;
+  document.getElementById('calc-yearly').textContent  = `$${Math.round(yearly)}`;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  updateCalc(100);
+  App.staggerIn('.clone-hero, .stat-row, .calc-card, .card, .btn', 60, 80);
+});
+</script>
+</body>
+</html>

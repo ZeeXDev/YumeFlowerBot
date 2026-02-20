@@ -1,7 +1,7 @@
 from aiohttp import web
 from aiohttp.web_middlewares import middleware
 from database.database import db
-from config import TG_BOT_TOKEN, FREE_SESSION_DURATION, ADMIN_PASSWORD
+from config import TG_BOT_TOKEN, FREE_SESSION_DURATION, ADMIN_PASSWORD, OWNER_ID
 import json
 import hashlib
 import hmac
@@ -48,7 +48,7 @@ def verify_telegram_auth(auth_data: str) -> dict:
             return None
         
         # Créer la data check string (triée par clés)
-        data_check_string = '\\n'.join([f"{k}={v}" for k, v in sorted(data.items()) if k != 'hash'])
+        data_check_string = '\n'.join([f"{k}={v}" for k, v in sorted(data.items()) if k != 'hash'])
         
         # Clé secrète = SHA256 du bot token
         secret_key = hashlib.sha256(TG_BOT_TOKEN.encode()).digest()
@@ -84,19 +84,25 @@ def verify_telegram_auth(auth_data: str) -> dict:
 
 @middleware
 async def cors_middleware(request, handler):
-    """Autorise les requêtes CORS depuis Vercel"""
+    """Autorise les requêtes CORS depuis n'importe quelle origine Telegram"""
     origin = request.headers.get('Origin', '')
     
-    # Autoriser explicitement ton domaine
+    # Autoriser les origines Telegram et locales
     allowed_origins = [
-        'https://WaraMugiBot.vercel.app',
-        'https://wara-mugi-bot.vercel.app',
+        'https://web.telegram.org',
+        'https://telegram.org',
         'http://localhost:3000',
         'http://localhost:8000',
-        'https://web.telegram.org',
+        'http://localhost:8080',
+        'https://localhost',
     ]
     
-    is_allowed = any(allowed in origin for allowed in allowed_origins) or 'vercel.app' in origin
+    # Autoriser aussi toutes les origines https (pour la production)
+    is_allowed = (
+        any(allowed in origin for allowed in allowed_origins) or 
+        origin.startswith('https://') or
+        'telegram' in origin.lower()
+    )
     
     if request.method == "OPTIONS":
         response = web.Response()
@@ -111,7 +117,7 @@ async def cors_middleware(request, handler):
                 status=500
             )
     
-    if is_allowed:
+    if is_allowed and origin:
         response.headers['Access-Control-Allow-Origin'] = origin
     else:
         response.headers['Access-Control-Allow-Origin'] = '*'
@@ -132,11 +138,9 @@ routes = web.RouteTableDef()
 async def health_check(request):
     """Vérification que le serveur est en ligne"""
     try:
-        # Tester connexion DB
-        db_status = "connected" if db.storage else "disconnected"
         return web.json_response({
             "status": "online",
-            "database": db_status,
+            "service": "YumeFlower2 Bot API",
             "timestamp": datetime.now().isoformat()
         })
     except Exception as e:
@@ -257,9 +261,8 @@ async def api_watch_ad_clone(request):
         # Incrémenter les stats
         await db.increment_bot_stat(bot_id, 'total_ads_watched')
         
-        # AJOUTER DES GAINS AU BOT (monétisation)
-        # $0.01 par impression (exemple)
-        earning_per_ad = 0.01
+        # AJOUTER DES GAINS AU BOT ($0.002 par impression = $2 CPM)
+        earning_per_ad = 0.002
         await db.add_earning(bot_id, earning_per_ad, 'ad_impression')
         
         logger.info(f"Session créée pour user {user_id} sur bot {bot_id}")
@@ -328,9 +331,8 @@ async def api_check_session_clone(request):
             'error': str(e)
         }, status=500)
 
-
 # ============================================================
-# API PAGE MAÎTRE
+# API PAGE MAÎTRE (ID_CODE)
 # ============================================================
 
 @routes.post("/api/master/login")
@@ -373,6 +375,7 @@ async def api_master_login(request):
         
         bot_data = await db.get_cloned_bot(id_data['bot_id'])
         earnings = await db.get_bot_earnings(id_data['bot_id'])
+        stats = bot_data.get('stats', {}) if bot_data else {}
         
         return web.json_response({
             'success': True,
@@ -382,6 +385,11 @@ async def api_master_login(request):
                 'created_at': bot_data['created_at']
             },
             'id_pubs': id_data['id_pubs'],
+            'stats': {
+                'total_users': stats.get('total_users', 0),
+                'total_ads_watched': stats.get('total_ads_watched', 0),
+                'total_files_sent': stats.get('total_files_sent', 0)
+            },
             'earnings': {
                 'balance': earnings['balance'] if earnings else 0,
                 'total_earned': earnings['total_earned'] if earnings else 0,
@@ -399,12 +407,13 @@ async def api_master_login(request):
 
 @routes.post("/api/master/withdraw")
 async def api_master_withdraw(request):
-    """Demande de retrait pour un maître"""
+    """Demande de retrait pour un maître (manuel - envoie notification à l'OWNER)"""
     try:
         data = await request.json()
         id_code = data.get('id_code', '').strip().upper()
         amount = float(data.get('amount', 0))
-        method = data.get('method', 'crypto')
+        method = data.get('method', 'crypto')  # crypto, moov, orange, ecobank
+        account_info = data.get('account_info', '')  # numéro de téléphone/compte
         
         if not id_code or amount <= 0:
             return web.json_response({
@@ -421,12 +430,54 @@ async def api_master_withdraw(request):
             })
         
         bot_id = id_data['bot_id']
+        bot_data = await db.get_cloned_bot(bot_id)
         
-        # Effectuer le retrait
+        # Vérifier solde suffisant (minimum $7)
+        earnings = await db.get_bot_earnings(bot_id)
+        if not earnings or earnings['balance'] < 7.0:
+            return web.json_response({
+                'success': False,
+                'error': 'Solde insuffisant (minimum $7)'
+            })
+        
+        if earnings['balance'] < amount:
+            return web.json_response({
+                'success': False,
+                'error': 'Montant supérieur au solde'
+            })
+        
+        # Créer la demande de retrait (statut: pending)
         result = await db.request_withdrawal(bot_id, amount, method)
         
         if result['success']:
-            logger.info(f"Retrait demandé pour bot {bot_id}: ${amount}")
+            # Envoyer notification à l'OWNER (manuel)
+            try:
+                from bot import Bot
+                bot = Bot()
+                
+                method_names = {
+                    'crypto': 'Crypto (BTC/USDT)',
+                    'moov': 'Moov Money',
+                    'orange': 'Orange Money',
+                    'ecobank': 'Ecobank Xpress'
+                }
+                
+                await bot.send_message(
+                    OWNER_ID,
+                    f"💸 <b>Nouvelle demande de retrait!</b>\n\n"
+                    f"🤖 Bot: @{bot_data['bot_username']}\n"
+                    f"👤 Maître ID: <code>{id_data['master_id']}</code>\n"
+                    f"💵 Montant: ${amount:.2f}\n"
+                    f"💳 Méthode: {method_names.get(method, method)}\n"
+                    f"📱 Compte: <code>{account_info}</code>\n\n"
+                    f"🆔 ID_PUBS: <code>{id_data['id_pubs']}</code>\n\n"
+                    f"Utilisez /withdrawals pour voir toutes les demandes.",
+                    parse_mode='HTML'
+                )
+            except Exception as notify_error:
+                logger.error(f"Erreur notification owner: {notify_error}")
+            
+            logger.info(f"Retrait demandé pour bot {bot_id}: ${amount} via {method}")
         
         return web.json_response(result)
         
@@ -494,7 +545,7 @@ async def api_master_regenerate_code(request):
         }, status=500)
 
 # ============================================================
-# API EXISTANTES (conservées)
+# API EXISTANTES (BOT MÈRE)
 # ============================================================
 
 @routes.post("/api/check-session")
@@ -639,9 +690,9 @@ async def api_payment(request):
         logger.error(f"Error in payment: {e}")
         return web.json_response({'error': str(e)}, status=500)
 
-# -----------------------------------------------------------
-# API Admin
-# -----------------------------------------------------------
+# ============================================================
+# API ADMIN (OWNER)
+# ============================================================
 
 @routes.post("/api/admin/login")
 async def api_admin_login(request):
@@ -684,41 +735,29 @@ async def api_admin_stats(request):
     """Statistiques admin"""
     try:
         all_users = await db.full_userbase()
-        all_sessions = await db.sessions_col.find().to_list(length=None)
         all_bots = await db.get_all_cloned_bots()
         
+        # Calculer sessions actives
         active_sessions = 0
         premium_users = 0
         free_users = 0
         
-        for session in all_sessions:
-            if session.get('is_active'):
-                try:
-                    expiry = datetime.fromisoformat(session['expires_at'])
-                    if datetime.now() < expiry:
-                        active_sessions += 1
-                        if session.get('type') == 'premium':
-                            premium_users += 1
-                        else:
-                            free_users += 1
-                except:
-                    pass
-        
         # Stats des bots clonés
         total_cloned_balance = 0
+        total_ads_watched = 0
+        
         for bot in all_bots:
             earnings = await db.get_bot_earnings(bot['_id'])
             if earnings:
                 total_cloned_balance += earnings['balance']
+                total_ads_watched += bot.get('stats', {}).get('total_ads_watched', 0)
         
         return web.json_response({
             'success': True,
             'total_users': len(all_users),
-            'active_sessions': active_sessions,
-            'premium_users': premium_users,
-            'free_users': free_users,
             'cloned_bots': len(all_bots),
             'cloned_bots_balance': total_cloned_balance,
+            'total_ads_watched': total_ads_watched,
             'config': {
                 'free_session_duration': await db.get_free_session_duration()
             }
@@ -768,50 +807,6 @@ async def api_admin_credit_bot(request):
         }, status=500)
 
 
-@routes.get("/api/notifications")
-async def get_notifications(request):
-    """Récupère les notifications promo actives"""
-    try:
-        notifications = await db.get_notifications() if hasattr(db, 'get_notifications') else []
-        return web.json_response({
-            'success': True,
-            'notifications': notifications
-        })
-    except Exception as e:
-        return web.json_response({
-            'success': False,
-            'error': str(e)
-        }, status=500)
-
-
-@routes.post("/api/admin/notifications")
-async def update_notifications(request):
-    """Met à jour les notifications (admin only)"""
-    try:
-        data = await request.json()
-        notifications = data.get('notifications', [])
-        
-        # Limiter à 2 notifications
-        notifications = notifications[:2]
-        
-        # Sauvegarder dans DB
-        if hasattr(db, 'save_notifications'):
-            await db.save_notifications(notifications)
-        
-        logger.info(f"Notifications mises à jour: {len(notifications)} items")
-        
-        return web.json_response({
-            'success': True,
-            'message': 'Notifications updated'
-        })
-    except Exception as e:
-        logger.error(f"Erreur update notifications: {e}")
-        return web.json_response({
-            'success': False,
-            'error': str(e)
-        }, status=500)
-
-
 @routes.post("/api/admin/config")
 async def api_admin_config(request):
     """Modifie la configuration"""
@@ -831,6 +826,72 @@ async def api_admin_config(request):
         logger.error(f"Error in admin config: {e}")
         return web.json_response({'error': str(e)}, status=500)
 
+
+@routes.get("/api/admin/withdrawals")
+async def api_admin_withdrawals(request):
+    """Liste toutes les demandes de retrait en attente (OWNER)"""
+    try:
+        pending = await db.get_pending_withdrawals()
+        
+        return web.json_response({
+            'success': True,
+            'withdrawals': pending
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in admin withdrawals: {e}")
+        return web.json_response({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@routes.post("/api/admin/approve-withdrawal")
+async def api_admin_approve_withdrawal(request):
+    """Approuve un retrait (OWNER)"""
+    try:
+        data = await request.json()
+        bot_id = data.get('bot_id')
+        tx_timestamp = data.get('timestamp')
+        
+        if not bot_id or not tx_timestamp:
+            return web.json_response({
+                'success': False,
+                'error': 'Paramètres manquants'
+            }, status=400)
+        
+        success = await db.approve_withdrawal(bot_id, tx_timestamp)
+        
+        if success:
+            # Notifier le maître
+            try:
+                from bot import Bot
+                bot = Bot()
+                bot_data = await db.get_cloned_bot(bot_id)
+                id_data = await db.get_id_codes(bot_id=bot_id)
+                
+                if bot_data and id_data:
+                    await bot.send_message(
+                        id_data['master_id'],
+                        f"✅ <b>Retrait approuvé!</b>\n\n"
+                        f"Votre demande de retrait a été traitée.\n"
+                        f"Le montant sera envoyé sous peu.",
+                        parse_mode='HTML'
+                    )
+            except Exception as e:
+                logger.error(f"Erreur notification maître: {e}")
+        
+        return web.json_response({
+            'success': success
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in approve withdrawal: {e}")
+        return web.json_response({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
 # ============================================================
 # CREATION APP
 # ============================================================
@@ -843,5 +904,6 @@ async def web_server():
     logger.info("✅ Web server initialized")
     logger.info(f"🔐 Admin password: {'Yes' if ADMIN_PASSWORD else 'No'}")
     logger.info(f"🤖 Bot token: {'Yes' if TG_BOT_TOKEN else 'No'}")
+    logger.info(f"👑 Owner ID: {OWNER_ID}")
     
     return web_app

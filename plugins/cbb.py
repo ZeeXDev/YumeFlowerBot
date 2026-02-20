@@ -13,7 +13,7 @@ from config import *
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from database.database import *
 
-@Bot.on_callback_query()
+@Bot.on_callback_query(group=2)
 async def cb_handler(client: Bot, query: CallbackQuery):
     data = query.data
 

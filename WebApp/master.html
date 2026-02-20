@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>YumeFlower — Espace Maître</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/pages.css">
+</head>
+<body>
+
+<div class="bg-container">
+  <div class="bg-grid"></div>
+  <div class="bg-glow bg-glow-red"></div>
+  <div class="bg-glow bg-glow-blue"></div>
+  <div class="bg-noise"></div>
+</div>
+
+<div id="toast"></div>
+
+<div class="page-wrapper">
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- VUE LOGIN (ID_CODE)                               -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <div id="view-login">
+
+    <div class="page-header">
+      <div class="header-title">ESPACE MAÎTRE</div>
+      <div class="header-sub">Tableau de bord de votre bot</div>
+    </div>
+
+    <div class="master-login-wrap">
+
+      <div class="master-lock text-center">
+        <div class="icon-circle red" style="animation:anim-float 3s ease-in-out infinite;margin-bottom:20px;">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#FF1A1A" stroke-width="1.8">
+            <rect x="3" y="11" width="18" height="11" rx="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+        <div class="t-display t-display-md" style="margin-bottom:8px;">Connexion Maître</div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.6;max-width:260px;margin:0 auto;">
+          Entrez votre <strong style="color:#fff">ID_CODE</strong> reçu lors de la création de votre bot.
+        </p>
+      </div>
+
+      <div class="input-group">
+        <label class="input-label" for="id-code-input">ID_CODE secret</label>
+        <input
+          class="input-field input-code"
+          id="id-code-input"
+          type="text"
+          placeholder="XXXX-XXXX-XXXX-XXXX"
+          maxlength="20"
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck="false"
+        >
+        <div class="input-hint" id="login-hint"></div>
+      </div>
+
+      <button class="btn btn-red" id="btn-login" onclick="doLogin()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+          <polyline points="10 17 15 12 10 7"/>
+          <line x1="15" y1="12" x2="3" y2="12"/>
+        </svg>
+        Accéder au tableau de bord
+      </button>
+
+      <div class="divider"></div>
+
+      <div class="card card-center">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.8" style="margin:0 auto 8px;display:block">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <div class="card-text" style="font-size:12px;">
+          L'ID_CODE se trouve dans le message que la bot mère vous a envoyé lors de la création de votre bot cloné.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- DASHBOARD (après login)                           -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <div id="view-dashboard" style="display:none;">
+
+    <!-- Header dashboard -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;padding-top:8px;">
+      <div>
+        <div class="t-display t-display-sm">MON BOT</div>
+        <div style="font-size:13px;color:var(--muted);" id="dash-bot-username">@BotName</div>
+      </div>
+      <button onclick="doLogout()" style="background:var(--gray3);border:1px solid var(--gray4);border-radius:var(--radius-sm);padding:8px 12px;color:var(--muted);font-size:12px;cursor:pointer;font-family:var(--font-body);">
+        Déconnexion
+      </button>
+    </div>
+
+    <!-- BALANCE -->
+    <div class="balance-card" style="margin-bottom:14px;">
+      <div class="balance-label">Solde disponible</div>
+      <div class="balance-amount" id="dash-balance">$0.00</div>
+      <div class="balance-sub">Total gagné : <span id="dash-total-earned">$0.00</span></div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stat-row">
+      <div class="stat-box red">
+        <div class="stat-val red" id="dash-total-users">0</div>
+        <div class="stat-key">Utilisateurs</div>
+      </div>
+      <div class="stat-box blue">
+        <div class="stat-val blue" id="dash-ads-watched">0</div>
+        <div class="stat-key">Pubs vues</div>
+      </div>
+      <div class="stat-box green">
+        <div class="stat-val green" id="dash-files-sent">0</div>
+        <div class="stat-key">Fichiers</div>
+      </div>
+    </div>
+
+    <!-- CODES -->
+    <div class="code-display" style="flex-direction:column;gap:10px;">
+      <!-- ID_PUBS -->
+      <div>
+        <div class="code-label">ID_PUBS (à partager avec vos utilisateurs)</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+          <div class="code-value" id="dash-id-pubs">--</div>
+          <button class="copy-btn" onclick="copyCode('id-pubs')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            Copier
+          </button>
+        </div>
+      </div>
+      <div style="height:1px;background:var(--gray4);"></div>
+      <!-- ID_CODE -->
+      <div>
+        <div class="code-label">ID_CODE (gardez-le secret)</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+          <div id="dash-id-code-wrap" style="display:flex;align-items:center;gap:8px;">
+            <div class="code-value" id="dash-id-code" style="filter:blur(6px);transition:filter 0.3s;">••••••••••••••••</div>
+            <button onclick="toggleCodeVisible()" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;">
+              <svg id="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+          <button class="copy-btn" onclick="copyCode('id-code')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            Copier
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RÉGÉNÉRER CODES -->
+    <button class="btn btn-ghost btn-sm" id="btn-regen" onclick="regenCodes()" style="margin-bottom:14px;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="23 4 23 10 17 10"/>
+        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+      </svg>
+      Régénérer mes codes
+    </button>
+
+    <!-- RETRAIT -->
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-title" style="font-size:16px;margin-bottom:14px;">Demande de retrait</div>
+
+      <!-- Seuil minimum -->
+      <div id="withdraw-locked" style="display:none;">
+        <div style="text-align:center;padding:12px 0;">
+          <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">Solde minimum requis : <strong style="color:#fff">$7.00</strong></div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="balance-progress" style="width:0%"></div>
+          </div>
+          <div class="progress-meta" style="margin-top:6px;">
+            <span id="balance-progress-label">$0.00 / $7.00</span>
+            <span id="balance-progress-pct">0%</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="withdraw-form">
+        <div class="input-group">
+          <label class="input-label">Montant ($)</label>
+          <input class="input-field" id="withdraw-amount" type="number" placeholder="7.00" min="7" step="0.01">
+        </div>
+
+        <div style="margin-bottom:14px;">
+          <div class="input-label" style="margin-bottom:10px;">Méthode</div>
+          <div class="withdraw-methods">
+            <button class="wm-btn selected" id="wm-crypto" onclick="selectWithdrawMethod('crypto')">Crypto</button>
+            <button class="wm-btn" id="wm-moov" onclick="selectWithdrawMethod('moov')">Moov Money</button>
+            <button class="wm-btn" id="wm-orange" onclick="selectWithdrawMethod('orange')">Orange Money</button>
+            <button class="wm-btn" id="wm-ecobank" onclick="selectWithdrawMethod('ecobank')">Ecobank</button>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label" id="account-label">Adresse crypto (BTC/USDT)</label>
+          <input class="input-field" id="withdraw-account" placeholder="Adresse ou numéro..." autocomplete="off">
+        </div>
+
+        <button class="btn btn-red" id="btn-withdraw" onclick="submitWithdraw()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+          Demander le retrait
+        </button>
+      </div>
+    </div>
+
+    <!-- INFO BOT -->
+    <div class="card">
+      <div class="card-title" style="font-size:14px;margin-bottom:12px;">Informations du bot</div>
+      <div class="info-row">
+        <span class="info-key">Bot username</span>
+        <span class="info-val" id="info-username">--</span>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Créé le</span>
+        <span class="info-val" id="info-created">--</span>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Total retiré</span>
+        <span class="info-val text-blue" id="info-withdrawn">$0.00</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="nav-float">
+  <button class="nav-btn" onclick="location.href='index.html'">
+    <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+    <span class="nav-text">Accès</span>
+  </button>
+  <button class="nav-btn" onclick="location.href='prime.html'">
+    <span class="nav-icon"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+    <span class="nav-text">Premium</span>
+  </button>
+  <button class="nav-btn" onclick="location.href='clone.html'">
+    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M8 17l-2-2 2-2"/><path d="M16 7l2 2-2 2"/><line x1="6" y1="15" x2="18" y2="9"/></svg></span>
+    <span class="nav-text">Clone</span>
+  </button>
+  <button class="nav-btn active" onclick="location.href='master.html'">
+    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+    <span class="nav-text">Maître</span>
+  </button>
+</nav>
+
+<script src="js/app.js"></script>
+<script src="js/tg.js"></script>
+<script src="js/api.js"></script>
+<script>
+
+// ── STATE ─────────────────────────────────────────────────
+let dashData = {
+  idCode:     null,
+  idPubs:     null,
+  balance:    0,
+  codeVisible: false,
+  withdrawMethod: 'crypto',
+};
+
+// ── INIT ──────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // Restaurer session si dispo
+  const saved = App.Store.get('master_session');
+  if (saved?.id_code) {
+    document.getElementById('id-code-input').value = saved.id_code;
+    doLogin(true); // Auto-login silencieux
+    return;
+  }
+  App.animateIn(document.getElementById('view-login'), 100);
+});
+
+// ── LOGIN ─────────────────────────────────────────────────
+async function doLogin(silent = false) {
+  const input  = document.getElementById('id-code-input');
+  const idCode = input.value.trim().toUpperCase();
+  const hint   = document.getElementById('login-hint');
+
+  if (!idCode || idCode.length < 6) {
+    input.classList.add('error');
+    hint.textContent = 'ID_CODE trop court.';
+    hint.className   = 'input-hint error';
+    TG.hapticError();
+    return;
+  }
+
+  if (!silent) {
+    App.setLoading('btn-login', true);
+    TG.hapticLight();
+  }
+
+  const auth = TG.getAuth();
+  const res  = await API.masterLogin(idCode, auth);
+
+  if (!silent) App.setLoading('btn-login', false);
+
+  if (!res.ok || !res.data.success) {
+    input.classList.add('error');
+    hint.textContent = res.data.error || 'ID_CODE invalide ou expiré.';
+    hint.className   = 'input-hint error';
+    if (!silent) { App.Toast.error('Connexion échouée'); TG.hapticError(); }
+    App.Store.remove('master_session');
+    return;
+  }
+
+  dashData.idCode = idCode;
+  dashData.idPubs = res.data.id_pubs;
+
+  // Sauvegarder
+  App.Store.set('master_session', { id_code: idCode });
+
+  if (!silent) TG.hapticSuccess();
+  populateDashboard(res.data);
+  showDashboard();
+}
+
+function showDashboard() {
+  App.hide('view-login');
+  App.show('view-dashboard');
+  App.animateIn(document.getElementById('view-dashboard'), 50);
+}
+
+function doLogout() {
+  App.Store.remove('master_session');
+  dashData = { idCode:null, idPubs:null, balance:0, codeVisible:false, withdrawMethod:'crypto' };
+  App.hide('view-dashboard');
+  App.show('view-login');
+  document.getElementById('id-code-input').value = '';
+  App.Toast.info('Déconnecté');
+}
+
+// ── POPULATE ──────────────────────────────────────────────
+function populateDashboard(data) {
+  const bot      = data.bot || {};
+  const stats    = data.stats || {};
+  const earnings = data.earnings || {};
+
+  // Header
+  const uname = bot.username || 'BotName';
+  App.setText('dash-bot-username', `@${uname}`);
+  App.setText('info-username', `@${uname}`);
+
+  if (bot.created_at) {
+    const d = new Date(bot.created_at);
+    App.setText('info-created', d.toLocaleDateString('fr-FR'));
+  }
+
+  // Balance
+  dashData.balance = earnings.balance || 0;
+  App.setText('dash-balance',      `$${dashData.balance.toFixed(2)}`);
+  App.setText('dash-total-earned', `$${(earnings.total_earned || 0).toFixed(2)}`);
+  App.setText('info-withdrawn',    `$${(earnings.total_withdrawn || 0).toFixed(2)}`);
+
+  // Stats
+  App.setText('dash-total-users', (stats.total_users    || 0).toLocaleString());
+  App.setText('dash-ads-watched', (stats.total_ads_watched || 0).toLocaleString());
+  App.setText('dash-files-sent',  (stats.total_files_sent  || 0).toLocaleString());
+
+  // Codes
+  App.setText('dash-id-pubs',  data.id_pubs  || '--');
+  App.setText('dash-id-code',  dashData.idCode || '--');
+
+  // Progression retrait
+  const pct = Math.min(100, (dashData.balance / 7) * 100);
+  const balBar = document.getElementById('balance-progress');
+  if (balBar) balBar.style.width = `${pct}%`;
+  App.setText('balance-progress-label', `$${dashData.balance.toFixed(2)} / $7.00`);
+  App.setText('balance-progress-pct', `${Math.round(pct)}%`);
+
+  // Montrer/masquer form retrait
+  if (dashData.balance >= 7) {
+    App.hide('withdraw-locked');
+    App.show('withdraw-form');
+    document.getElementById('withdraw-amount').value = dashData.balance.toFixed(2);
+  } else {
+    App.show('withdraw-locked');
+    App.hide('withdraw-form');
+  }
+}
+
+// ── CODES ─────────────────────────────────────────────────
+function toggleCodeVisible() {
+  dashData.codeVisible = !dashData.codeVisible;
+  const codeEl = document.getElementById('dash-id-code');
+  const eyeEl  = document.getElementById('eye-icon');
+  if (codeEl) codeEl.style.filter = dashData.codeVisible ? 'none' : 'blur(6px)';
+  if (eyeEl) eyeEl.innerHTML = dashData.codeVisible
+    ? `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+       <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+       <line x1="1" y1="1" x2="23" y2="23"/>`
+    : `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+  TG.hapticLight();
+}
+
+function copyCode(type) {
+  const text = type === 'id-pubs'
+    ? document.getElementById('dash-id-pubs')?.textContent
+    : dashData.idCode;
+  if (text && text !== '--') {
+    App.copyToClipboard(text, type === 'id-pubs' ? 'ID_PUBS copié !' : 'ID_CODE copié !');
+    TG.hapticLight();
+  }
+}
+
+async function regenCodes() {
+  if (!confirm('Régénérer vos codes ? L\'ancien ID_PUBS ne fonctionnera plus.')) return;
+
+  App.setLoading('btn-regen', true);
+  TG.hapticMedium();
+
+  const auth = TG.getAuth();
+  const res = await API.masterRegenerate(dashData.idCode, auth);
+
+  App.setLoading('btn-regen', false);
+
+  if (!res.ok || !res.data.success) {
+    App.Toast.error(res.data.error || 'Erreur régénération');
+    TG.hapticError();
+    return;
+  }
+
+  dashData.idCode = res.data.id_code;
+  dashData.idPubs = res.data.id_pubs;
+
+  App.setText('dash-id-pubs', res.data.id_pubs);
+  App.setText('dash-id-code', res.data.id_code);
+
+  // Mettre à jour la session sauvegardée
+  App.Store.set('master_session', { id_code: res.data.id_code });
+
+  App.Toast.success('Codes régénérés !', 3000);
+  TG.hapticSuccess();
+}
+
+// ── RETRAIT ───────────────────────────────────────────────
+const accountLabels = {
+  crypto:  'Adresse crypto (BTC/USDT)',
+  moov:    'Numéro Moov Money',
+  orange:  'Numéro Orange Money',
+  ecobank: 'Numéro de compte Ecobank',
+};
+
+function selectWithdrawMethod(method) {
+  dashData.withdrawMethod = method;
+  ['crypto','moov','orange','ecobank'].forEach(m => {
+    const el = document.getElementById(`wm-${m}`);
+    if (el) el.classList.toggle('selected', m === method);
+  });
+  const label = document.getElementById('account-label');
+  const input = document.getElementById('withdraw-account');
+  if (label) label.textContent = accountLabels[method] || 'Compte';
+  if (input) input.placeholder = method === 'crypto' ? 'Adresse BTC ou USDT (TRC20)' : '+226 XX XX XX XX';
+  TG.hapticLight();
+}
+
+async function submitWithdraw() {
+  const amountEl  = document.getElementById('withdraw-amount');
+  const accountEl = document.getElementById('withdraw-account');
+
+  const amount  = parseFloat(amountEl?.value || 0);
+  const account = accountEl?.value?.trim();
+
+  if (!amount || amount < 7) {
+    App.Toast.error('Montant minimum : $7.00');
+    amountEl?.classList.add('error');
+    return;
+  }
+
+  if (amount > dashData.balance) {
+    App.Toast.error('Montant supérieur au solde disponible');
+    amountEl?.classList.add('error');
+    return;
+  }
+
+  if (!account) {
+    App.Toast.error('Entrez votre compte/adresse');
+    accountEl?.classList.add('error');
+    return;
+  }
+
+  amountEl?.classList.remove('error');
+  accountEl?.classList.remove('error');
+
+  App.setLoading('btn-withdraw', true);
+  TG.hapticMedium();
+
+  const res = await API.masterWithdraw(
+    dashData.idCode,
+    amount,
+    dashData.withdrawMethod,
+    account
+  );
+
+  App.setLoading('btn-withdraw', false);
+
+  if (!res.ok || !res.data.success) {
+    App.Toast.error(res.data.error || 'Erreur lors de la demande');
+    TG.hapticError();
+    return;
+  }
+
+  App.Toast.success('Demande envoyée ! Traitement sous 24-48h.', 5000);
+  TG.hapticSuccess();
+
+  // Réinitialiser le formulaire
+  if (amountEl) amountEl.value = '';
+  if (accountEl) accountEl.value = '';
+}
+
+// ── ENTER KEY ─────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const login = document.getElementById('view-login');
+    if (login && login.style.display !== 'none') doLogin();
+  }
+});
+</script>
+</body>
+</html>

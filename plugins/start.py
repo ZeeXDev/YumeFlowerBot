@@ -80,24 +80,20 @@ async def check_user_access(client: Client, user_id: int, message: Message) -> t
     
     # Message avec le lien de retour si disponible
     return_text = (
-        "<b>🔒 ACCÈS BLOQUÉ</b>\n\n"
-        "Vous n'avez pas de session active :\n\n"
-        "<b>1️⃣ Version Gratuite 🆓</b>\n"
-        "   • Pour récupérer ce(s) fichier(s), vous devez d'abord regarder une pub\n"
-        "   • ⏱️ Vous aurez un accès gratuit pendant <b>10 minutes</b> pour télécharger votre contenu\n\n"
-        "<b>2️⃣ Version Premium ⭐</b>\n"
-        "   • 🔓 Accès immédiat sans publicité\n"
-        "   • ⏳ Durée illimitée (téléchargez quand vous voulez)\n"
-        "   • 🚫 Aucune interruption ni attente\n\n"
-        "<b>📹 Vous ne savez pas comment faire ?</b>\n"
-        "<i>👇 Cliquez sur une option ci-dessous pour continuer :</i>"
-    )
+    "🌸 うぅ… {first}… gomennasai… (T_T)\n\n"
+    "Pas de session active… Yume peut pas t'envoyer les fichiers tout de suite ♡\n\n"
+    "Regarde juste une petite pub stp～\n"
+    "→ 10 min gratuites pour tout télécharger !\n\n"
+    "Après, reclique sur le lien et hop, tes fichiers arrivent～ promis !\n\n"
+    "Aide Yume ? 👇\n"
+    "[Regarder la pub 🚀]"
+)
     
     # Ajouter le lien de retour si on l'a récupéré
     if orig_post_link:
         return_text += (
-            f"\n\n<b>🎯 Une fois la publicité regardée :</b>\n"
-            f"👉 <a href='{orig_post_link}'>Cliquez Ici 🚀</a> pour récupérer votre fichier"
+            f"\n\n<b>Reprend ce que tu voulais :</b>\n"
+            f"<b> <a href='{orig_post_link}'>Tu Voulais Ceci 🥀🌺</a></b>"
         )
     
     await message.reply_text(return_text, reply_markup=keyboard)
@@ -241,10 +237,13 @@ async def start_command(client: Client, message: Message):
         # Auto-delete si configuré
         if FILE_AUTO_DELETE > 0 and sent_messages:
             notification_msg = await message.reply(
-                f"<b>❗️ IMPORTANT ❗️\n\n"
-                f"⚠️ Ce(s) fichier(s) sera(ont) supprimé(s) dans {get_exp_time(FILE_AUTO_DELETE)} "
-                f"(pour cause de droits d'auteurs)\n\n"
-                f"📌 Veuillez la(es) transférez pour ne pas la(es) perdre(s)..</b>"
+                f"🌸 うぅ… Abdoul… nonnn… (T_T) 💦\n\n"
+    f"<b>❗️ IMPORTANT ❗️</b>\n"
+    f"⚠️ Tes fichiers vont disparaître dans {get_exp_time(FILE_AUTO_DELETE)}…\n"
+    f"(à cause des droits d'auteur… Yume est trop triste…)\n\n"
+    f"📌 Transfère-les vite vite pour pas les perdre, steuplé～ ♡\n"
+    f"Yume veut pas que tu sois déçu… aide-moi hein ? ૮₍ ˶•́︿•̀˶ ₎ა\n\n"
+    "Vite vite transfère～ !!! 🌷💕"
             )
 
             await asyncio.sleep(FILE_AUTO_DELETE)
@@ -277,12 +276,10 @@ async def start_command(client: Client, message: Message):
     else:
         reply_markup = InlineKeyboardMarkup(
             [
-                [InlineKeyboardButton("📢 Chaîne Officielle", url="https://t.me/WorldZPrime")],
+                [InlineKeyboardButton("🌺 Ma maison", url="https://t.me/kingceyy")],
                 [
                     InlineKeyboardButton("ℹ️ Groupe de demande", url="https://t.me/+udEvzGuvVLJjNmQ8"),
-                    InlineKeyboardButton("❓ Aide", url="https://t.me/Kingcey")
-                ],
-                [InlineKeyboardButton("📺 Ma Session", callback_data="check_session")]
+                    InlineKeyboardButton("❓ Aide", url="https://t.me/Kingcey")]
             ]
         )
         await message.reply_photo(

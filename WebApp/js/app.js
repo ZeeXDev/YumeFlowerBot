@@ -1,352 +1,222 @@
-/**
- * APPLICATION PRINCIPALE
- * =======================
- * Logique métier complète de la Mini App Telegram
- * Gère le cycle de vie : vérification session → visionnage pub → timer countdown
- */
+/* ============================================================
+   APP.JS — Logique principale, Toast, Monetag, Navigation
+   YumeFlower WebApp
+   ============================================================ */
 
-// Initialisation Telegram WebApp
-const tg = window.Telegram?.WebApp;
+// ── MONETAG CONFIG ─────────────────────────────────────────
+// Remplace par ton vrai Zone ID Monetag
+const MONETAG_ZONE_ID = '10518701';
 
-// État global de l'application
-let currentUser = null;
-let sessionData = null;
-let countdownInterval = null;
+// ── TOAST ─────────────────────────────────────────────────
+const Toast = (() => {
+  let _timer = null;
 
-// Configuration
-const CONFIG = {
-  BOT_USERNAME: 'TonBotUsername', // À REMPLACER par le vrai username du bot
-  SESSION_CHECK_INTERVAL: 30000, // Vérifier session toutes les 30s
-  TIMER_UPDATE_INTERVAL: 1000 // Mettre à jour timer chaque seconde
-};
+  function show(message, type = 'info', duration = 3000) {
+    const el = document.getElementById('toast');
+    if (!el) return;
 
-/**
- * INITIALISATION
- * Point d'entrée principal au chargement de la page
- */
-document.addEventListener('DOMContentLoaded', async () => {
-  console.log('[App] Démarrage de l\'application...');
-  
-  // Vérifier si Telegram WebApp est disponible
-  if (!tg) {
-    showError('Cette application doit être ouverte via Telegram');
-    return;
+    el.textContent = message;
+    el.className = `show ${type}`;
+
+    clearTimeout(_timer);
+    _timer = setTimeout(() => {
+      el.classList.remove('show');
+    }, duration);
   }
 
-  // Initialiser Telegram WebApp
-  tg.expand();
-  tg.ready();
-  
-  // Activer le bouton retour
-  tg.BackButton.onClick(() => {
-    if (window.location.pathname !== '/index.html' && window.location.pathname !== '/') {
-      window.location.href = 'index.html';
-    } else {
-      tg.close();
-    }
-  });
+  return {
+    success: (msg, d) => show(msg, 'success', d),
+    error:   (msg, d) => show(msg, 'error',   d),
+    info:    (msg, d) => show(msg, 'info',     d),
+  };
+})();
 
-  // Récupérer les données utilisateur
-  if (!tg.initDataUnsafe?.user) {
-    showError('Impossible de récupérer vos informations utilisateur');
-    return;
-  }
-  
-  currentUser = tg.initDataUnsafe.user;
-  console.log('[App] Utilisateur:', currentUser.id, currentUser.first_name);
-  
-  // Vérifier la session existante
-  await checkSession();
-  
-  // Vérifier périodiquement la session
-  setInterval(checkSession, CONFIG.SESSION_CHECK_INTERVAL);
-});
+// ── MONETAG AD ─────────────────────────────────────────────
+const MonetAd = (() => {
 
-/**
- * VÉRIFICATION SESSION
- * Vérifie si l'utilisateur a déjà un accès actif
- */
-async function checkSession() {
-  console.log('[App] Vérification de la session...');
-  
-  const data = await API.checkSession(currentUser.id, tg.initData);
-  
-  if (data.has_access) {
-    console.log('[App] Session active détectée');
-    sessionData = data;
-    showActiveSession(data);
-  } else {
-    console.log('[App] Aucune session active');
-    showMonetagSection();
-  }
-}
+  let _onComplete = null;
+  let _onError    = null;
 
-/**
- * AFFICHER SECTION MONETAG
- * Affiche l'interface pour regarder la pub
- */
-function showMonetagSection() {
-  const monetagSection = document.getElementById('monetagSection');
-  const successSection = document.getElementById('successSection');
-  const statusDot = document.getElementById('statusDot');
-  const statusText = document.getElementById('statusText');
-  const accessType = document.getElementById('accessType');
-  const expireTime = document.getElementById('expireTime');
-  
-  // Afficher section pub
-  if (monetagSection) monetagSection.classList.remove('hidden');
-  if (successSection) successSection.classList.add('hidden');
-  
-  // Mettre à jour status
-  if (statusDot) statusDot.classList.remove('active');
-  if (statusText) statusText.textContent = 'Aucun accès';
-  if (accessType) accessType.textContent = 'Non connecté';
-  if (expireTime) expireTime.textContent = '-';
-  
-  // Cacher timer et progress bar
-  const timerDisplay = document.getElementById('timerDisplay');
-  const progressBar = document.getElementById('progressBar');
-  if (timerDisplay) timerDisplay.classList.add('hidden');
-  if (progressBar) progressBar.classList.add('hidden');
-  
-  // Arrêter countdown si actif
-  if (countdownInterval) {
-    clearInterval(countdownInterval);
-    countdownInterval = null;
-  }
-}
+  /**
+   * Lance une pub Monetag Interstitial/OnClick
+   * Appelle onComplete() quand la pub est terminée (ou simulée en dev)
+   */
+  function show(onComplete, onError) {
+    _onComplete = onComplete;
+    _onError    = onError || (() => {});
 
-/**
- * AFFICHER SESSION ACTIVE
- * Affiche l'état quand l'utilisateur a déjà un accès
- */
-function showActiveSession(data) {
-  const monetagSection = document.getElementById('monetagSection');
-  const successSection = document.getElementById('successSection');
-  const statusDot = document.getElementById('statusDot');
-  const statusText = document.getElementById('statusText');
-  const accessType = document.getElementById('accessType');
-  const expireTime = document.getElementById('expireTime');
-  
-  // Cacher section pub, afficher succès
-  if (monetagSection) monetagSection.classList.add('hidden');
-  if (successSection) successSection.classList.remove('hidden');
-  
-  // Mettre à jour status
-  if (statusDot) statusDot.classList.add('active');
-  if (statusText) statusText.textContent = 'Session active';
-  
-  // Type d'accès
-  const type = data.type === 'premium' ? 'Premium' : 'Gratuit (Pub)';
-  if (accessType) accessType.textContent = type;
-  
-  // Calculer temps restant
-  const remaining = API.getRemainingMinutes(data.expires_at);
-  if (expireTime) expireTime.textContent = `${remaining} min`;
-  
-  // Démarrer le countdown
-  const remainingSeconds = API.getRemainingSeconds(data.expires_at);
-  startCountdown(remainingSeconds);
-}
-
-/**
- * GESTION CLIC BOUTON MONETAG
- * Déclenche le visionnage de la pub Monetag
- */
-async function handleWatchAd() {
-  console.log('[App] Démarrage processus pub Monetag...');
-  
-  const btn = document.getElementById('watchAdBtn');
-  const loader = document.getElementById('loader');
-  const errorMsg = document.getElementById('errorMsg');
-  
-  // UI Loading
-  if (btn) btn.classList.add('hidden');
-  if (loader) loader.classList.remove('hidden');
-  if (errorMsg) errorMsg.classList.add('hidden');
-  
-  // Haptic feedback
-  if (tg.HapticFeedback) {
-    tg.HapticFeedback.impactOccurred('light');
-  }
-  
-  try {
-    // Étape 1 : Vérifier que le SDK Monetag est prêt
-    console.log('[App] Vérification SDK Monetag...');
-    await monetag.checkSDK();
-    
-    // Étape 2 : Afficher la publicité (plein écran)
-    console.log('[App] Affichage de la publicité...');
-    await monetag.showAd();
-    
-    // Étape 3 : Publicité visionnée avec succès, créer la session
-    console.log('[App] Publicité terminée, création de la session...');
-    const result = await API.watchAd(currentUser.id, tg.initData);
-    
-    if (result.success) {
-      // Succès !
-      console.log('[App] Session créée avec succès');
-      showSuccess(result.duration || 10);
-      
-      // Haptic feedback succès
-      if (tg.HapticFeedback) {
-        tg.HapticFeedback.notificationOccurred('success');
-      }
-      
-      // Alert Telegram
-      tg.showAlert(`✅ Accès débloqué pour ${result.duration || 10} minutes !`);
-    } else {
-      throw new Error('Échec création session');
-    }
-    
-  } catch (error) {
-    // Échec : pub fermée avant la fin ou erreur technique
-    console.error('[App] Erreur visionnage pub:', error);
-    
-    // Restaurer UI
-    if (btn) btn.classList.remove('hidden');
-    if (loader) loader.classList.add('hidden');
-    if (errorMsg) errorMsg.classList.remove('hidden');
-    
-    // Haptic feedback erreur
-    if (tg.HapticFeedback) {
-      tg.HapticFeedback.notificationOccurred('error');
-    }
-  }
-}
-
-/**
- * AFFICHER SUCCÈS
- * Affiche l'interface après visionnage réussi de la pub
- */
-function showSuccess(minutes) {
-  const monetagSection = document.getElementById('monetagSection');
-  const successSection = document.getElementById('successSection');
-  const durationText = document.getElementById('durationText');
-  const statusDot = document.getElementById('statusDot');
-  const statusText = document.getElementById('statusText');
-  const accessType = document.getElementById('accessType');
-  const expireTime = document.getElementById('expireTime');
-  
-  // Basculer les sections
-  if (monetagSection) monetagSection.classList.add('hidden');
-  if (successSection) successSection.classList.remove('hidden');
-  if (durationText) durationText.textContent = `${minutes} minutes`;
-  
-  // Mettre à jour status card
-  if (statusDot) statusDot.classList.add('active');
-  if (statusText) statusText.textContent = 'Session active';
-  if (accessType) accessType.textContent = 'Gratuit (Pub)';
-  if (expireTime) expireTime.textContent = `${minutes} min`;
-  
-  // Démarrer countdown visuel
-  startCountdown(minutes * 60);
-}
-
-/**
- * COUNTDOWN TIMER
- * Démarre un compte à rebours visuel de la session
- */
-function startCountdown(totalSeconds) {
-  const timerDisplay = document.getElementById('timerDisplay');
-  const timerValue = document.getElementById('timerValue');
-  const progressBar = document.getElementById('progressBar');
-  const progressFill = document.getElementById('progressFill');
-  
-  // Afficher les éléments
-  if (timerDisplay) timerDisplay.classList.remove('hidden');
-  if (progressBar) progressBar.classList.remove('hidden');
-  
-  let remaining = totalSeconds;
-  const total = totalSeconds;
-  
-  // Arrêter l'ancien interval si existant
-  if (countdownInterval) {
-    clearInterval(countdownInterval);
-  }
-  
-  // Fonction de mise à jour
-  const updateTimer = () => {
-    if (remaining <= 0) {
-      clearInterval(countdownInterval);
-      countdownInterval = null;
-      
-      // Session expirée, recharger la page
-      tg.showAlert('⏱️ Votre session a expiré. Regardez une nouvelle pub pour continuer.');
-      setTimeout(() => location.reload(), 2000);
+    if (!TG.isInTelegram() && window.location.hostname === 'localhost') {
+      // ── MODE DEV : simuler pub de 3 secondes ──
+      console.log('[AD] Mode dev — simulation pub 3s');
+      _showDevOverlay();
       return;
     }
-    
-    // Calculer minutes et secondes
-    const mins = Math.floor(remaining / 60);
-    const secs = remaining % 60;
-    
-    // Afficher le temps
-    if (timerValue) {
-      timerValue.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
-    }
-    
-    // Mettre à jour la barre de progression
-    if (progressFill) {
-      const percent = (remaining / total) * 100;
-      progressFill.style.width = `${percent}%`;
-      
-      // Changer couleur si < 1 minute
-      if (remaining < 60) {
-        progressFill.style.backgroundColor = 'var(--accent-red)';
+
+    // ── MODE PROD : Monetag ──
+    try {
+      if (typeof window.show_9403709 === 'function') {
+        // API Monetag Onclick/Interstitial
+        window.show_9403709()
+          .then(() => {
+            console.log('[AD] Pub Monetag terminée');
+            if (_onComplete) _onComplete();
+          })
+          .catch(err => {
+            console.error('[AD] Erreur Monetag:', err);
+            // On valide quand même pour ne pas bloquer l'utilisateur
+            if (_onComplete) _onComplete();
+          });
+      } else {
+        // SDK pas encore chargé → simuler
+        console.warn('[AD] Monetag SDK non disponible, simulation');
+        setTimeout(() => { if (_onComplete) _onComplete(); }, 2000);
       }
+    } catch (err) {
+      console.error('[AD] Erreur lancement pub:', err);
+      setTimeout(() => { if (_onComplete) _onComplete(); }, 2000);
     }
-    
-    remaining--;
-  };
-  
-  // Première mise à jour immédiate
-  updateTimer();
-  
-  // Puis toutes les secondes
-  countdownInterval = setInterval(updateTimer, CONFIG.TIMER_UPDATE_INTERVAL);
-}
-
-/**
- * NAVIGATION - Ouvrir le bot Telegram
- */
-function openBot() {
-  console.log('[App] Ouverture du bot...');
-  
-  if (tg.HapticFeedback) {
-    tg.HapticFeedback.impactOccurred('medium');
   }
-  
-  tg.openTelegramLink(`https://t.me/${CONFIG.BOT_USERNAME}`);
-  
-  // Fermer la WebApp après 500ms
-  setTimeout(() => tg.close(), 500);
-}
 
-/**
- * NAVIGATION - Aller vers Premium
- */
-function goPremium() {
-  console.log('[App] Navigation vers Premium...');
-  
-  if (tg.HapticFeedback) {
-    tg.HapticFeedback.impactOccurred('light');
+  // Overlay de simulation en dev
+  function _showDevOverlay() {
+    let overlay = document.getElementById('dev-ad-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'dev-ad-overlay';
+      overlay.style.cssText = `
+        position: fixed; inset: 0; z-index: 9000;
+        background: rgba(0,0,0,0.95);
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        gap: 16px; font-family: 'DM Sans', sans-serif;
+        color: #fff;
+      `;
+      overlay.innerHTML = `
+        <div style="width:80px;height:80px;background:#1A1A1A;border:1px solid #333;
+          border-radius:12px;display:flex;align-items:center;justify-content:center;">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#FF1A1A" stroke-width="2">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+        </div>
+        <div style="font-size:14px;color:#777;">Publicité (simulation dev)</div>
+        <div id="dev-ad-count" style="font-family:'Bebas Neue',sans-serif;font-size:48px;color:#FF1A1A;">3</div>
+        <div style="font-size:12px;color:#555;">Patientez...</div>
+      `;
+      document.body.appendChild(overlay);
+    }
+
+    overlay.style.display = 'flex';
+    let count = 3;
+
+    const countEl = document.getElementById('dev-ad-count');
+    const iv = setInterval(() => {
+      count--;
+      if (countEl) countEl.textContent = count;
+      if (count <= 0) {
+        clearInterval(iv);
+        overlay.style.display = 'none';
+        if (_onComplete) _onComplete();
+      }
+    }, 1000);
   }
-  
-  window.location.href = 'prime.html';
+
+  return { show };
+
+})();
+
+// ── STORAGE LOCAL ─────────────────────────────────────────
+const Store = {
+  get(key)        { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } },
+  set(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch {} },
+  remove(key)     { try { localStorage.removeItem(key); } catch {} }
+};
+
+// ── UI HELPERS ────────────────────────────────────────────
+function show(id)  {
+  const el = document.getElementById(id);
+  if (el) el.style.display = '';
 }
 
-/**
- * AFFICHER ERREUR
- * Affiche un message d'erreur global
- */
-function showError(message) {
-  console.error('[App] Erreur:', message);
-  
-  // Utiliser l'alert Telegram si disponible
-  if (tg && tg.showAlert) {
-    tg.showAlert(`❌ ${message}`);
+function hide(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = 'none';
+}
+
+function setText(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = text;
+}
+
+function setHTML(id, html) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = html;
+}
+
+function setLoading(btnId, loading, originalText = null) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  if (loading) {
+    btn.dataset.originalText = btn.textContent;
+    btn.innerHTML = '<span class="btn-spinner"></span>';
+    btn.classList.add('loading');
+    btn.disabled = true;
   } else {
-    alert(message);
+    btn.innerHTML = originalText || btn.dataset.originalText || btn.textContent;
+    btn.classList.remove('loading');
+    btn.disabled = false;
   }
 }
+
+// ── COPY TO CLIPBOARD ────────────────────────────────────
+async function copyToClipboard(text, successMsg = 'Copié !') {
+  const ok = await TG.copyText(text);
+  if (ok) {
+    Toast.success(successMsg);
+    TG.hapticLight();
+  } else {
+    Toast.error('Impossible de copier');
+  }
+}
+
+// ── ANIMATE IN ────────────────────────────────────────────
+function animateIn(el, delay = 0) {
+  if (!el) return;
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(14px)';
+  setTimeout(() => {
+    el.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+    el.style.opacity = '1';
+    el.style.transform = 'translateY(0)';
+  }, delay);
+}
+
+function staggerIn(selector, baseDelay = 0, step = 80) {
+  const els = document.querySelectorAll(selector);
+  els.forEach((el, i) => animateIn(el, baseDelay + i * step));
+}
+
+// ── SVG ICONS (inline) ────────────────────────────────────
+const Icons = {
+  lock:    `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
+  check:   `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+  play:    `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>`,
+  star:    `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+  copy:    `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`,
+  refresh: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>`,
+  arrow:   `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>`,
+};
+
+// ── EXPORT GLOBAL ────────────────────────────────────────
+window.App = {
+  Toast,
+  MonetAd,
+  Store,
+  Icons,
+  show, hide, setText, setHTML,
+  setLoading, copyToClipboard,
+  animateIn, staggerIn,
+};
+
+// Compatibilité raccourcie
+window.toast   = Toast;
+window.showToast = (msg, type) => Toast[type] ? Toast[type](msg) : Toast.info(msg);

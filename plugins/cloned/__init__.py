@@ -1,3 +1,4 @@
+import os
 # Creating the __init__.py for cloned plugins and updated config.py
 
 # Plugins pour bots clonés
