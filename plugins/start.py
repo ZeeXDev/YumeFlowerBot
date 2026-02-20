@@ -40,13 +40,26 @@ async def get_bot_id(client: Client) -> int:
 async def get_id_pubs_for_client(client: Client) -> str:
     """Retourne l'ID_PUBS du bot courant pour la Mini App URL."""
     try:
-        bot_id = await get_bot_id(client)
-        id_data = await db.get_id_codes(bot_id=bot_id)
-        if id_data:
-            return id_data["id_pubs"]
+        me = await client.get_me()
+        bot_id = me.id
+        
+        # Vérifier si c'est un bot cloné
+        cloned = await db.get_cloned_bot(bot_id)
+        if cloned:
+            id_data = await db.get_id_codes(bot_id=bot_id)
+            if id_data:
+                return id_data["id_pubs"]
+            else:
+                # Bot cloné mais pas d'ID_CODES → erreur grave
+                print(f"[get_id_pubs] ERREUR: Bot cloné {bot_id} sans ID_CODES !")
+                return None
+        
+        # C'est le bot mère
+        return "YUMEFLOWER"
+        
     except Exception as e:
         print(f"[get_id_pubs] Erreur: {e}")
-    return "YUMEFLOWER"
+        return None
 
 
 async def check_user_access(client: Client, user_id: int, message: Message) -> tuple:
@@ -57,8 +70,20 @@ async def check_user_access(client: Client, user_id: int, message: Message) -> t
     """
     # Récupérer l'ID du bot courant (0 = bot mère, sinon ID Telegram du cloné)
     bot_id = await get_bot_id(client)
+    
+    print(f"[DEBUG] ===== check_user_access =====")
+    print(f"[DEBUG] user_id: {user_id}")
+    print(f"[DEBUG] bot_id from get_bot_id: {bot_id}")
+    
+    # Vérifier si ce bot_id existe dans cloned_bots
+    if bot_id != 0:
+        cloned_check = await db.get_cloned_bot(bot_id)
+        print(f"[DEBUG] Is cloned bot in DB: {cloned_check is not None}")
+        if not cloned_check:
+            print(f"[DEBUG] ATTENTION: Bot {bot_id} n'est pas trouvé dans cloned_bots !")
 
     has_session = await db.has_active_session(user_id, bot_id)
+    print(f"[DEBUG] has_active_session({user_id}, {bot_id}) = {has_session}")
     
     if has_session:
         time_left = await db.get_session_time_left(user_id, bot_id)
@@ -77,18 +102,27 @@ async def check_user_access(client: Client, user_id: int, message: Message) -> t
             await db.deactivate_session(user_id, bot_id)
             print(f"[DEBUG] Session expirée pour user {user_id} bot {bot_id}, désactivation...")
     
-    # Pas de session active -> proposer la Mini App avec l'ID_PUBS du bon bot
+    # Pas de session active → proposer la Mini App avec l'ID_PUBS du bon bot
     web_app_url = ADSGRAM_WEBAPP_URL
     
     if not web_app_url:
         web_app_url = f"https://{client.username}.onrender.com"
     
-    # Récupérer l'ID_PUBS du bot courant pour pré-remplir la Mini App
+    # Récupérer l'ID_PUBS du bot courant
     id_pubs = await get_id_pubs_for_client(client)
+    
+    # 🔴 VÉRIFICATION CRITIQUE
+    if not id_pubs:
+        await message.reply_text(
+            "❌ <b>Erreur de configuration</b>\n\n"
+            "Le bot n'a pas d'ID_PUBS configuré. Contactez le support.",
+            parse_mode=ParseMode.HTML
+        )
+        return False, None
+    
     print(f"[DEBUG] Redirection Mini App: {web_app_url} avec ID_PUBS={id_pubs} bot_id={bot_id}")
     
     # RÉCUPÉRER LE LIEN ORIGINAL pour le bouton "Cliquez ici après la pub"
-    # Le lien est dans message.text (ex: /start Z2V0LTE1Nzc5OTE4MDYxODEyMTktMTU4OTAyNjcxMzkxNjc1Mg)
     orig_post_link = None
     try:
         if message.text and len(message.text) > 7:
@@ -415,8 +449,13 @@ async def give_premium_session(client: Client, message: Message):
         user_id = int(args[1])
         duration = int(args[2])
         
+        # Déterminer le bot_id (0 pour bot mère par défaut, ou spécifier)
+        bot_id = 0
+        if len(args) >= 4:
+            bot_id = int(args[3])
+        
         # Créer la session premium
-        await db.create_premium_session(user_id, duration, message.from_user.id)
+        await db.create_premium_session(user_id, duration, message.from_user.id, bot_id)
         
         # Calculer date expiration
         expiry = datetime.now() + timedelta(seconds=duration)
@@ -426,8 +465,10 @@ async def give_premium_session(client: Client, message: Message):
         hours = (duration % 86400) // 3600
         mins = (duration % 3600) // 60
         
+        bot_info = f" (Bot ID: {bot_id})" if bot_id != 0 else " (Bot Mère)"
+        
         await message.reply_text(
-            f"<b>✅ Session Premium Accordée</b>\n\n"
+            f"<b>✅ Session Premium Accordée</b>{bot_info}\n\n"
             f"<b>User ID:</b> <code>{user_id}</code>\n"
             f"<b>Durée:</b> {days}j {hours}h {mins}m\n"
             f"<b>Expire le:</b> <code>{expiry.strftime('%d/%m/%Y %H:%M')}</code>\n\n"
@@ -467,34 +508,39 @@ async def give_premium_session(client: Client, message: Message):
 
 @Bot.on_message(filters.command("delprime") & filters.private & admin)
 async def delete_premium_session(client: Client, message: Message):
-    """Supprime la session d'un utilisateur: /delprime user_id"""
+    """Supprime la session d'un utilisateur: /delprime user_id [bot_id]"""
     try:
         args = message.command
         if len(args) < 2:
             return await message.reply_text(
                 "<b>❌ Utilisation incorrecte</b>\n\n"
-                "<code>/delprime user_id</code>\n\n"
+                "<code>/delprime user_id [bot_id]</code>\n\n"
                 "<b>Exemple:</b>\n"
-                "<code>/delprime 123456789</code>",
+                "<code>/delprime 123456789</code>\n"
+                "<code>/delprime 123456789 123456789</code> (pour un bot cloné)",
                 quote=True
             )
         
         user_id = int(args[1])
+        bot_id = int(args[2]) if len(args) >= 3 else 0
         
         # Vérifier si l'utilisateur a une session
-        session = await db.get_user_session(user_id)
+        session = await db.get_user_session(user_id, bot_id)
         if not session:
             return await message.reply_text(
                 f"<b>⚠️ Aucune session trouvée</b>\n\n"
-                f"L'utilisateur <code>{user_id}</code> n'a pas de session active.",
+                f"L'utilisateur <code>{user_id}</code> n'a pas de session active"
+                f"{' pour ce bot' if bot_id != 0 else ''}.",
                 quote=True
             )
         
         # Supprimer la session
-        await db.remove_session(user_id)
+        await db.remove_session(user_id, bot_id)
+        
+        bot_info = f" (Bot ID: {bot_id})" if bot_id != 0 else " (Bot Mère)"
         
         await message.reply_text(
-            f"<b>✅ Session Supprimée</b>\n\n"
+            f"<b>✅ Session Supprimée</b>{bot_info}\n\n"
             f"<b>User ID:</b> <code>{user_id}</code>\n"
             f"<b>Type:</b> {session.get('type', 'inconnu').upper()}\n\n"
             f"<i>L'utilisateur doit maintenant regarder une pub ou acheter Premium pour accéder aux fichiers.</i>",

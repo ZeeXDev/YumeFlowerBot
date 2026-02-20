@@ -172,6 +172,7 @@ async def api_verify_id_pubs(request):
         id_data = await db.get_id_codes(id_pubs=id_pubs)
         
         if not id_data:
+            logger.warning(f"ID_PUBS invalide: {id_pubs}")
             return web.json_response({
                 'success': False,
                 'error': 'ID_PUBS invalide'
@@ -180,10 +181,13 @@ async def api_verify_id_pubs(request):
         bot_data = await db.get_cloned_bot(id_data['bot_id'])
         
         if not bot_data:
+            logger.warning(f"Bot non trouvé pour ID_PUBS: {id_pubs}, bot_id: {id_data['bot_id']}")
             return web.json_response({
                 'success': False,
                 'error': 'Bot non trouvé'
             })
+        
+        logger.info(f"ID_PUBS {id_pubs} validé - Bot: {bot_data.get('bot_username', 'Unknown')}")
         
         return web.json_response({
             'success': True,
@@ -227,15 +231,19 @@ async def api_watch_ad_clone(request):
         id_data = await db.get_id_codes(id_pubs=id_pubs)
         
         if not id_data:
+            logger.error(f"ID_PUBS invalide: {id_pubs}")
             return web.json_response({
                 'success': False,
                 'error': 'ID_PUBS invalide'
             })
         
         bot_id = id_data['bot_id']
+        logger.info(f"ID_PUBS {id_pubs} correspond au bot_id: {bot_id}")
+        
         bot_data = await db.get_cloned_bot(bot_id)
         
         if not bot_data:
+            logger.error(f"Bot non trouvé pour bot_id: {bot_id}")
             return web.json_response({
                 'success': False,
                 'error': 'Bot non trouvé'
@@ -248,7 +256,9 @@ async def api_watch_ad_clone(request):
                 logger.warning(f"Mismatch user_id: {user_id} vs {user_data.get('id')}")
         
         # Vérifier si déjà session active pour CE bot
-        if await db.has_active_session(user_id, bot_id):
+        existing_session = await db.has_active_session(user_id, bot_id)
+        if existing_session:
+            logger.info(f"Session déjà active pour user {user_id} sur bot {bot_id}")
             return web.json_response({
                 'success': False,
                 'message': 'Session déjà active pour ce bot'
@@ -265,7 +275,7 @@ async def api_watch_ad_clone(request):
         earning_per_ad = 0.002
         await db.add_earning(bot_id, earning_per_ad, 'ad_impression')
         
-        logger.info(f"Session créée pour user {user_id} sur bot {bot_id}")
+        logger.info(f"✅ Session créée pour user {user_id} sur bot {bot_id} (ID_PUBS: {id_pubs})")
         logger.info(f"Gains ajoutés au bot {bot_id}: ${earning_per_ad}")
         
         return web.json_response({
@@ -293,6 +303,8 @@ async def api_check_session_clone(request):
         user_id = data.get('user_id')
         id_pubs = data.get('id_pubs', '').strip().upper()
         
+        logger.info(f"Check session clone - User: {user_id}, ID_PUBS: {id_pubs}")
+        
         if not user_id or not id_pubs:
             return web.json_response({
                 'success': False,
@@ -303,17 +315,21 @@ async def api_check_session_clone(request):
         id_data = await db.get_id_codes(id_pubs=id_pubs)
         
         if not id_data:
+            logger.warning(f"ID_PUBS invalide: {id_pubs}")
             return web.json_response({
                 'success': False,
                 'error': 'ID_PUBS invalide'
             })
         
         bot_id = id_data['bot_id']
+        logger.info(f"Check session - ID_PUBS {id_pubs} -> bot_id {bot_id}")
         
         # Vérifier session pour CE bot
         has_session = await db.has_active_session(user_id, bot_id)
         time_left = await db.get_session_time_left(user_id, bot_id) if has_session else 0
         session = await db.get_user_session(user_id, bot_id) if has_session else None
+        
+        logger.info(f"Check session result - has_session: {has_session}, time_left: {time_left}")
         
         return web.json_response({
             'success': True,
@@ -556,16 +572,16 @@ async def api_check_session(request):
         user_id = data.get('user_id')
         auth = data.get('auth')
         
-        logger.info(f"Check session - User: {user_id}")
+        logger.info(f"Check session (bot mère) - User: {user_id}")
         
         if not user_id:
             return web.json_response({'error': 'Missing user_id'}, status=400)
         
-        # Vérifier session pour bot mère (pas de bot_id)
+        # Vérifier session pour bot mère (bot_id=0)
         try:
-            has_session = await db.has_active_session(user_id)
-            time_left = await db.get_session_time_left(user_id) if has_session else 0
-            session = await db.get_user_session(user_id) if has_session else None
+            has_session = await db.has_active_session(user_id, 0)  # bot_id=0 pour bot mère
+            time_left = await db.get_session_time_left(user_id, 0) if has_session else 0
+            session = await db.get_user_session(user_id, 0) if has_session else None
             
             return web.json_response({
                 'has_access': has_session and time_left > 0,
@@ -600,7 +616,7 @@ async def api_watch_ad(request):
         user_id = data.get('user_id')
         auth = data.get('auth')
         
-        logger.info(f"Watch ad - User: {user_id}")
+        logger.info(f"Watch ad (bot mère) - User: {user_id}")
         
         if not user_id:
             return web.json_response({'error': 'Missing user_id'}, status=400)
@@ -613,7 +629,7 @@ async def api_watch_ad(request):
         
         # Vérifier si déjà session active
         try:
-            if await db.has_active_session(user_id):
+            if await db.has_active_session(user_id, 0):  # bot_id=0 pour bot mère
                 logger.info(f"User {user_id} a déjà une session active")
                 return web.json_response({
                     'success': False,
@@ -629,7 +645,7 @@ async def api_watch_ad(request):
             logger.info(f"Création session - Duration: {duration}min - User: {user_id}")
             
             # bot_id=0 = bot mère YUMEFLOWER
-            session = await db.create_free_session(user_id, duration, bot_id=0)
+            session = await db.create_free_session(user_id, duration, 0)
             logger.info(f"Session créée avec succès: {session}")
             
             # Créditer les gains au bot mère (YUMEFLOWER, bot_id=0)
@@ -670,6 +686,7 @@ async def api_payment(request):
         user_id = data.get('user_id')
         auth = data.get('auth')
         plan = data.get('plan', 'monthly')
+        id_pubs = data.get('id_pubs', '').strip().upper()
         
         if not user_id or not auth:
             return web.json_response({'error': 'Missing parameters'}, status=400)
@@ -679,13 +696,20 @@ async def api_payment(request):
         if not user_data or int(user_data.get('id', 0)) != int(user_id):
             return web.json_response({'error': 'Unauthorized'}, status=401)
         
+        # Déterminer le bot_id
+        bot_id = 0  # Par défaut bot mère
+        if id_pubs:
+            id_data = await db.get_id_codes(id_pubs=id_pubs)
+            if id_data:
+                bot_id = id_data['bot_id']
+        
         # Déterminer la durée selon le plan
         duration_days = 7 if plan == 'weekly' else 30 if plan == 'monthly' else 365
         duration_minutes = duration_days * 24 * 60
         
-        session = await db.create_premium_session(user_id, duration_minutes)
+        session = await db.create_premium_session(user_id, duration_minutes, None, bot_id)
         
-        logger.info(f"Premium session created for user {user_id}, plan: {plan}")
+        logger.info(f"Premium session created for user {user_id}, bot {bot_id}, plan: {plan}")
         
         return web.json_response({
             'success': True,

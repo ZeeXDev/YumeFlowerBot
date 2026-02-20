@@ -56,7 +56,7 @@ class Rohit:
     async def _seed_mother_bot(self):
         """Crée les codes fixes de la bot mère si absents"""
         try:
-            existing = await self.db.id_codes.find_one({"id_pubs": "YUMEFLOWER"})
+            existing = await self.db.id_codes.find_one({"bot_id": 0})
             if not existing:
                 from datetime import datetime, timezone
                 now = datetime.now(timezone.utc)
@@ -412,9 +412,15 @@ class Rohit:
             await self.init()
         bot_id = bot_id if bot_id is not None else 0
         session_id = f"{user_id}_{bot_id}"
+        
+        logging.info(f"[DB DEBUG] get_user_session - Looking for session_id: {session_id}")
+        
         session = await self.db.sessions.find_one({"session_id": session_id})
         if session:
             session["_id"] = str(session["_id"])
+            logging.info(f"[DB DEBUG] Session found: {session}")
+        else:
+            logging.info(f"[DB DEBUG] No session found for {session_id}")
         return session
 
     async def create_free_session(self, user_id: int, duration_minutes: int = 10, bot_id: int = None) -> Dict:
@@ -447,7 +453,7 @@ class Rohit:
             upsert=True
         )
 
-        logging.info(f"[DB] Session GLOBALE créée pour user {user_id} (via bot {bot_id}), expire à {expiry_time}")
+        logging.info(f"[DB] Session créée: {session_id} pour bot {bot_id}, expire à {expiry_time}")
         return {
             "_id": session_id,
             "user_id": user_id,
@@ -484,6 +490,7 @@ class Rohit:
             upsert=True
         )
 
+        logging.info(f"[DB] Session premium créée: {session_id} pour bot {bot_id}")
         return {
             "_id": session_id,
             "user_id": user_id,
@@ -500,8 +507,14 @@ class Rohit:
     async def has_active_session(self, user_id: int, bot_id: int = None) -> bool:
         if not self._initialized:
             await self.init()
+        bot_id = bot_id if bot_id is not None else 0
+        session_id = f"{user_id}_{bot_id}"
+        
+        logging.info(f"[DB DEBUG] has_active_session - Checking {session_id}")
+        
         session = await self.get_user_session(user_id, bot_id)
         if not session or not session.get("is_active"):
+            logging.info(f"[DB DEBUG] No active session for {session_id}")
             return False
 
         try:
@@ -512,12 +525,14 @@ class Rohit:
             now = datetime.now(timezone.utc)
             
             if now > expiry:
+                logging.info(f"[DB DEBUG] Session expired for {session_id}")
                 await self.deactivate_session(user_id, bot_id)
                 return False
             
+            logging.info(f"[DB DEBUG] Session active for {session_id}")
             return True
         except Exception as e:
-            logging.error(f"[ERROR] Erreur vérification session: {e}")
+            logging.error(f"[DB DEBUG] Error checking session {session_id}: {e}")
             return False
 
     async def deactivate_session(self, user_id: int, bot_id: int = None) -> None:
@@ -529,6 +544,7 @@ class Rohit:
             {"session_id": session_id},
             {"$set": {"is_active": False}}
         )
+        logging.info(f"[DB] Session deactivated: {session_id}")
 
     async def remove_session(self, user_id: int, bot_id: int = None) -> None:
         if not self._initialized:
@@ -536,6 +552,7 @@ class Rohit:
         bot_id = bot_id if bot_id is not None else 0
         session_id = f"{user_id}_{bot_id}"
         await self.db.sessions.delete_one({"session_id": session_id})
+        logging.info(f"[DB] Session removed: {session_id}")
 
     async def get_session_time_left(self, user_id: int, bot_id: int = None) -> int:
         if not self._initialized:
@@ -846,12 +863,14 @@ class Rohit:
             await self.init()
         
         query = {}
-        if bot_id:
+        if bot_id is not None:
             query["bot_id"] = bot_id
         if id_pubs:
-            query["id_pubs"] = id_pubs
+            query["id_pubs"] = id_pubs.upper()
         if id_code:
-            query["id_code"] = id_code
+            query["id_code"] = id_code.upper()
+        
+        logging.info(f"[DB DEBUG] get_id_codes - Query: {query}")
         
         codes = await self.db.id_codes.find_one(query)
         if codes:
@@ -860,6 +879,9 @@ class Rohit:
                 codes["created_at"] = codes["created_at"].isoformat()
             if isinstance(codes.get("updated_at"), datetime):
                 codes["updated_at"] = codes["updated_at"].isoformat()
+            logging.info(f"[DB DEBUG] get_id_codes - Found: {codes}")
+        else:
+            logging.info(f"[DB DEBUG] get_id_codes - Not found for query: {query}")
         return codes
 
     async def get_bot_by_id_pubs(self, id_pubs: str) -> Optional[Dict]:

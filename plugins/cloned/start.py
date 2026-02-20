@@ -128,19 +128,28 @@ async def cloned_start_handler(client: Client, message: Message):
     bot_username = client.me.username
     user_id = message.from_user.id
 
+    print(f"[CLONE DEBUG] ===== cloned_start_handler =====")
+    print(f"[CLONE DEBUG] Bot ID: {bot_id}")
+    print(f"[CLONE DEBUG] Bot Username: {bot_username}")
+    print(f"[CLONE DEBUG] User ID: {user_id}")
+    print(f"[CLONE DEBUG] Message text: {message.text}")
+
     # Enregistrer l'utilisateur dans la DB du bot cloné
     try:
         await db.add_bot_user(bot_id, user_id)
-    except Exception:
-        pass
+        print(f"[CLONE DEBUG] User {user_id} added to bot {bot_id}")
+    except Exception as e:
+        print(f"[CLONE DEBUG] Error adding user: {e}")
 
     # Vérifier si c'est un lien de fichier (argument après /start)
     args = message.text.split(" ", 1)
     if len(args) > 1 and args[1].strip():
+        print(f"[CLONE DEBUG] Handling file link: {args[1].strip()}")
         await handle_file_link(client, message, args[1].strip())
         return
 
     # Message de démarrage normal
+    print(f"[CLONE DEBUG] Sending normal start message")
     start_msg = await get_start_message(bot_id, message.from_user)
     start_photo = await get_start_photo(bot_id)
     keyboard = await build_start_keyboard(bot_id, bot_username)
@@ -176,13 +185,29 @@ async def handle_file_link(client: Client, message: Message, base64_string: str)
     bot_id = client.me.id
     user_id = message.from_user.id
 
+    print(f"[CLONE DEBUG] ===== handle_file_link =====")
+    print(f"[CLONE DEBUG] Bot ID: {bot_id}")
+    print(f"[CLONE DEBUG] User ID: {user_id}")
+    print(f"[CLONE DEBUG] Base64: {base64_string}")
+
     # Vérifier si l'utilisateur a une session active pour CE bot
     has_access = await db.has_active_session(user_id, bot_id)
+    print(f"[CLONE DEBUG] has_active_session({user_id}, {bot_id}) = {has_access}")
 
     if not has_access:
         # Récupérer l'ID_PUBS du bot
         id_codes = await db.get_id_codes(bot_id=bot_id)
-        id_pubs = id_codes['id_pubs'] if id_codes else 'N/A'
+        id_pubs = id_codes['id_pubs'] if id_codes else None
+        
+        print(f"[CLONE DEBUG] ID_PUBS for bot {bot_id}: {id_pubs}")
+
+        if not id_pubs:
+            await message.reply_text(
+                "❌ <b>Erreur de configuration</b>\n\n"
+                "Ce bot n'a pas d'ID_PUBS configuré. Contactez le maître du bot.",
+                parse_mode=ParseMode.HTML
+            )
+            return
 
         web_app_url = ADSGRAM_WEBAPP_URL or f"https://{client.me.username}.onrender.com"
 
@@ -227,6 +252,8 @@ async def handle_file_link(client: Client, message: Message, base64_string: str)
         settings = await get_clone_settings(bot_id)
         channel_id = settings.get('channel_id')
 
+        print(f"[CLONE DEBUG] Channel ID from settings: {channel_id}")
+
         if not channel_id:
             await message.reply_text(
                 "<b>❌ Erreur:</b> Canal DB non configuré.\n"
@@ -251,8 +278,11 @@ async def handle_file_link(client: Client, message: Message, base64_string: str)
                 print(f"[CLONE] Error decoding ID: {e}")
                 return
 
+        print(f"[CLONE DEBUG] Message IDs to fetch: {ids}")
+
         # Récupérer et envoyer les messages
         messages = await get_messages(client, channel_id, ids)
+        print(f"[CLONE DEBUG] Retrieved {len(messages)} messages")
 
         for msg in messages:
             try:
@@ -267,6 +297,7 @@ async def handle_file_link(client: Client, message: Message, base64_string: str)
         # Afficher le temps restant + stats
         try:
             time_left = await db.get_session_time_left(user_id, bot_id)
+            print(f"[CLONE DEBUG] Time left: {time_left}s")
             if time_left > 0:
                 minutes = time_left // 60
                 seconds = time_left % 60
@@ -275,17 +306,19 @@ async def handle_file_link(client: Client, message: Message, base64_string: str)
                     f"⏱️ Temps restant: {minutes}m {seconds}s",
                     parse_mode=ParseMode.HTML
                 )
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[CLONE DEBUG] Error showing time left: {e}")
 
         # Incrémenter stat fichiers
         try:
             await db.increment_bot_stat(bot_id, 'total_files_sent', len(messages))
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[CLONE DEBUG] Error incrementing stats: {e}")
 
     except Exception as e:
         print(f"[CLONE] Error handling file link: {e}")
+        import traceback
+        traceback.print_exc()
         await message.reply_text(
             "<b>❌ Erreur lors de la récupération des fichiers.</b>",
             parse_mode=ParseMode.HTML
@@ -301,6 +334,8 @@ async def check_session_callback(client: Client, callback_query):
     """Vérifie la session de l'utilisateur"""
     bot_id = client.me.id
     user_id = callback_query.from_user.id
+
+    print(f"[CLONE DEBUG] check_session_callback - Bot: {bot_id}, User: {user_id}")
 
     has_session = await db.has_active_session(user_id, bot_id)
 
