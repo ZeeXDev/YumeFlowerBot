@@ -311,7 +311,13 @@ async def restart_all_cloned_bots():
     
     for bot_data in bots:
         if bot_data.get('is_active', True):
-            success = await start_cloned_bot(bot_data['_id'])
+            # CORRECTION: utiliser bot_id (int) et non _id (string ObjectId)
+            real_bot_id = bot_data.get('bot_id')
+            if real_bot_id is None:
+                logger.warning(f"[CLONE] Bot sans bot_id ignoré: {bot_data.get('_id')}")
+                failed += 1
+                continue
+            success = await start_cloned_bot(int(real_bot_id))
             if success:
                 started += 1
             else:

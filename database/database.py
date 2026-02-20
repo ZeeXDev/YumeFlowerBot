@@ -403,25 +403,37 @@ class Rohit:
     # ==========================================
 
     async def get_user_session(self, user_id: int, bot_id: int = None) -> Optional[Dict]:
+        """
+        Récupère la session d'un utilisateur POUR UN BOT SPÉCIFIQUE.
+        session_id = "{user_id}_{bot_id}" — une session par bot par utilisateur.
+        bot_id=0 = bot mère YUMEFLOWER.
+        """
         if not self._initialized:
             await self.init()
-        session_id = f"{user_id}_{bot_id}" if bot_id else str(user_id)
+        bot_id = bot_id if bot_id is not None else 0
+        session_id = f"{user_id}_{bot_id}"
         session = await self.db.sessions.find_one({"session_id": session_id})
         if session:
             session["_id"] = str(session["_id"])
         return session
 
     async def create_free_session(self, user_id: int, duration_minutes: int = 10, bot_id: int = None) -> Dict:
+        """
+        Crée une session gratuite pour ce bot spécifique.
+        session_id = "{user_id}_{bot_id}" — une session par bot par utilisateur.
+        bot_id=0 = bot mère YUMEFLOWER.
+        """
         if not self._initialized:
             await self.init()
+        bot_id = bot_id if bot_id is not None else 0
         now = datetime.now(timezone.utc)
         expiry_time = now + timedelta(minutes=duration_minutes)
-        session_id = f"{user_id}_{bot_id}" if bot_id else str(user_id)
+        session_id = f"{user_id}_{bot_id}"
 
         session_doc = {
             "session_id": session_id,
             "user_id": user_id,
-            "bot_id": bot_id,
+            "bot_id": bot_id,  # conservé pour tracking gains
             "type": "free",
             "is_active": True,
             "created_at": now,
@@ -435,7 +447,7 @@ class Rohit:
             upsert=True
         )
 
-        logging.info(f"[DB] Session créée pour user {user_id} sur bot {bot_id}, expire à {expiry_time}")
+        logging.info(f"[DB] Session GLOBALE créée pour user {user_id} (via bot {bot_id}), expire à {expiry_time}")
         return {
             "_id": session_id,
             "user_id": user_id,
@@ -451,7 +463,8 @@ class Rohit:
             await self.init()
         now = datetime.now(timezone.utc)
         expiry_time = now + timedelta(seconds=duration_seconds)
-        session_id = f"{user_id}_{bot_id}" if bot_id else str(user_id)
+        bot_id = bot_id if bot_id is not None else 0
+        session_id = f"{user_id}_{bot_id}"  # session par bot
 
         session_doc = {
             "session_id": session_id,
@@ -510,7 +523,8 @@ class Rohit:
     async def deactivate_session(self, user_id: int, bot_id: int = None) -> None:
         if not self._initialized:
             await self.init()
-        session_id = f"{user_id}_{bot_id}" if bot_id else str(user_id)
+        bot_id = bot_id if bot_id is not None else 0
+        session_id = f"{user_id}_{bot_id}"
         await self.db.sessions.update_one(
             {"session_id": session_id},
             {"$set": {"is_active": False}}
@@ -519,13 +533,14 @@ class Rohit:
     async def remove_session(self, user_id: int, bot_id: int = None) -> None:
         if not self._initialized:
             await self.init()
-        session_id = f"{user_id}_{bot_id}" if bot_id else str(user_id)
+        bot_id = bot_id if bot_id is not None else 0
+        session_id = f"{user_id}_{bot_id}"
         await self.db.sessions.delete_one({"session_id": session_id})
 
     async def get_session_time_left(self, user_id: int, bot_id: int = None) -> int:
         if not self._initialized:
             await self.init()
-        session = await self.get_user_session(user_id, bot_id)
+        session = await self.get_user_session(user_id, bot_id)  # par bot
         if not session or not session.get("is_active"):
             return 0
 

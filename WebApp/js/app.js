@@ -30,7 +30,8 @@ const MonetAd = (() => {
   function show(onComplete, onError) {
     onError = onError || (() => {});
 
-    if (MONETAG_ZONE_ID === '10518701' || !TG.isInTelegram()) {
+    // Mode dev uniquement si pas dans Telegram
+    if (!TG.isInTelegram()) {
       _showDevOverlay(onComplete);
       return;
     }
@@ -42,10 +43,19 @@ const MonetAd = (() => {
           .then(() => { if (onComplete) onComplete(); })
           .catch(() => { if (onComplete) onComplete(); });
       } else {
-        setTimeout(() => { if (onComplete) onComplete(); }, 2000);
+        // SDK pas encore chargé, attendre 3s et retenter
+        setTimeout(() => {
+          if (typeof window[fnName] === 'function') {
+            window[fnName]()
+              .then(() => { if (onComplete) onComplete(); })
+              .catch(() => { if (onComplete) onComplete(); });
+          } else {
+            if (onError) onError();
+          }
+        }, 3000);
       }
     } catch (err) {
-      setTimeout(() => { if (onComplete) onComplete(); }, 2000);
+      if (onError) onError();
     }
   }
 

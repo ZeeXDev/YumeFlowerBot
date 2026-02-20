@@ -242,24 +242,55 @@ let state = {
 
 // ── INIT ──────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
-  // Auto-fill depuis URL param ou start_param Telegram
-  const param = TG.getStartParam();
-  if (param) {
-    const input = document.getElementById('id-pubs-input');
-    if (input) { input.value = param.toUpperCase(); }
-  }
+  // Priorité 1 : ?id_pubs=XXX dans l'URL (passé par le bot Pyrogram)
+  // Priorité 2 : start_param Telegram (passé via t.me/bot?start=XXX)
+  // Priorité 3 : YUMEFLOWER (bot mère par défaut)
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlIdPubs = urlParams.get('id_pubs');
+  const param = urlIdPubs || TG.getStartParam() || 'YUMEFLOWER';
+  const autoIdPubs = param.toUpperCase();
 
-  // Vérifier si session déjà active
-  const cached = App.Store.get('active_session');
+  const input = document.getElementById('id-pubs-input');
+  if (input) { input.value = autoIdPubs; }
+
+  // Vérifier si session déjà active POUR CE BOT SPÉCIFIQUE
+  const cacheKey = 'active_session_' + autoIdPubs;
+  const cached = App.Store.get(cacheKey);
   if (cached && cached.expires_at) {
     const secsLeft = Timer.secondsFromExpiry(cached.expires_at);
     if (secsLeft > 30) {
-      state.idPubs = cached.id_pubs;
+      state.idPubs = autoIdPubs;
       state.botData = cached.bot;
-      showSuccessStep(secsLeft, cached.id_pubs, cached.bot_name || '');
+      showSuccessStep(secsLeft, autoIdPubs, cached.bot_name || '');
       return;
     } else {
-      App.Store.remove('active_session');
+      App.Store.remove(cacheKey);
+    }
+  }
+
+  // Vérifier aussi côté serveur si session active
+  const userId = TG.getUserId();
+  if (userId && autoIdPubs) {
+    const check = await API.checkSessionClone(userId, autoIdPubs);
+    if (check.ok && check.data.has_access) {
+      state.idPubs = autoIdPubs;
+      App.Store.set(cacheKey, {
+        id_pubs: autoIdPubs,
+        expires_at: check.data.expires_at
+      });
+      showSuccessStep(check.data.time_left || 600, autoIdPubs, '');
+      return;
+    }
+  }
+
+  // Pas de session → vérifier l'ID_PUBS et aller à la confirmation directement
+  if (autoIdPubs) {
+    const res = await API.verifyIdPubs(autoIdPubs);
+    if (res.ok && res.data.success) {
+      state.idPubs = autoIdPubs;
+      state.botData = res.data.bot;
+      showConfirmStep(res.data.bot || { username: autoIdPubs }, autoIdPubs);
+      return;
     }
   }
 
@@ -376,8 +407,9 @@ async function activateSession(userId) {
   const expiresAt = res.data.expires_at;
   const botName = res.data.bot_username || state.botData?.username || '';
 
-  // Sauvegarder en cache
-  App.Store.set('active_session', {
+  // Sauvegarder en cache POUR CE BOT SPÉCIFIQUE
+  const cKey = 'active_session_' + state.idPubs;
+  App.Store.set(cKey, {
     id_pubs: state.idPubs,
     bot: state.botData,
     bot_name: botName,
@@ -405,7 +437,7 @@ function showSuccessStep(seconds, idPubs, botName, expiresAt = null) {
     display: document.getElementById('timer-display'),
     pctEl:   document.getElementById('timer-pct'),
     onEnd: () => {
-      App.Store.remove('active_session');
+      App.Store.remove('active_session_' + state.idPubs);
       App.Toast.info('Session expirée. Regardez une nouvelle pub.', 5000);
       resetToInput();
     }

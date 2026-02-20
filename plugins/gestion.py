@@ -1656,8 +1656,10 @@ async def handle_photo_upload(client: Bot, message: Message):
             return await message.reply_text("❌ Aucune photo détectée. Envoyez une image.")
 
         # Télécharger la photo localement depuis la bot mère
-        import os; os.makedirs("/storage/emulated/0/Absolute/YumeFlower2/temp_photos", exist_ok=True)
-        temp_path = await client.download_media(message.photo, file_name=f"/storage/emulated/0/Absolute/YumeFlower2/temp_photos/start_photo_{bot_id}.jpg")
+        import os
+        tmp_dir = "/tmp/yume_photos"
+        os.makedirs(tmp_dir, exist_ok=True)
+        temp_path = await client.download_media(message.photo, file_name=f"{tmp_dir}/start_photo_{bot_id}.jpg")
 
         # Récupérer le client du bot cloné pour obtenir son propre file_id
         from plugins.clone import cloned_clients

@@ -623,13 +623,21 @@ async def api_watch_ad(request):
             logger.error(f"Erreur DB has_active_session: {e}")
             return web.json_response({'error': f'DB Error: {str(e)}'}, status=500)
         
-        # Créer session gratuite (bot mère, pas de bot_id)
+        # Créer session gratuite (bot mère — bot_id=0 pour YUMEFLOWER)
         try:
             duration = await db.get_free_session_duration()
             logger.info(f"Création session - Duration: {duration}min - User: {user_id}")
             
-            session = await db.create_free_session(user_id, duration)
+            # bot_id=0 = bot mère YUMEFLOWER
+            session = await db.create_free_session(user_id, duration, bot_id=0)
             logger.info(f"Session créée avec succès: {session}")
+            
+            # Créditer les gains au bot mère (YUMEFLOWER, bot_id=0)
+            try:
+                await db.add_earning(0, 0.002, 'ad_impression')
+                await db.increment_bot_stat(0, 'total_ads_watched')
+            except Exception as eg:
+                logger.warning(f"Gains bot mère non crédités: {eg}")
             
             return web.json_response({
                 'success': True,

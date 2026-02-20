@@ -20,40 +20,72 @@ BAN_SUPPORT = f"{BAN_SUPPORT}"
 # FONCTION DE VÉRIFICATION D'ACCÈS (CORRIGÉE)
 # ============================================================
 
+async def get_bot_id(client: Client) -> int:
+    """
+    Retourne l'ID du bot courant pour le système de sessions.
+    Bot mère = 0 (YUMEFLOWER), bot cloné = son ID Telegram.
+    """
+    try:
+        me = await client.get_me()
+        bot_real_id = me.id
+        cloned = await db.get_cloned_bot(bot_real_id)
+        if cloned:
+            return bot_real_id  # Bot cloné
+        return 0  # Bot mère YUMEFLOWER
+    except Exception as e:
+        print(f"[get_bot_id] Erreur: {e}")
+        return 0
+
+
+async def get_id_pubs_for_client(client: Client) -> str:
+    """Retourne l'ID_PUBS du bot courant pour la Mini App URL."""
+    try:
+        bot_id = await get_bot_id(client)
+        id_data = await db.get_id_codes(bot_id=bot_id)
+        if id_data:
+            return id_data["id_pubs"]
+    except Exception as e:
+        print(f"[get_id_pubs] Erreur: {e}")
+    return "YUMEFLOWER"
+
+
 async def check_user_access(client: Client, user_id: int, message: Message) -> tuple:
     """
-    Vérifie si l'utilisateur a accès aux fichiers.
+    Vérifie si l'utilisateur a accès aux fichiers POUR CE BOT SPÉCIFIQUE.
+    Chaque bot a sa propre session par utilisateur.
     Retourne: (has_access: bool, status_message: str or None)
     """
-    # CORRECTION : Vérifier d'abord si session existe ET si temps restant > 0
-    has_session = await db.has_active_session(user_id)
+    # Récupérer l'ID du bot courant (0 = bot mère, sinon ID Telegram du cloné)
+    bot_id = await get_bot_id(client)
+
+    has_session = await db.has_active_session(user_id, bot_id)
     
     if has_session:
-        time_left = await db.get_session_time_left(user_id)
+        time_left = await db.get_session_time_left(user_id, bot_id)
         
-        # CORRECTION CRITIQUE : Vérifier qu'il reste du temps !
+        # Vérifier qu'il reste du temps !
         if time_left > 0:
             minutes = time_left // 60
             seconds = time_left % 60
-            session = await db.get_user_session(user_id)
+            session = await db.get_user_session(user_id, bot_id)
             
             type_label = "⭐ PREMIUM" if session.get('type') == 'premium' else "📺 FREE"
             status_msg = f"{type_label} | Temps restant: {minutes}m {seconds}s"
             return True, status_msg
         else:
             # Session existe mais expirée, on la supprime proprement
-            await db.deactivate_session(user_id)
-            print(f"[DEBUG] Session expirée pour user {user_id}, désactivation...")
+            await db.deactivate_session(user_id, bot_id)
+            print(f"[DEBUG] Session expirée pour user {user_id} bot {bot_id}, désactivation...")
     
-    # Pas de session active -> proposer la Mini App
-    # CORRECTION : Utiliser ADSGRAM_WEBAPP_URL qui doit pointer vers Vercel
+    # Pas de session active -> proposer la Mini App avec l'ID_PUBS du bon bot
     web_app_url = ADSGRAM_WEBAPP_URL
     
     if not web_app_url:
-        print("[ERROR] ADSGRAM_WEBAPP_URL non défini dans config.py !")
-        web_app_url = f"https://{client.username}.onrender.com"  # Fallback mais mauvais !
+        web_app_url = f"https://{client.username}.onrender.com"
     
-    print(f"[DEBUG] Redirection vers Mini App: {web_app_url}")
+    # Récupérer l'ID_PUBS du bot courant pour pré-remplir la Mini App
+    id_pubs = await get_id_pubs_for_client(client)
+    print(f"[DEBUG] Redirection Mini App: {web_app_url} avec ID_PUBS={id_pubs} bot_id={bot_id}")
     
     # RÉCUPÉRER LE LIEN ORIGINAL pour le bouton "Cliquez ici après la pub"
     # Le lien est dans message.text (ex: /start Z2V0LTE1Nzc5OTE4MDYxODEyMTktMTU4OTAyNjcxMzkxNjc1Mg)
@@ -65,14 +97,15 @@ async def check_user_access(client: Client, user_id: int, message: Message) -> t
     except:
         pass
     
+    # Passer l'ID_PUBS dans l'URL pour que la Mini App sache quel bot
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton(
             "📺 Débloquer (Regarder Pub)", 
-            web_app=WebAppInfo(url=f"{web_app_url}/index.html")
+            web_app=WebAppInfo(url=f"{web_app_url}/index.html?id_pubs={id_pubs}")
         )],
         [InlineKeyboardButton(
             "⭐ Devenir Premium", 
-            web_app=WebAppInfo(url=f"{web_app_url}/prime.html")
+            web_app=WebAppInfo(url=f"{web_app_url}/prime.html?id_pubs={id_pubs}")
         )],
         [InlineKeyboardButton(
             "❓ Comment ça marche ?", url="https://t.me/zeexclub/563")]
@@ -305,13 +338,21 @@ async def check_session_callback(client: Client, callback_query: CallbackQuery):
     """Vérifie et affiche le statut de la session de l'utilisateur"""
     user_id = callback_query.from_user.id
     
-    has_session = await db.has_active_session(user_id)
+    # Récupérer bot_id depuis le client
+    try:
+        me = await client.get_me()
+        cloned = await db.get_cloned_bot(me.id)
+        bot_id = me.id if cloned else 0
+    except Exception:
+        bot_id = 0
+
+    has_session = await db.has_active_session(user_id, bot_id)
     
     if has_session:
-        time_left = await db.get_session_time_left(user_id)
+        time_left = await db.get_session_time_left(user_id, bot_id)
         minutes = time_left // 60
         seconds = time_left % 60
-        session = await db.get_user_session(user_id)
+        session = await db.get_user_session(user_id, bot_id)
         
         type_emoji = "⭐" if session.get('type') == 'premium' else "📺"
         type_text = "PREMIUM" if session.get('type') == 'premium' else "GRATUITE"
