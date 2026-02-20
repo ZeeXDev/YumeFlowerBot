@@ -10,7 +10,10 @@ from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, 
 from pyrogram.enums import ParseMode
 from pyrogram.errors import FloodWait
 from database.database import db
-from config import ADSGRAM_WEBAPP_URL
+try:
+    from config import ADSGRAM_WEBAPP_URL
+except ImportError:
+    ADSGRAM_WEBAPP_URL = None
 
 
 # ============================================================
@@ -40,8 +43,11 @@ async def build_start_keyboard(bot_id: int, bot_username: str) -> InlineKeyboard
     keyboard.append([InlineKeyboardButton("📺 Ma Session", callback_data="check_session")])
 
     # Bouton obligatoire vers bot mère
-    from config import MOTHER_BOT_USERNAME as TG_BOT_USERNAME
-    mother_bot = TG_BOT_USERNAME if hasattr(__import__('config'), 'TG_BOT_USERNAME') else "YumeFlowerBot"
+    try:
+        from config import MOTHER_BOT_USERNAME as TG_BOT_USERNAME
+        mother_bot = TG_BOT_USERNAME
+    except ImportError:
+        mother_bot = "YumeFlowerBot"
     keyboard.append([InlineKeyboardButton(
         "🤖 Créer Votre Propre Bot",
         url=f"https://t.me/{mother_bot}?start=clone"
@@ -101,7 +107,7 @@ async def get_messages(client, channel_id, message_ids):
         try:
             msgs = await client.get_messages(chat_id=channel_id, message_ids=temp_ids)
         except FloodWait as e:
-            await asyncio.sleep(e.x)
+            await asyncio.sleep(e.value)
             msgs = await client.get_messages(chat_id=channel_id, message_ids=temp_ids)
         except Exception as e:
             print(f"[CLONE] Error getting messages: {e}")
@@ -253,12 +259,12 @@ async def handle_file_link(client: Client, message: Message, base64_string: str)
                 await msg.copy(chat_id=user_id)
                 await db.increment_bot_stat(bot_id, 'total_files_sent')
             except FloodWait as e:
-                await asyncio.sleep(e.x)
+                await asyncio.sleep(e.value)
                 await msg.copy(chat_id=user_id)
             except Exception as e:
                 print(f"[CLONE] Error sending message: {e}")
 
-        # Afficher le temps restant
+        # Afficher le temps restant + stats
         try:
             time_left = await db.get_session_time_left(user_id, bot_id)
             if time_left > 0:
@@ -269,6 +275,12 @@ async def handle_file_link(client: Client, message: Message, base64_string: str)
                     f"⏱️ Temps restant: {minutes}m {seconds}s",
                     parse_mode=ParseMode.HTML
                 )
+        except Exception:
+            pass
+
+        # Incrémenter stat fichiers
+        try:
+            await db.increment_bot_stat(bot_id, 'total_files_sent', len(messages))
         except Exception:
             pass
 

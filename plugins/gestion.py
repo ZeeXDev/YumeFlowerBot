@@ -101,12 +101,16 @@ async def check_role(user_id: int, bot_id: int = None) -> Optional[str]:
     
     if bot_id:
         try:
+            # Vérifier d'abord si master_id direct dans cloned_bots
+            bot_data = await db.get_cloned_bot(bot_id)
+            if bot_data and bot_data.get('master_id') == user_id:
+                return 'maitre'
             role = await db.get_user_bot_role(bot_id, user_id)
             if role:
                 return role
         except Exception as e:
             logger.error(f"Erreur check_role: {e}")
-    
+
     return None
 
 async def is_owner(user_id: int) -> bool:
@@ -161,7 +165,7 @@ async def gestion_command(client: Bot, message: Message):
     
     # Si un seul bot, ouvrir directement
     if len(user_bots) == 1:
-        return await show_gestion_menu(message, user_bots[0]['_id'], user_id)
+        return await show_gestion_menu(message, user_bots[0].get('bot_id', user_bots[0]['_id']), user_id)
     
     # Sinon, afficher la liste des bots
     return await show_bot_selection(message, user_bots)
@@ -173,7 +177,20 @@ async def get_user_managed_bots(user_id: int) -> List[Dict]:
         user_bots = []
         
         for bot in all_bots:
-            role = await db.get_user_bot_role(bot['_id'], user_id)
+            real_bot_id = bot.get('bot_id')
+            if real_bot_id is None:
+                continue
+            try:
+                real_bot_id = int(real_bot_id)
+            except (TypeError, ValueError):
+                continue
+            # Maître direct → toujours visible
+            if bot.get('master_id') == user_id:
+                bot['role'] = 'maitre'
+                user_bots.append(bot)
+                continue
+            # Vérifier dans bot_admins
+            role = await db.get_user_bot_role(real_bot_id, user_id)
             if role in ['maitre', 'admin']:
                 bot['role'] = role
                 user_bots.append(bot)
@@ -213,9 +230,10 @@ async def gestion_owner_menu(message: Message):
         buttons = []
         for bot in bots[:20]:  # Limiter à 20 pour éviter les messages trop longs
             status = "🟢" if bot.get('is_active') else "🔴"
+            real_id = bot.get('bot_id', bot['_id'])
             buttons.append([InlineKeyboardButton(
                 f"{status} @{bot['bot_username']}",
-                callback_data=f"gestion_select_{bot['_id']}"
+                callback_data=f"gestion_select_{real_id}"
             )])
         
         # Pagination si plus de 20 bots
@@ -254,9 +272,10 @@ async def show_bot_selection(message: Message, bots: List[Dict]):
     for bot in bots:
         emoji = "👑" if bot['role'] == 'maitre' else "👤"
         status = "🟢" if bot.get('is_active') else "🔴"
+        real_id = bot.get('bot_id', bot['_id'])
         buttons.append([InlineKeyboardButton(
             f"{emoji} {status} @{bot['bot_username']}",
-            callback_data=f"gestion_select_{bot['_id']}"
+            callback_data=f"gestion_select_{real_id}"
         )])
     
     buttons.append([InlineKeyboardButton("❌ Fermer", callback_data="close")])
@@ -457,9 +476,10 @@ async def gestion_owner_page_callback(client: Bot, callback: CallbackQuery):
         buttons = []
         for bot in page_bots:
             status = "🟢" if bot.get('is_active') else "🔴"
+            real_id = bot.get('bot_id', bot['_id'])
             buttons.append([InlineKeyboardButton(
                 f"{status} @{bot['bot_username']}",
-                callback_data=f"gestion_select_{bot['_id']}"
+                callback_data=f"gestion_select_{real_id}"
             )])
         
         # Pagination
@@ -1636,7 +1656,8 @@ async def handle_photo_upload(client: Bot, message: Message):
             return await message.reply_text("❌ Aucune photo détectée. Envoyez une image.")
 
         # Télécharger la photo localement depuis la bot mère
-        temp_path = await client.download_media(message.photo, file_name=f"/tmp/start_photo_{bot_id}.jpg")
+        import os; os.makedirs("/storage/emulated/0/Absolute/YumeFlower2/temp_photos", exist_ok=True)
+        temp_path = await client.download_media(message.photo, file_name=f"/storage/emulated/0/Absolute/YumeFlower2/temp_photos/start_photo_{bot_id}.jpg")
 
         # Récupérer le client du bot cloné pour obtenir son propre file_id
         from plugins.clone import cloned_clients
