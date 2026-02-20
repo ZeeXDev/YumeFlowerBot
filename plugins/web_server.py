@@ -155,12 +155,11 @@ async def health_check(request):
 
 @routes.post("/api/verify-id-pubs")
 async def api_verify_id_pubs(request):
-    """Vérifie un ID_PUBS et retourne les infos du bot"""
     try:
         data = await request.json()
         id_pubs = data.get('id_pubs', '').strip().upper()
         
-        logger.info(f"Vérification ID_PUBS: {id_pubs}")
+        logger.info(f"[VERIFY] ID_PUBS reçu: '{id_pubs}'")
         
         if not id_pubs:
             return web.json_response({
@@ -170,24 +169,23 @@ async def api_verify_id_pubs(request):
         
         # Chercher le bot par ID_PUBS
         id_data = await db.get_id_codes(id_pubs=id_pubs)
+        logger.info(f"[VERIFY] Résultat DB: {id_data}")
         
         if not id_data:
-            logger.warning(f"ID_PUBS invalide: {id_pubs}")
+            logger.warning(f"[VERIFY] ID_PUBS non trouvé: '{id_pubs}'")
             return web.json_response({
                 'success': False,
                 'error': 'ID_PUBS invalide'
             })
         
         bot_data = await db.get_cloned_bot(id_data['bot_id'])
+        logger.info(f"[VERIFY] Bot trouvé: {bot_data}")
         
         if not bot_data:
-            logger.warning(f"Bot non trouvé pour ID_PUBS: {id_pubs}, bot_id: {id_data['bot_id']}")
             return web.json_response({
                 'success': False,
                 'error': 'Bot non trouvé'
             })
-        
-        logger.info(f"ID_PUBS {id_pubs} validé - Bot: {bot_data.get('bot_username', 'Unknown')}")
         
         return web.json_response({
             'success': True,
@@ -200,11 +198,14 @@ async def api_verify_id_pubs(request):
         })
         
     except Exception as e:
-        logger.error(f"Error in verify-id-pubs: {e}")
+        logger.error(f"[VERIFY] Error: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
         return web.json_response({
             'success': False,
             'error': str(e)
         }, status=500)
+
 
 
 @routes.post("/api/watch-ad-clone")

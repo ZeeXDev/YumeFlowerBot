@@ -1340,7 +1340,7 @@ async def gestion_earnings_callback(client: Bot, callback: CallbackQuery):
                 'balance': 0.0,
                 'total_earned': 0.0,
                 'total_withdrawn': 0.0,
-                'cpm': 3.0,  # $3 par 1000 vues
+                'cpm': 2.0,  # $2 par 1000 vues
                 'today_views': 0,
                 'week_views': 0,
                 'month_views': 0
@@ -1356,7 +1356,7 @@ async def gestion_earnings_callback(client: Bot, callback: CallbackQuery):
             f"• Aujourd'hui: {earnings.get('today_views', 0):,}\n"
             f"• Cette semaine: {earnings.get('week_views', 0):,}\n"
             f"• Ce mois: {earnings.get('month_views', 0):,}\n\n"
-            f"<b>💵 CPM:</b> ${earnings.get('cpm', 3.0):.2f} (par 1000 vues)\n\n"
+            f"<b>💵 CPM:</b> ${earnings.get('cpm', 2.0):.2f} (Pour CPM)\n\n"
         )
         
         # Seuil de retrait

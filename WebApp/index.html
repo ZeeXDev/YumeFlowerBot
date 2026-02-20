@@ -242,59 +242,60 @@ let state = {
 
 // ── INIT ──────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
-  // Priorité 1 : ?id_pubs=XXX dans l'URL (passé par le bot Pyrogram)
-  // Priorité 2 : start_param Telegram (passé via t.me/bot?start=XXX)
+  console.log('[INIT] Page loaded');
+  
+  // Priorité 1 : ?id_pubs=XXX dans l'URL
+  // Priorité 2 : start_param Telegram
   // Priorité 3 : YUMEFLOWER (bot mère par défaut)
   const urlParams = new URLSearchParams(window.location.search);
   const urlIdPubs = urlParams.get('id_pubs');
   const param = urlIdPubs || TG.getStartParam() || 'YUMEFLOWER';
-  const autoIdPubs = param.toUpperCase();
+  const autoIdPubs = param.toUpperCase().trim();
+
+  console.log(`[INIT] ID_PUBS from URL/param: ${autoIdPubs}`);
 
   const input = document.getElementById('id-pubs-input');
   if (input) { input.value = autoIdPubs; }
 
+  // Vérifier d'abord si l'ID_PUBS est valide
+  console.log(`[INIT] Verifying ID_PUBS: ${autoIdPubs}`);
+  const verifyRes = await API.verifyIdPubs(autoIdPubs);
+  console.log(`[INIT] Verify result:`, verifyRes);
+
+  if (!verifyRes.ok || !verifyRes.data.success) {
+    console.error(`[INIT] ID_PUBS invalide: ${autoIdPubs}`, verifyRes.data);
+    App.Toast.error(`ID_PUBS invalide: ${verifyRes.data?.error || 'Erreur inconnue'}`);
+    // Reste sur l'étape input avec l'ID pré-rempli
+    App.staggerIn('#step-input .card, #step-input .input-group, #step-input .btn', 100, 80);
+    return;
+  }
+
+  // ID_PUBS valide → sauvegarder
+  state.idPubs = autoIdPubs;
+  state.botData = verifyRes.data.bot;
+  console.log(`[INIT] Bot trouvé:`, state.botData);
+
   // Vérifier si session déjà active POUR CE BOT SPÉCIFIQUE
-  const cacheKey = 'active_session_' + autoIdPubs;
-  const cached = App.Store.get(cacheKey);
-  if (cached && cached.expires_at) {
-    const secsLeft = Timer.secondsFromExpiry(cached.expires_at);
-    if (secsLeft > 30) {
-      state.idPubs = autoIdPubs;
-      state.botData = cached.bot;
-      showSuccessStep(secsLeft, autoIdPubs, cached.bot_name || '');
+  const userId = TG.getUserId();
+  console.log(`[INIT] User ID: ${userId}`);
+
+  if (userId) {
+    console.log(`[INIT] Checking session for user ${userId} on bot ${autoIdPubs}`);
+    const check = await API.checkSessionClone(userId, autoIdPubs);
+    console.log(`[INIT] Session check result:`, check);
+
+    if (check.ok && check.data.has_access) {
+      console.log(`[INIT] Session active! Time left: ${check.data.time_left}s`);
+      showSuccessStep(check.data.time_left || 600, autoIdPubs, state.botData?.username || '');
       return;
     } else {
-      App.Store.remove(cacheKey);
+      console.log(`[INIT] No active session:`, check.data?.error || 'No access');
     }
   }
 
-  // Vérifier aussi côté serveur si session active
-  const userId = TG.getUserId();
-  if (userId && autoIdPubs) {
-    const check = await API.checkSessionClone(userId, autoIdPubs);
-    if (check.ok && check.data.has_access) {
-      state.idPubs = autoIdPubs;
-      App.Store.set(cacheKey, {
-        id_pubs: autoIdPubs,
-        expires_at: check.data.expires_at
-      });
-      showSuccessStep(check.data.time_left || 600, autoIdPubs, '');
-      return;
-    }
-  }
-
-  // Pas de session → vérifier l'ID_PUBS et aller à la confirmation directement
-  if (autoIdPubs) {
-    const res = await API.verifyIdPubs(autoIdPubs);
-    if (res.ok && res.data.success) {
-      state.idPubs = autoIdPubs;
-      state.botData = res.data.bot;
-      showConfirmStep(res.data.bot || { username: autoIdPubs }, autoIdPubs);
-      return;
-    }
-  }
-
-  App.staggerIn('#step-input .card, #step-input .input-group, #step-input .btn', 100, 80);
+  // Pas de session → aller à l'étape confirmation
+  console.log(`[INIT] No session, showing confirmation step`);
+  showConfirmStep(state.botData, autoIdPubs);
 });
 
 // ── STEP 1 : VÉRIFIER ID_PUBS ────────────────────────────
@@ -303,10 +304,12 @@ async function verifyIdPubs() {
   const idPubs = input.value.trim().toUpperCase();
   const hint = document.getElementById('input-hint');
 
+  console.log(`[VERIFY] Checking ID_PUBS: ${idPubs}`);
+
   // Validation locale
   if (!idPubs || idPubs.length < 6) {
     input.classList.add('error');
-    hint.textContent = 'ID_PUBS trop court.';
+    hint.textContent = 'ID_PUBS trop court (min 6 caractères).';
     hint.className = 'input-hint error';
     TG.hapticError();
     return;
@@ -320,31 +323,34 @@ async function verifyIdPubs() {
   TG.hapticLight();
 
   const res = await API.verifyIdPubs(idPubs);
+  console.log(`[VERIFY] Result:`, res);
 
   App.setLoading('btn-verify', false);
 
   if (!res.ok || !res.data.success) {
     input.classList.add('error');
-    hint.textContent = res.data.error || 'ID_PUBS introuvable. Vérifiez et réessayez.';
+    hint.textContent = res.data?.error || 'ID_PUBS introuvable. Vérifiez et réessayez.';
     hint.className = 'input-hint error';
-    App.Toast.error('ID_PUBS invalide');
+    App.Toast.error(`Erreur: ${res.data?.error || 'ID_PUBS invalide'}`);
     TG.hapticError();
     return;
   }
 
   // Succès
-  state.idPubs  = idPubs;
+  state.idPubs = idPubs;
   state.botData = res.data.bot;
+  console.log(`[VERIFY] Success! Bot:`, state.botData);
   TG.hapticSuccess();
   showConfirmStep(res.data.bot, idPubs);
 }
 
 // ── STEP 2 : CONFIRMATION ────────────────────────────────
 function showConfirmStep(bot, idPubs) {
+  console.log(`[CONFIRM] Showing confirmation for ${idPubs}`);
   App.hide('step-input');
   App.show('step-confirm');
 
-  const name = bot.username || bot.name || 'Bot';
+  const name = bot?.username || bot?.name || 'Bot';
   App.setText('confirm-bot-name', `@${name}`);
   App.setText('confirm-id-pubs-display', idPubs);
 
@@ -358,8 +364,15 @@ function showConfirmStep(bot, idPubs) {
 // ── STEP 3 : LANCER PUB MONETAG ──────────────────────────
 function launchAd() {
   const userId = TG.getUserId();
+  console.log(`[AD] Launching ad for user ${userId}, bot ${state.idPubs}`);
+
   if (!userId) {
     App.Toast.error('Impossible de récupérer votre ID Telegram');
+    return;
+  }
+
+  if (!state.idPubs) {
+    App.Toast.error('Erreur: ID_PUBS manquant');
     return;
   }
 
@@ -370,11 +383,13 @@ function launchAd() {
   App.MonetAd.show(
     // ── Pub terminée → activer la session ──
     async () => {
+      console.log(`[AD] Ad completed, activating session`);
       App.setLoading('btn-watch-ad', false);
       await activateSession(userId);
     },
     // ── Erreur pub ──
     () => {
+      console.log(`[AD] Ad error`);
       App.setLoading('btn-watch-ad', false);
       App.Toast.error('Erreur lors de la pub. Réessayez.');
     }
@@ -382,21 +397,30 @@ function launchAd() {
 }
 
 async function activateSession(userId) {
+  console.log(`[ACTIVATE] Activating session for user ${userId}, bot ${state.idPubs}`);
+  
   const auth = TG.getAuth();
   const res = await API.watchAdClone(userId, state.idPubs, auth);
+  console.log(`[ACTIVATE] Result:`, res);
 
   if (!res.ok || !res.data.success) {
+    console.error(`[ACTIVATE] Failed:`, res.data);
+    
     // Session peut-être déjà active
-    if (res.data.message?.includes('déjà active')) {
+    if (res.data?.message?.includes('déjà active') || res.data?.message?.includes('already active')) {
       App.Toast.info('Session déjà active !');
       // Vérifier le temps restant
       const check = await API.checkSessionClone(userId, state.idPubs);
-      if (check.data.has_access) {
+      console.log(`[ACTIVATE] Recheck session:`, check);
+      
+      if (check.data?.has_access) {
         const secs = check.data.time_left || 600;
         showSuccessStep(secs, state.idPubs, state.botData?.username || '');
+      } else {
+        App.Toast.error('Erreur de vérification de session');
       }
     } else {
-      App.Toast.error(res.data.error || 'Erreur activation session');
+      App.Toast.error(res.data?.error || 'Erreur activation session');
     }
     return;
   }
@@ -406,6 +430,8 @@ async function activateSession(userId) {
   const duration = (res.data.duration || 10) * 60;
   const expiresAt = res.data.expires_at;
   const botName = res.data.bot_username || state.botData?.username || '';
+
+  console.log(`[ACTIVATE] Session created! Duration: ${duration}s, expires: ${expiresAt}`);
 
   // Sauvegarder en cache POUR CE BOT SPÉCIFIQUE
   const cKey = 'active_session_' + state.idPubs;
@@ -421,6 +447,8 @@ async function activateSession(userId) {
 
 // ── STEP SUCCÈS + TIMER ───────────────────────────────────
 function showSuccessStep(seconds, idPubs, botName, expiresAt = null) {
+  console.log(`[SUCCESS] Showing success step for ${idPubs}, ${seconds}s remaining`);
+  
   App.hide('step-input');
   App.hide('step-confirm');
   App.show('step-success');
@@ -429,6 +457,7 @@ function showSuccessStep(seconds, idPubs, botName, expiresAt = null) {
   App.animateIn(document.getElementById('step-success'), 50);
 
   const totalSecs = expiresAt ? Timer.secondsFromExpiry(expiresAt) : seconds;
+  console.log(`[SUCCESS] Starting timer with ${totalSecs}s`);
 
   Timer.startWithRing({
     seconds: totalSecs,
@@ -437,6 +466,7 @@ function showSuccessStep(seconds, idPubs, botName, expiresAt = null) {
     display: document.getElementById('timer-display'),
     pctEl:   document.getElementById('timer-pct'),
     onEnd: () => {
+      console.log(`[SUCCESS] Timer ended`);
       App.Store.remove('active_session_' + state.idPubs);
       App.Toast.info('Session expirée. Regardez une nouvelle pub.', 5000);
       resetToInput();
@@ -446,6 +476,7 @@ function showSuccessStep(seconds, idPubs, botName, expiresAt = null) {
 
 // ── RESET ─────────────────────────────────────────────────
 function resetToInput() {
+  console.log(`[RESET] Resetting to input`);
   Timer.stop();
   state = { idPubs: null, botData: null, sessionDuration: 600 };
 

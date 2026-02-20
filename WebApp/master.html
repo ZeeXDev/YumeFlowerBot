@@ -291,9 +291,17 @@ async function doLogin(silent = false) {
   const idCode = input.value.trim().toUpperCase();
   const hint   = document.getElementById('login-hint');
 
+  // ── LOGIN ─────────────────────────────────────────────────
+async function doLogin(silent = false) {
+  const input  = document.getElementById('id-code-input');
+  const idCode = input.value.trim().toUpperCase();
+  const hint   = document.getElementById('login-hint');
+
+  console.log(`[LOGIN] Attempting login with ID_CODE: ${idCode}`);
+
   if (!idCode || idCode.length < 6) {
     input.classList.add('error');
-    hint.textContent = 'ID_CODE trop court.';
+    hint.textContent = 'ID_CODE trop court (min 6 caractères).';
     hint.className   = 'input-hint error';
     TG.hapticError();
     return;
@@ -305,15 +313,21 @@ async function doLogin(silent = false) {
   }
 
   const auth = TG.getAuth();
+  console.log(`[LOGIN] Auth data:`, auth ? 'Present' : 'Missing');
+  
   const res  = await API.masterLogin(idCode, auth);
+  console.log(`[LOGIN] Response:`, res);
 
   if (!silent) App.setLoading('btn-login', false);
 
   if (!res.ok || !res.data.success) {
     input.classList.add('error');
-    hint.textContent = res.data.error || 'ID_CODE invalide ou expiré.';
+    hint.textContent = res.data?.error || 'ID_CODE invalide ou expiré.';
     hint.className   = 'input-hint error';
-    if (!silent) { App.Toast.error('Connexion échouée'); TG.hapticError(); }
+    if (!silent) { 
+      App.Toast.error(`Erreur: ${res.data?.error || 'Connexion échouée'}`); 
+      TG.hapticError(); 
+    }
     App.Store.remove('master_session');
     return;
   }
@@ -328,6 +342,7 @@ async function doLogin(silent = false) {
   populateDashboard(res.data);
   showDashboard();
 }
+
 
 function showDashboard() {
   App.hide('view-login');
