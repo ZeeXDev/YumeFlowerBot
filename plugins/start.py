@@ -413,9 +413,13 @@ async def check_session_callback(client: Client, callback_query: CallbackQuery):
             "• Ou passez Premium pour un accès illimité"
         )
         
+        # Récupérer l'id_pubs du bot courant pour la mini app
+        id_pubs_for_url = await get_id_pubs_for_client(client)
+        id_pubs_param = f"?id_pubs={id_pubs_for_url}" if id_pubs_for_url else ""
+
         keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("📺 Débloquer", web_app=WebAppInfo(url=f"{web_app_url}/index.html"))],
-            [InlineKeyboardButton("⭐ Premium", web_app=WebAppInfo(url=f"{web_app_url}/prime.html"))],
+            [InlineKeyboardButton("📺 Débloquer", web_app=WebAppInfo(url=f"{web_app_url}/index.html{id_pubs_param}"))],
+            [InlineKeyboardButton("⭐ Premium", web_app=WebAppInfo(url=f"{web_app_url}/prime.html{id_pubs_param}"))],
             [InlineKeyboardButton("❌ Fermer", callback_data="close")]
         ])
     

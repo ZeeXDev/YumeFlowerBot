@@ -291,12 +291,6 @@ async function doLogin(silent = false) {
   const idCode = input.value.trim().toUpperCase();
   const hint   = document.getElementById('login-hint');
 
-  // ── LOGIN ─────────────────────────────────────────────────
-async function doLogin(silent = false) {
-  const input  = document.getElementById('id-code-input');
-  const idCode = input.value.trim().toUpperCase();
-  const hint   = document.getElementById('login-hint');
-
   console.log(`[LOGIN] Attempting login with ID_CODE: ${idCode}`);
 
   if (!idCode || idCode.length < 6) {

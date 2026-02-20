@@ -19,6 +19,55 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # ============================================================
+# ✅ AJOUT : CONSTANTES BOT MÈRE
+# ============================================================
+
+MOTHER_BOT_ID_PUBS = "YUMEFLOWER"
+MOTHER_BOT_ID_CODE = "KINGCEY00"
+MOTHER_BOT_ID      = 0  # bot_id=0 → bot mère dans la DB sessions
+
+# ============================================================
+# ✅ AJOUT : HELPERS — Résoudre ID_PUBS / ID_CODE → bot_id
+# Ces fonctions gèrent le cas bot mère ET les clones
+# ============================================================
+
+async def resolve_bot_id_from_id_pubs(id_pubs: str):
+    """
+    Retourne (bot_id, bot_info_dict or None, error_str or None)
+    Gère le cas bot mère (YUMEFLOWER) ET les clones.
+    """
+    id_pubs = id_pubs.strip().upper()
+    if id_pubs == MOTHER_BOT_ID_PUBS:
+        return MOTHER_BOT_ID, {"username": "YumeFlowerBot", "name": "YumeFlower (Bot Mère)", "is_mother": True}, None
+    id_data = await db.get_id_codes(id_pubs=id_pubs)
+    if not id_data:
+        return None, None, "ID_PUBS invalide"
+    bot_data = await db.get_cloned_bot(id_data["bot_id"])
+    if not bot_data:
+        return None, None, "Bot non trouvé"
+    return id_data["bot_id"], bot_data, None
+
+
+async def resolve_bot_id_from_id_code(id_code: str):
+    """
+    Retourne (bot_id, id_data_dict or None, error_str or None)
+    Gère le cas bot mère (KINGCEY00) ET les clones.
+    """
+    id_code = id_code.strip().upper()
+    if id_code == MOTHER_BOT_ID_CODE:
+        return MOTHER_BOT_ID, {
+            "bot_id":    MOTHER_BOT_ID,
+            "id_pubs":   MOTHER_BOT_ID_PUBS,
+            "id_code":   MOTHER_BOT_ID_CODE,
+            "master_id": OWNER_ID,
+            "is_mother": True
+        }, None
+    id_data = await db.get_id_codes(id_code=id_code)
+    if not id_data:
+        return None, None, "ID_CODE invalide"
+    return id_data["bot_id"], id_data, None
+
+# ============================================================
 # AUTHENTIFICATION TELEGRAM WEB APP
 # ============================================================
 
@@ -167,25 +216,32 @@ async def api_verify_id_pubs(request):
                 'error': 'ID_PUBS manquant'
             }, status=400)
         
-        # Chercher le bot par ID_PUBS
-        id_data = await db.get_id_codes(id_pubs=id_pubs)
-        logger.info(f"[VERIFY] Résultat DB: {id_data}")
+        # ✅ CORRIGÉ : Supporte maintenant YUMEFLOWER (bot mère) ET les clones
+        bot_id, bot_info, error = await resolve_bot_id_from_id_pubs(id_pubs)
+        logger.info(f"[VERIFY] Résultat: bot_id={bot_id}, error={error}")
         
-        if not id_data:
+        if error:
             logger.warning(f"[VERIFY] ID_PUBS non trouvé: '{id_pubs}'")
             return web.json_response({
                 'success': False,
-                'error': 'ID_PUBS invalide'
+                'error': error
             })
-        
-        bot_data = await db.get_cloned_bot(id_data['bot_id'])
-        logger.info(f"[VERIFY] Bot trouvé: {bot_data}")
-        
-        if not bot_data:
+
+        # Cas bot mère : retourner un objet bot synthétique
+        if bot_info.get("is_mother"):
             return web.json_response({
-                'success': False,
-                'error': 'Bot non trouvé'
+                'success': True,
+                'bot': {
+                    'id': MOTHER_BOT_ID,
+                    'username': 'YumeFlowerBot',
+                    'name': 'YumeFlower (Bot Mère)'
+                },
+                'id_pubs': id_pubs
             })
+        
+        # Cas clone : retourner les vraies données
+        bot_data = bot_info
+        logger.info(f"[VERIFY] Bot trouvé: {bot_data}")
         
         return web.json_response({
             'success': True,
@@ -228,27 +284,27 @@ async def api_watch_ad_clone(request):
                 'error': 'Paramètres manquants'
             }, status=400)
         
-        # Vérifier l'ID_PUBS
-        id_data = await db.get_id_codes(id_pubs=id_pubs)
+        # ✅ CORRIGÉ : Supporte maintenant YUMEFLOWER (bot mère) ET les clones
+        bot_id, bot_info, error = await resolve_bot_id_from_id_pubs(id_pubs)
         
-        if not id_data:
+        if error:
             logger.error(f"ID_PUBS invalide: {id_pubs}")
             return web.json_response({
                 'success': False,
-                'error': 'ID_PUBS invalide'
+                'error': error
             })
         
-        bot_id = id_data['bot_id']
         logger.info(f"ID_PUBS {id_pubs} correspond au bot_id: {bot_id}")
         
-        bot_data = await db.get_cloned_bot(bot_id)
-        
-        if not bot_data:
-            logger.error(f"Bot non trouvé pour bot_id: {bot_id}")
-            return web.json_response({
-                'success': False,
-                'error': 'Bot non trouvé'
-            })
+        # Pour les clones, vérifier que le bot existe bien dans cloned_bots
+        if not bot_info.get("is_mother"):
+            bot_data = bot_info
+            if not bot_data:
+                logger.error(f"Bot non trouvé pour bot_id: {bot_id}")
+                return web.json_response({
+                    'success': False,
+                    'error': 'Bot non trouvé'
+                })
         
         # Vérifier auth Telegram (optionnel mais recommandé)
         if auth:
@@ -276,6 +332,8 @@ async def api_watch_ad_clone(request):
         earning_per_ad = 0.002
         await db.add_earning(bot_id, earning_per_ad, 'ad_impression')
         
+        bot_username = "YumeFlowerBot" if bot_info.get("is_mother") else bot_info.get('bot_username', 'Bot')
+        
         logger.info(f"✅ Session créée pour user {user_id} sur bot {bot_id} (ID_PUBS: {id_pubs})")
         logger.info(f"Gains ajoutés au bot {bot_id}: ${earning_per_ad}")
         
@@ -283,7 +341,7 @@ async def api_watch_ad_clone(request):
             'success': True,
             'duration': duration,
             'expires_at': session.get('expires_at'),
-            'bot_username': bot_data['bot_username'],
+            'bot_username': bot_username,
             'message': 'Session activée avec succès'
         })
         
@@ -312,17 +370,16 @@ async def api_check_session_clone(request):
                 'error': 'Paramètres manquants'
             }, status=400)
         
-        # Trouver le bot par ID_PUBS
-        id_data = await db.get_id_codes(id_pubs=id_pubs)
+        # ✅ CORRIGÉ : Supporte maintenant YUMEFLOWER (bot mère) ET les clones
+        bot_id, bot_info, error = await resolve_bot_id_from_id_pubs(id_pubs)
         
-        if not id_data:
+        if error:
             logger.warning(f"ID_PUBS invalide: {id_pubs}")
             return web.json_response({
                 'success': False,
-                'error': 'ID_PUBS invalide'
+                'error': error
             })
         
-        bot_id = id_data['bot_id']
         logger.info(f"Check session - ID_PUBS {id_pubs} -> bot_id {bot_id}")
         
         # Vérifier session pour CE bot
@@ -368,13 +425,13 @@ async def api_master_login(request):
                 'error': 'ID_CODE manquant'
             }, status=400)
         
-        # Vérifier l'ID_CODE
-        id_data = await db.get_id_codes(id_code=id_code)
+        # ✅ CORRIGÉ : Supporte maintenant KINGCEY00 (bot mère) ET les clones
+        bot_id, id_data, error = await resolve_bot_id_from_id_code(id_code)
         
-        if not id_data:
+        if error:
             return web.json_response({
                 'success': False,
-                'error': 'ID_CODE invalide'
+                'error': error
             })
         
         # Vérifier auth Telegram si fourni
@@ -382,7 +439,7 @@ async def api_master_login(request):
             user_data = verify_telegram_auth(auth)
             if user_data:
                 # Vérifier que l'utilisateur est bien le maître
-                master_id = id_data['master_id']
+                master_id = id_data.get('master_id', OWNER_ID)
                 if int(user_data.get('id', 0)) != master_id:
                     logger.warning(f"Tentative accès maître non autorisée: {user_data.get('id')} vs {master_id}")
                     return web.json_response({
@@ -390,8 +447,34 @@ async def api_master_login(request):
                         'error': 'Non autorisé'
                     }, status=403)
         
-        bot_data = await db.get_cloned_bot(id_data['bot_id'])
-        earnings = await db.get_bot_earnings(id_data['bot_id'])
+        # ── CAS BOT MÈRE ──────────────────────────────────────
+        if id_data.get("is_mother"):
+            earnings = await db.get_bot_earnings(MOTHER_BOT_ID) or {
+                "balance": 0, "total_earned": 0, "total_withdrawn": 0
+            }
+            return web.json_response({
+                'success': True,
+                'bot': {
+                    'id': MOTHER_BOT_ID,
+                    'username': 'YumeFlowerBot',
+                    'created_at': '2025-01-01T00:00:00'
+                },
+                'id_pubs': MOTHER_BOT_ID_PUBS,
+                'stats': {
+                    'total_users': 0,
+                    'total_ads_watched': earnings.get('total_ads_watched', 0),
+                    'total_files_sent': 0
+                },
+                'earnings': {
+                    'balance':         earnings.get('balance', 0),
+                    'total_earned':    earnings.get('total_earned', 0),
+                    'total_withdrawn': earnings.get('total_withdrawn', 0)
+                }
+            })
+        
+        # ── CAS CLONE ─────────────────────────────────────────
+        bot_data = await db.get_cloned_bot(bot_id)
+        earnings = await db.get_bot_earnings(bot_id)
         stats = bot_data.get('stats', {}) if bot_data else {}
         
         return web.json_response({
