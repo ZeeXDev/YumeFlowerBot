@@ -522,6 +522,10 @@ class Rohit:
             if isinstance(expiry, str):
                 expiry = datetime.fromisoformat(expiry.replace('Z', '+00:00'))
             
+            # ✅ FIX : forcer UTC si MongoDB retourne un datetime sans timezone
+            if expiry is not None and expiry.tzinfo is None:
+                expiry = expiry.replace(tzinfo=timezone.utc)
+            
             now = datetime.now(timezone.utc)
             
             if now > expiry:
@@ -565,6 +569,10 @@ class Rohit:
             expiry = session.get("expires_at")
             if isinstance(expiry, str):
                 expiry = datetime.fromisoformat(expiry.replace('Z', '+00:00'))
+            
+            # ✅ FIX : forcer UTC si MongoDB retourne un datetime sans timezone
+            if expiry is not None and expiry.tzinfo is None:
+                expiry = expiry.replace(tzinfo=timezone.utc)
             
             now = datetime.now(timezone.utc)
             remaining = (expiry - now).total_seconds()
@@ -623,9 +631,7 @@ class Rohit:
         if not self._initialized:
             await self.init()
         
-        current_count = await self.count_user_cloned_bots(master_id)
-        if current_count >= 3:
-            raise Exception(f"Limite atteinte: vous avez déjà {current_count} bot(s). Maximum: 3 bots.")
+        # ✅ Pas de limite de clones
 
         now = datetime.now(timezone.utc)
 
@@ -653,25 +659,38 @@ class Rohit:
             }
         }
 
-        await self.db.cloned_bots.insert_one(bot_data)
-        
-        await self.db.id_codes.insert_one({
-            "bot_id": bot_id,
-            "id_pubs": id_pubs,
-            "id_code": id_code,
-            "master_id": master_id,
-            "created_at": now,
-            "updated_at": now
-        })
+        # ✅ FIX duplicate key : upsert au lieu de insert pour éviter E11000
+        await self.db.cloned_bots.update_one(
+            {"bot_id": bot_id},
+            {"$set": bot_data},
+            upsert=True
+        )
 
-        await self.db.bot_earnings.insert_one({
-            "bot_id": bot_id,
-            "balance": 0.0,
-            "total_earned": 0.0,
-            "total_withdrawn": 0.0,
-            "transactions": [],
-            "master_id": master_id
-        })
+        await self.db.id_codes.update_one(
+            {"bot_id": bot_id},
+            {"$setOnInsert": {
+                "bot_id": bot_id,
+                "id_pubs": id_pubs,
+                "id_code": id_code,
+                "master_id": master_id,
+                "created_at": now,
+                "updated_at": now
+            }},
+            upsert=True
+        )
+
+        await self.db.bot_earnings.update_one(
+            {"bot_id": bot_id},
+            {"$setOnInsert": {
+                "bot_id": bot_id,
+                "balance": 0.0,
+                "total_earned": 0.0,
+                "total_withdrawn": 0.0,
+                "transactions": [],
+                "master_id": master_id
+            }},
+            upsert=True
+        )
 
         await self.add_bot_admin(bot_id, master_id, "maitre", master_id)
 

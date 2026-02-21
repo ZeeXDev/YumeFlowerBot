@@ -69,25 +69,11 @@ async def clone_bot_command(client: Bot, message: Message):
     
     bot_token = message.command[1].strip()
     
-    # Vérifier la limite de 3 bots par utilisateur
     try:
         current_count = await db.count_user_cloned_bots(user_id)
-        if current_count >= 3:
-            return await message.reply_text(
-                "<b>⛔ Limite atteinte!</b>\n\n"
-                f"Vous avez déjà <b>{current_count}</b> bot(s) cloné(s).\n"
-                f"Maximum autorisé: <b>3 bots</b>.\n\n"
-                f"Utilisez <code>/gestion</code> pour gérer vos bots existants\n"
-                f"ou supprimez un bot pour en créer un nouveau.",
-                quote=True
-            )
     except Exception as e:
-        logger.error(f"Erreur vérification limite bots: {e}")
-        return await message.reply_text(
-            "<b>❌ Erreur</b>\n"
-            "Impossible de vérifier vos bots existants. Réessayez.",
-            quote=True
-        )
+        logger.error(f"Erreur comptage bots: {e}")
+        current_count = 0
     
     # Vérifier si le token est déjà utilisé
     existing_bot = await db.get_cloned_bot_by_token(bot_token)
@@ -137,7 +123,6 @@ async def clone_bot_command(client: Bot, message: Message):
         success = await start_cloned_bot(bot_info['id'])
         
         if success:
-            remaining = 3 - (current_count + 1)
             await processing_msg.edit_text(
                 f"<b>🎉 Bot cloné avec succès!</b>\n\n"
                 f"<b>🤖 Bot:</b> @{bot_info['username']}\n"
@@ -145,7 +130,6 @@ async def clone_bot_command(client: Bot, message: Message):
                 f"<b>👤 Maître:</b> <code>{user_id}</code>\n"
                 f"<b>🆔 ID_PUBS:</b> <code>{clone_data['id_pubs']}</code>\n"
                 f"<b>🔑 ID_CODE:</b> <code>{clone_data['id_code']}</code>\n\n"
-                f"<b>📊 Limite:</b> {current_count + 1}/3 bots ({remaining} restant(s))\n\n"
                 f"<b>⚠️ IMPORTANT:</b>\n"
                 f"• Conservez votre <code>ID_CODE</code> précieusement\n"
                 f"• Il permet d'accéder à la page Maître\n"
@@ -304,6 +288,18 @@ async def restart_cloned_bot(bot_id: int) -> bool:
 async def restart_all_cloned_bots():
     """Redémarre tous les bots clonés au démarrage du bot mère"""
     logger.info("[CLONE] Redémarrage des bots clonés...")
+
+    # ✅ FIX : attendre que MongoDB soit connecté avant de lire les bots
+    for attempt in range(15):
+        try:
+            if db._initialized:
+                break
+            await db.init()
+            break
+        except Exception as e:
+            logger.warning(f"[CLONE] MongoDB pas encore prêt (tentative {attempt+1}/15): {e}")
+            await asyncio.sleep(2)
+
     bots = await db.get_all_cloned_bots()
     
     started = 0
