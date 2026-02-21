@@ -179,7 +179,8 @@ async def check_user_access(client: Client, user_id: int, message: Message) -> t
         chat_id=message.from_user.id,
         text=return_text,
         reply_markup=keyboard,
-        parse_mode=ParseMode.HTML
+        parse_mode=ParseMode.HTML,
+        disable_web_page_preview=True
     )
     return False, None
 
@@ -362,8 +363,8 @@ async def start_command(client: Client, message: Message):
             [
                 [InlineKeyboardButton("🌺 Ma maison", url="https://t.me/kingceyy")],
                 [
-                    InlineKeyboardButton("ℹ️ Groupe de demande", url="https://t.me/+udEvzGuvVLJjNmQ8"),
-                    InlineKeyboardButton("❓ Aide", url="https://t.me/Kingcey")]
+                    InlineKeyboardButton("Aide", callback_data="help"),
+                    InlineKeyboardButton("À propos", callback_data="about")]
             ]
         )
         await message.reply_photo(

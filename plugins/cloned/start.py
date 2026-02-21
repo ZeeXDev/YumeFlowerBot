@@ -166,7 +166,8 @@ async def cloned_start_handler(client: Client, message: Message):
             await message.reply_text(
                 start_msg,
                 reply_markup=keyboard,
-                parse_mode=ParseMode.HTML
+                parse_mode=ParseMode.HTML,
+                disable_web_page_preview=True
             )
     except Exception as e:
         print(f"[CLONE {bot_id}] Error in start: {e}")
