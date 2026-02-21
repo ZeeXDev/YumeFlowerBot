@@ -146,24 +146,41 @@ async def check_user_access(client: Client, user_id: int, message: Message) -> t
     ])
     
     # Message avec le lien de retour si disponible
+    # ✅ FIX CACHE TELEGRAM : on supprime d'abord l'ancien message avant d'en envoyer un nouveau
+    # Telegram met en cache la réponse du bot sur les liens /start
+    # En supprimant le message précédent, on force Telegram à redemander au bot
+    try:
+        await message.delete()
+    except Exception:
+        pass
+
+    import datetime as _dt
+    _now = _dt.datetime.now().strftime("%H:%M:%S")
+
     return_text = (
-    "🌸 うぅ… {first}… gomennasai… (T_T)\n\n"
+    f"🌸 うぅ… gomennasai… (T_T)\n\n"
     "Pas de session active… Yume peut pas t'envoyer les fichiers tout de suite ♡\n\n"
     "Regarde juste une petite pub stp～\n"
     "→ 10 min gratuites pour tout télécharger !\n\n"
     "Après, reclique sur le lien et hop, tes fichiers arrivent～ promis !\n\n"
     "Aide Yume ? 👇\n"
-    "[Regarder la pub 🚀]"
+    f"[Regarder la pub 🚀] <code>({_now})</code>"
 )
-    
+
     # Ajouter le lien de retour si on l'a récupéré
     if orig_post_link:
         return_text += (
             f"\n\n<b>Reprend ce que tu voulais :</b>\n"
             f"<b> <a href='{orig_post_link}'>Tu Voulais Ceci 🥀🌺</a></b>"
         )
-    
-    await message.reply_text(return_text, reply_markup=keyboard)
+
+    # Envoyer dans le chat (pas en reply pour éviter le cache Telegram)
+    await client.send_message(
+        chat_id=message.from_user.id,
+        text=return_text,
+        reply_markup=keyboard,
+        parse_mode=ParseMode.HTML
+    )
     return False, None
 
 
@@ -413,13 +430,9 @@ async def check_session_callback(client: Client, callback_query: CallbackQuery):
             "• Ou passez Premium pour un accès illimité"
         )
         
-        # Récupérer l'id_pubs du bot courant pour la mini app
-        id_pubs_for_url = await get_id_pubs_for_client(client)
-        id_pubs_param = f"?id_pubs={id_pubs_for_url}" if id_pubs_for_url else ""
-
         keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("📺 Débloquer", web_app=WebAppInfo(url=f"{web_app_url}/index.html{id_pubs_param}"))],
-            [InlineKeyboardButton("⭐ Premium", web_app=WebAppInfo(url=f"{web_app_url}/prime.html{id_pubs_param}"))],
+            [InlineKeyboardButton("📺 Débloquer", web_app=WebAppInfo(url=f"{web_app_url}/index.html"))],
+            [InlineKeyboardButton("⭐ Premium", web_app=WebAppInfo(url=f"{web_app_url}/prime.html"))],
             [InlineKeyboardButton("❌ Fermer", callback_data="close")]
         ])
     
