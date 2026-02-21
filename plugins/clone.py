@@ -22,18 +22,33 @@ cloned_clients = {}
 
 async def get_bot_info(token: str):
     """Récupère les informations d'un bot à partir de son token"""
+    import hashlib, os
+
+    # ✅ FIX : nom de session unique par token pour éviter la réutilisation
+    # de la session du bot précédent (fichier temp_bot.session)
+    token_hash = hashlib.md5(token.encode()).hexdigest()[:8]
+    session_name = f"temp_verify_{token_hash}"
+    session_file = f"{session_name}.session"
+
     temp_client = Client(
-        name="temp_bot",
+        name=session_name,
         api_id=APP_ID,
         api_hash=API_HASH,
         bot_token=token,
-        no_updates=True
+        no_updates=True,
+        in_memory=True  # ✅ pas de fichier .session sur disque
     )
     
     try:
         await temp_client.start()
         me = await temp_client.get_me()
         await temp_client.stop()
+        # Nettoyer le fichier session si créé quand même
+        try:
+            if os.path.exists(session_file):
+                os.remove(session_file)
+        except:
+            pass
         return {
             'success': True,
             'id': me.id,
@@ -41,8 +56,18 @@ async def get_bot_info(token: str):
             'first_name': me.first_name
         }
     except AccessTokenInvalid:
+        try:
+            if os.path.exists(session_file):
+                os.remove(session_file)
+        except:
+            pass
         return {'success': False, 'error': 'Token invalide'}
     except Exception as e:
+        try:
+            if os.path.exists(session_file):
+                os.remove(session_file)
+        except:
+            pass
         return {'success': False, 'error': str(e)}
 
 
@@ -210,12 +235,16 @@ async def start_cloned_bot(bot_id: int) -> bool:
             del cloned_clients[bot_id]
         
         # Créer le client
+        # ✅ in_memory=True : pas de fichier .session sur disque
+        # Render efface les fichiers à chaque redémarrage donc on ne peut pas
+        # compter sur les fichiers de session. Le bot_token suffit à se reconnecter.
         client = Client(
             name=f"cloned_bot_{bot_id}",
             api_id=APP_ID,
             api_hash=API_HASH,
             bot_token=bot_data['bot_token'],
-            plugins={"root": "plugins/cloned"}  # Plugins spéciaux pour bots clonés
+            plugins={"root": "plugins/cloned"},
+            in_memory=True
         )
         
         await client.start()
