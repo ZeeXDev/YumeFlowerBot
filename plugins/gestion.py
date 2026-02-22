@@ -1016,7 +1016,8 @@ async def gestion_setchannel_callback(client: Bot, callback: CallbackQuery):
             f"1. Ajoutez @userinfobot dans votre canal\n"
             f"2. Envoyez un message dans le canal\n"
             f"3. Le bot répondra avec l'ID\n\n"
-            f"Envoyez <code>/annuler</code> pour annuler."
+            f"Envoyez <code>/annuler</code> pour annuler.\n"
+            f"Ou utilsé simplement <code>/addchnl ID_CANAL</code>"
         )
         
         buttons = [[InlineKeyboardButton("❌ Annuler", callback_data=f"gestion_channel_{bot_id}")]]

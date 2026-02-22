@@ -76,7 +76,6 @@ async def clone_bot_command(client: Bot, message: Message):
     """
     Commande /clone - Permet de cloner le bot
     Usage: /clone {BOT_TOKEN}
-    Limite: 3 bots maximum par utilisateur
     """
     user_id = message.from_user.id
     
@@ -87,8 +86,7 @@ async def clone_bot_command(client: Bot, message: Message):
             "<b>Usage:</b> <code>/clone {BOT_TOKEN}</code>\n\n"
             "<b>Exemple:</b>\n"
             "<code>/clone 89171999:HKqjakakxxxxxxxxxxxxx</code>\n\n"
-            "<i>Obtenez votre token depuis @BotFather</i>\n\n"
-            "<b>ℹ️ Limite:</b> 3 bots maximum par utilisateur",
+            "<i>Obtenez votre token depuis @BotFather</i>\n\n",
             quote=True
         )
     
@@ -172,7 +170,7 @@ async def clone_bot_command(client: Bot, message: Message):
             await processing_msg.edit_text(
                 f"<b>⚠️ Bot créé mais non démarré</b>\n\n"
                 f"Le bot @{bot_info['username']} a été enregistré mais n'a pas pu démarrer.\n"
-                f"Contactez l'administrateur ou utilisez /restart pour réessayer."
+                f"Contactez l'administrateur @kingcey ou utilisez /restart pour réessayer."
             )
             
     except Exception as e:
@@ -254,7 +252,7 @@ async def start_cloned_bot(bot_id: int) -> bool:
         try:
             commands = [
                 BotCommand("start", "Démarrer le bot"),
-                BotCommand("adddb", "Configurer le canal DB"),
+                BotCommand("addchnl", "Configurer le canal DB"),
                 BotCommand("genlink", "Générer un lien de partage"),
                 BotCommand("batch", "Créer un lien batch"),
                 BotCommand("addfsub", "Ajouter canal force-sub"),
@@ -269,7 +267,7 @@ async def start_cloned_bot(bot_id: int) -> bool:
                 BotCommand("deladmin", "Retirer un admin"),
                 BotCommand("admins", "Liste des admins"),
                 BotCommand("broadcast", "Diffuser un message"),
-                BotCommand("pbroadcast", "Diffuser une photo"),
+                BotCommand("pbroadcast", "Diffuser un message en l'épinglant"),
                 BotCommand("dbroadcast", "Diffuser un document"),
                 BotCommand("custom_batch", "Batch personnalisé"),
                 BotCommand("stats", "Statistiques du bot"),
