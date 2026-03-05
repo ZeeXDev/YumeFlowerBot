@@ -9,7 +9,7 @@ const API = (() => {
   // localhost pour test Termux, mettre l'URL Render en prod
   const BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:8080'
-    : 'https://yumeflowerbot.onrender.com';   // ← sans /api ici !
+    : 'https://yumeflowerbot.koyeb.app';   // ← sans /api ici !
 
   const TIMEOUT_MS = 12000;
 
