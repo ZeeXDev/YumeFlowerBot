@@ -27,9 +27,9 @@ API_HASH = os.environ.get("API_HASH", "30db27d9e56d854fb5e943723268db32")
 # CONFIGURATION BASE DE DONNÉES & CHANNEL
 # ==========================================
 
-CHANNEL_ID = int(os.environ.get("CHANNEL_ID", "-1003173430503"))
+CHANNEL_ID = int(os.environ.get("CHANNEL_ID", "-1003723207523"))
 OWNER = os.environ.get("OWNER", "ZeeXDevBot")
-OWNER_ID = int(os.environ.get("OWNER_ID", "8140299716"))
+OWNER_ID = int(os.environ.get("OWNER_ID", "8467461906"))
 
 # Base de données MongoDB (optionnel, pour futur scaling)
 DB_URI = os.environ.get("DATABASE_URL", "mongodb+srv://elisabethboko45_db_user:kmrLKNKnfe8lK1df@cluster0.isv90ao.mongodb.net/?appName=Cluster0")
@@ -43,7 +43,7 @@ PORT = os.environ.get("PORT", "8001")
 
 # URL de la Mini App (laisser vide pour auto-détection: https://{bot_username}.onrender.com)
 # Exemple: https://monbot.onrender.com
-ADSGRAM_WEBAPP_URL = "https://waramugi.vercel.app"  # Ton URL Vercel
+ADSGRAM_WEBAPP_URL = "https://jks-blond.vercel.app"  # Ton URL Vercel
 
 
 # Mot de passe pour accéder à la page admin (/admin)
